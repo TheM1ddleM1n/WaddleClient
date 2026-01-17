@@ -2,7 +2,7 @@
 // @name         WaddleClient4Miniblox
 // @namespace    M1ddleM1n and Scripter on top!
 // @version      4.2
-// @description  Waddle V4.2 - Ultra Animations + High Performance
+// @description  Waddle V4.2 - High Performance
 // @author       Scripter, TheM1ddleM1n
 // @icon         https://raw.githubusercontent.com/TheM1ddleM1n/WaddleClient/refs/heads/main/WaddlePic.png
 // @match        https://miniblox.io/
