@@ -2,7 +2,7 @@
 // @name         WaddleClient4Miniblox
 // @namespace    M1ddleM1n and Scripter on top!
 // @version      4.2
-// @description  Waddle V4.2 - High Performance
+// @description  Waddle V4.2 - Ultra Animations + High Performance
 // @author       Scripter, TheM1ddleM1n
 // @icon         https://raw.githubusercontent.com/TheM1ddleM1n/WaddleClient/refs/heads/main/WaddlePic.png
 // @match        https://miniblox.io/
@@ -428,6 +428,16 @@
             id: 'real-time-counter', counterType: null, initialText: '00:00:00 AM',
             position: { left: '50px', top: '50px' }, isDraggable: false
         });
+        counter.style.left = 'auto';
+        counter.style.top = 'auto';
+        counter.style.right = '30px';
+        counter.style.bottom = '30px';
+        counter.style.background = 'transparent';
+        counter.style.boxShadow = 'none';
+        counter.style.border = 'none';
+        counter.style.textShadow = '0 0 8px var(--waddle-primary), 0 0 15px var(--waddle-primary)';
+        counter.style.fontSize = '1.5rem';
+        counter.style.padding = '0';
         state.counters.realTime = counter;
         return counter;
     }
