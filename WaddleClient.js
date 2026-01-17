@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Velocity Enhanced
+// @name         Waddle Enhanced
 // @namespace    M1ddleM1n and Scripter on top!
 // @version      4.2
-// @description  NovaCoreX V4.2 - Ultra Animations + High Performance
+// @description  Waddle V4.2 - Ultra Animations + High Performance
 // @author       Scripter, TheM1ddleM1n
 // @icon         https://raw.githubusercontent.com/TheM1ddleM1n/NovaCoreX/refs/heads/main/NovaCoreX.png
 // @match        https://miniblox.io/
@@ -11,27 +11,27 @@
 
 (function() {
     'use strict';
-    document.title = '𝙉𝙤𝙫𝙖𝘾𝙤𝙧𝙚 𝙓 𝙁𝙤𝙧 𝙈𝙞𝙣𝙞𝙗𝙡𝙤𝙭!';
+    document.title = '🐧 𝙒𝙖𝙙𝙙𝙡𝙚 𝙁𝙤𝙧 𝙈𝙞𝙣𝙞𝙗𝙡𝙤𝙭!';
 
     const TIMING = {
         HINT_TEXT_DURATION: 4000, FPS_UPDATE_INTERVAL: 500, CPS_UPDATE_INTERVAL: 250,
         CPS_WINDOW: 1000, PING_UPDATE_INTERVAL: 2000, SAVE_DEBOUNCE: 2000, STATS_UPDATE_INTERVAL: 10000
     };
 
-    const SETTINGS_KEY = 'novacore_settings';
+    const SETTINGS_KEY = 'waddle_settings';
     const DEFAULT_MENU_KEY = '\\';
-    const CUSTOM_COLOR_KEY = 'novacore_custom_color';
-    const SESSION_COUNT_KEY = 'novacore_session_count';
+    const CUSTOM_COLOR_KEY = 'waddle_custom_color';
+    const SESSION_COUNT_KEY = 'waddle_session_count';
     const SCRIPT_VERSION = '4.2';
     const GITHUB_REPO = 'TheM1ddleM1n/NovaCoreX';
     const DEFAULT_COLOR = '#00ffff';
 
     const splashMessages = [
-        "Performance Unlocked 💎",
-        "Streaming Ready ⚡",
-        "Apex Performance 🚀",
-        "Zero Lag Guaranteed 🔥",
-        "NovaCoreX Activated ✨"
+        "Waddle Time! 🐧",
+        "Penguin Power ⚡",
+        "Flippers Ready 🚀",
+        "Ice Cold Performance 🔥",
+        "Waddle Activated ✨"
     ];
     const randomSplashMsg = splashMessages[Math.floor(Math.random() * splashMessages.length)];
 
@@ -67,7 +67,7 @@
     let cpsClickListenerRef = null;
 
     function safeExecute(fn, fallback = null) {
-        try { return fn(); } catch (e) { console.error('[NovaCoreX Error]:', e); return fallback; }
+        try { return fn(); } catch (e) { console.error('[Waddle Error]:', e); return fallback; }
     }
 
     function throttle(func, delay) {
@@ -160,8 +160,8 @@
     }
 
     function applyTheme(color) {
-        document.documentElement.style.setProperty('--nova-primary', color);
-        document.documentElement.style.setProperty('--nova-shadow', color);
+        document.documentElement.style.setProperty('--waddle-primary', color);
+        document.documentElement.style.setProperty('--waddle-shadow', color);
         state.customColor = color;
         try { localStorage.setItem(CUSTOM_COLOR_KEY, color); } catch (e) {}
     }
@@ -206,61 +206,61 @@
 
     const style = document.createElement('style');
     style.textContent = `
-:root { --nova-primary: #00ffff; --nova-shadow: #00ffff; --nova-bg-dark: #000000; }
+:root { --waddle-primary: #00ffff; --waddle-shadow: #00ffff; --waddle-bg-dark: #000000; }
 @keyframes counterSlideIn { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
 @keyframes slideInDown { 0% { opacity: 0; transform: translateY(-40px); } 100% { opacity: 1; transform: translateY(0); } }
 @keyframes slideInUp { 0% { opacity: 0; transform: translateY(40px); } 100% { opacity: 1; transform: translateY(0); } }
 
-#nova-splash-container { position: fixed; inset: 0; background: linear-gradient(135deg, #000000 0%, #001a33 100%); z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; font-family: 'Segoe UI', sans-serif; transition: opacity 0.8s ease; }
-#nova-splash-branding { text-align: center; margin-bottom: 30px; position: relative; z-index: 2; }
-#nova-splash-logo { width: 120px; height: 120px; border-radius: 20px; border: 3px solid #00ffff; box-shadow: 0 0 30px rgba(0,255,255,0.6), inset 0 0 20px rgba(0,255,255,0.3); }
-#nova-splash-title { color: #00ffff; font-size: 60px; margin: 20px 0; letter-spacing: 8px; font-weight: 900; }
-#nova-splash-message { color: rgba(0,255,255,0.8); font-family: monospace; letter-spacing: 3px; text-transform: uppercase; margin-top: 15px; font-size: 14px; }
-#nova-splash-play { background: rgba(0,0,0,0.6); border: 2px solid #00ffff; color: #00ffff; padding: 14px 32px; border-radius: 8px; cursor: pointer; font-weight: 700; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 2px; font-size: 0.9rem; box-shadow: 0 0 15px rgba(0,255,255,0.3); margin-top: 30px; font-family: Segoe UI, sans-serif; }
-#nova-splash-play:hover { background: #00ffff; color: #000; transform: translateY(-3px) scale(1.05); box-shadow: 0 0 30px rgba(0,255,255,0.6), 0 8px 20px rgba(0,255,255,0.3); }
-#nova-persistent-header { position: fixed; top: 10px; left: 10px; font-family: Segoe UI, sans-serif; font-weight: 900; font-size: 1.5rem; color: var(--nova-primary); text-shadow: 0 0 8px var(--nova-shadow), 0 0 20px var(--nova-shadow); user-select: none; z-index: 100000000; pointer-events: none; opacity: 0; transition: opacity 0.5s ease; contain: layout style paint; }
-#nova-persistent-header.visible { opacity: 1; animation: slideInDown 0.6s ease; }
-#nova-menu-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(15px); z-index: 10000000; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 40px; opacity: 0; pointer-events: none; transition: opacity 0.35s ease; user-select: none; contain: strict; }
-#nova-menu-overlay.show { opacity: 1; pointer-events: auto; }
-#nova-menu-header { font-family: Segoe UI, sans-serif; font-size: 3rem; font-weight: 900; color: var(--nova-primary); text-shadow: 0 0 8px var(--nova-shadow), 0 0 20px var(--nova-shadow); margin-bottom: 30px; animation: slideInDown 0.5s ease; }
-#nova-tabs { display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 2px solid rgba(0, 255, 255, 0.2); animation: slideInDown 0.6s ease 0.1s backwards; }
-.nova-tab-btn { background: transparent; border: none; color: #999; font-family: Segoe UI, sans-serif; font-weight: 700; padding: 12px 20px; cursor: pointer; transition: all 0.3s ease; border-bottom: 3px solid transparent; font-size: 1rem; position: relative; }
-.nova-tab-btn:hover { color: var(--nova-primary); transform: translateY(-2px); }
-.nova-tab-btn.active { color: var(--nova-primary); border-bottom-color: var(--nova-primary); box-shadow: 0 2px 10px rgba(0,255,255,0.3); }
-#nova-menu-content { width: 320px; background: rgba(17, 17, 17, 0.9); border-radius: 16px; padding: 24px; color: white; font-size: 1.1rem; box-shadow: 0 0 20px rgba(0, 255, 255, 0.4), inset 0 0 20px rgba(0, 255, 255, 0.1); display: flex; flex-direction: column; gap: 24px; max-height: 70vh; overflow-y: auto; contain: layout style paint; border: 1px solid rgba(0, 255, 255, 0.3); animation: slideInUp 0.5s ease; }
-.nova-tab-content { display: none; }
-.nova-tab-content.active { display: flex; flex-direction: column; gap: 12px; animation: slideInUp 0.4s ease; }
-.nova-menu-btn { background: rgba(0, 0, 0, 0.8); border: 2px solid var(--nova-primary); color: var(--nova-primary); font-family: Segoe UI, sans-serif; font-weight: 700; padding: 16px 20px; border-radius: 10px; cursor: pointer; transition: all 0.3s ease; user-select: none; will-change: transform; position: relative; overflow: hidden; }
-.nova-menu-btn:hover { background: var(--nova-primary); color: #000; transform: translateY(-3px); box-shadow: 0 5px 20px rgba(0,255,255,0.4); }
-#nova-hint-text { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: Consolas, monospace; color: var(--nova-primary); font-size: 1.25rem; text-shadow: 0 0 4px var(--nova-shadow), 0 0 10px var(--nova-shadow); user-select: none; opacity: 0; pointer-events: none; z-index: 9999999; white-space: nowrap; text-align: center; }
+#waddle-splash-container { position: fixed; inset: 0; background: linear-gradient(135deg, #000000 0%, #001a33 100%); z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; font-family: 'Segoe UI', sans-serif; transition: opacity 0.8s ease; }
+#waddle-splash-branding { text-align: center; margin-bottom: 30px; position: relative; z-index: 2; }
+#waddle-splash-logo { width: 120px; height: 120px; border-radius: 20px; border: 3px solid #00ffff; box-shadow: 0 0 30px rgba(0,255,255,0.6), inset 0 0 20px rgba(0,255,255,0.3); }
+#waddle-splash-title { color: #00ffff; font-size: 60px; margin: 20px 0; letter-spacing: 8px; font-weight: 900; }
+#waddle-splash-message { color: rgba(0,255,255,0.8); font-family: monospace; letter-spacing: 3px; text-transform: uppercase; margin-top: 15px; font-size: 14px; }
+#waddle-splash-play { background: rgba(0,0,0,0.6); border: 2px solid #00ffff; color: #00ffff; padding: 14px 32px; border-radius: 8px; cursor: pointer; font-weight: 700; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 2px; font-size: 0.9rem; box-shadow: 0 0 15px rgba(0,255,255,0.3); margin-top: 30px; font-family: Segoe UI, sans-serif; }
+#waddle-splash-play:hover { background: #00ffff; color: #000; transform: translateY(-3px) scale(1.05); box-shadow: 0 0 30px rgba(0,255,255,0.6), 0 8px 20px rgba(0,255,255,0.3); }
+#waddle-persistent-header { position: fixed; top: 10px; left: 10px; font-family: Segoe UI, sans-serif; font-weight: 900; font-size: 1.5rem; color: var(--waddle-primary); text-shadow: 0 0 8px var(--waddle-shadow), 0 0 20px var(--waddle-shadow); user-select: none; z-index: 100000000; pointer-events: none; opacity: 0; transition: opacity 0.5s ease; contain: layout style paint; }
+#waddle-persistent-header.visible { opacity: 1; animation: slideInDown 0.6s ease; }
+#waddle-menu-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(15px); z-index: 10000000; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 40px; opacity: 0; pointer-events: none; transition: opacity 0.35s ease; user-select: none; contain: strict; }
+#waddle-menu-overlay.show { opacity: 1; pointer-events: auto; }
+#waddle-menu-header { font-family: Segoe UI, sans-serif; font-size: 3rem; font-weight: 900; color: var(--waddle-primary); text-shadow: 0 0 8px var(--waddle-shadow), 0 0 20px var(--waddle-shadow); margin-bottom: 30px; animation: slideInDown 0.5s ease; }
+#waddle-tabs { display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 2px solid rgba(0, 255, 255, 0.2); animation: slideInDown 0.6s ease 0.1s backwards; }
+.waddle-tab-btn { background: transparent; border: none; color: #999; font-family: Segoe UI, sans-serif; font-weight: 700; padding: 12px 20px; cursor: pointer; transition: all 0.3s ease; border-bottom: 3px solid transparent; font-size: 1rem; position: relative; }
+.waddle-tab-btn:hover { color: var(--waddle-primary); transform: translateY(-2px); }
+.waddle-tab-btn.active { color: var(--waddle-primary); border-bottom-color: var(--waddle-primary); box-shadow: 0 2px 10px rgba(0,255,255,0.3); }
+#waddle-menu-content { width: 320px; background: rgba(17, 17, 17, 0.9); border-radius: 16px; padding: 24px; color: white; font-size: 1.1rem; box-shadow: 0 0 20px rgba(0, 255, 255, 0.4), inset 0 0 20px rgba(0, 255, 255, 0.1); display: flex; flex-direction: column; gap: 24px; max-height: 70vh; overflow-y: auto; contain: layout style paint; border: 1px solid rgba(0, 255, 255, 0.3); animation: slideInUp 0.5s ease; }
+.waddle-tab-content { display: none; }
+.waddle-tab-content.active { display: flex; flex-direction: column; gap: 12px; animation: slideInUp 0.4s ease; }
+.waddle-menu-btn { background: rgba(0, 0, 0, 0.8); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); font-family: Segoe UI, sans-serif; font-weight: 700; padding: 16px 20px; border-radius: 10px; cursor: pointer; transition: all 0.3s ease; user-select: none; will-change: transform; position: relative; overflow: hidden; }
+.waddle-menu-btn:hover { background: var(--waddle-primary); color: #000; transform: translateY(-3px); box-shadow: 0 5px 20px rgba(0,255,255,0.4); }
+#waddle-hint-text { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: Consolas, monospace; color: var(--waddle-primary); font-size: 1.25rem; text-shadow: 0 0 4px var(--waddle-shadow), 0 0 10px var(--waddle-shadow); user-select: none; opacity: 0; pointer-events: none; z-index: 9999999; white-space: nowrap; text-align: center; }
 .counter { position: fixed; background: rgba(0, 255, 255, 0.9); color: #000; font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1.25rem; padding: 8px 14px; border-radius: 12px; box-shadow: 0 0 15px rgba(0, 255, 255, 0.7), inset 0 0 10px rgba(0,255,255,0.2); user-select: none; cursor: grab; z-index: 999999999; width: max-content; transition: all 0.2s ease; will-change: transform; animation: counterSlideIn 0.5s ease-out; contain: layout style paint; border: 1px solid rgba(0,255,255,0.5); }
 .counter.dragging { cursor: grabbing; transform: scale(1.08); box-shadow: 0 0 25px rgba(0, 255, 255, 0.9), inset 0 0 20px rgba(0,255,255,0.3); }
 .counter:hover:not(.dragging) { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 255, 255, 0.8); }
 .settings-section { border-top: 1px solid rgba(0, 255, 255, 0.3); padding-top: 24px; margin-top: 16px; }
-.settings-label { font-size: 0.9rem; color: var(--nova-primary); margin-bottom: 10px; display: block; font-weight: 600; }
-.color-picker-input { width: 100%; height: 50px; border: 2px solid var(--nova-primary); border-radius: 8px; cursor: pointer; background: rgba(0, 0, 0, 0.8); transition: all 0.3s ease; margin-top: 12px; }
+.settings-label { font-size: 0.9rem; color: var(--waddle-primary); margin-bottom: 10px; display: block; font-weight: 600; }
+.color-picker-input { width: 100%; height: 50px; border: 2px solid var(--waddle-primary); border-radius: 8px; cursor: pointer; background: rgba(0, 0, 0, 0.8); transition: all 0.3s ease; margin-top: 12px; }
 .color-picker-input:hover { box-shadow: 0 0 15px rgba(0, 255, 255, 0.6); transform: scale(1.02); }
-.keybind-input { width: 100%; background: rgba(0, 0, 0, 0.8); border: 2px solid var(--nova-primary); color: var(--nova-primary); font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1rem; padding: 8px 12px; border-radius: 8px; text-align: center; transition: all 0.3s ease; }
+.keybind-input { width: 100%; background: rgba(0, 0, 0, 0.8); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1rem; padding: 8px 12px; border-radius: 8px; text-align: center; transition: all 0.3s ease; }
 .keybind-input:focus { outline: none; box-shadow: 0 0 15px rgba(0, 255, 255, 0.6); background: rgba(0, 255, 255, 0.15); transform: scale(1.02); }
 `;
     document.head.appendChild(style);
 
     function showTooltip(tooltip, element) {
-        const existing = document.getElementById('nova-tooltip-popup');
+        const existing = document.getElementById('waddle-tooltip-popup');
         if (existing) existing.remove();
 
         const rect = element.getBoundingClientRect();
         const popup = document.createElement('div');
-        popup.id = 'nova-tooltip-popup';
+        popup.id = 'waddle-tooltip-popup';
         popup.style.cssText = `
             position: fixed;
             left: ${rect.left}px;
             top: ${rect.bottom + 10}px;
             background: rgba(0, 0, 0, 0.95);
-            color: var(--nova-primary);
+            color: var(--waddle-primary);
             padding: 12px 16px;
             border-radius: 8px;
-            border: 2px solid var(--nova-primary);
+            border: 2px solid var(--waddle-primary);
             font-family: Segoe UI, sans-serif;
             font-weight: 700;
             font-size: 0.95rem;
@@ -350,25 +350,29 @@
 
     function createSplashScreen() {
         const container = document.createElement('div');
-        container.id = 'nova-splash-container';
+        container.id = 'waddle-splash-container';
 
-        const logo = document.createElement('img');
-        logo.id = 'nova-splash-logo';
-        logo.src = 'https://raw.githubusercontent.com/TheM1ddleM1n/NovaCoreX/refs/heads/main/NovaCoreX.png';
+        const logo = document.createElement('div');
+        logo.id = 'waddle-splash-logo';
+        logo.style.fontSize = '80px';
+        logo.style.display = 'flex';
+        logo.style.alignItems = 'center';
+        logo.style.justifyContent = 'center';
+        logo.textContent = '🐧';
         container.appendChild(logo);
 
         const title = document.createElement('div');
-        title.id = 'nova-splash-title';
-        title.textContent = 'NovaCoreX';
+        title.id = 'waddle-splash-title';
+        title.textContent = '🐧 Waddle';
         container.appendChild(title);
 
         const message = document.createElement('div');
-        message.id = 'nova-splash-message';
+        message.id = 'waddle-splash-message';
         message.textContent = randomSplashMsg;
         container.appendChild(message);
 
         const button = document.createElement('button');
-        button.id = 'nova-splash-play';
+        button.id = 'waddle-splash-play';
         button.textContent = 'LAUNCH';
         container.appendChild(button);
 
@@ -378,8 +382,8 @@
 
     function createPersistentHeader() {
         const header = document.createElement('div');
-        header.id = 'nova-persistent-header';
-        header.textContent = 'NovaCoreX 💎';
+        header.id = 'waddle-persistent-header';
+        header.textContent = '🐧 Waddle';
         document.body.appendChild(header);
         cachedElements.header = header;
         return header;
@@ -387,7 +391,7 @@
 
     function createHintText() {
         const hint = document.createElement('div');
-        hint.id = 'nova-hint-text';
+        hint.id = 'waddle-hint-text';
         hint.textContent = `Press ${state.menuKey} To Open Menu!`;
         document.body.appendChild(hint);
         cachedElements.hint = hint;
@@ -582,7 +586,7 @@
 
     function createAntiAfkCounter() {
         const counter = createCounterElement({
-            id: 'anti-afk-counter', counterType: 'antiAfk', initialText: '⚡ Jumping in 5s', tooltip: 'Anti-AFK - Auto jumps to prevent kick',
+            id: 'anti-afk-counter', counterType: 'antiAfk', initialText: '🐧 Jumping in 5s', tooltip: 'Anti-AFK - Auto jumps to prevent kick',
             position: { left: '50px', top: '290px' }, isDraggable: true
         });
         state.counters.antiAfk = counter;
@@ -598,7 +602,7 @@
     }
 
     function updateAntiAfkCounter() {
-        updateCounterText('antiAfk', `⚡ Jumping in ${state.antiAfkCountdown}s`);
+        updateCounterText('antiAfk', `🐧 Jumping in ${state.antiAfkCountdown}s`);
     }
 
     function startAntiAfk() {
@@ -655,7 +659,7 @@
     }
 
     function updateSessionDisplay() {
-        const display = document.getElementById('nova-session-display');
+        const display = document.getElementById('waddle-session-display');
         if (!display || !state.sessionStats.startTime) return;
         const elapsed = Math.floor((Date.now() - state.sessionStats.startTime) / 1000);
         const hours = String(Math.floor(elapsed / 3600)).padStart(2, '0');
@@ -667,11 +671,11 @@
     const CHANGELOG = {
         '4.2': [
             '✨ Ultra animations with particle effects',
-            '🌟 Chromatic aberration on splash title',
+            '🐧 Penguin-themed UI overhaul',
             '💫 Enhanced glow and shimmer effects',
             '🎬 Smooth slide-in animations for menu',
             '⚡ Performance-optimized particle system',
-            '✨ Simplified splash screen design'
+            '🐧 Waddle splash screen design'
         ],
         '4.1': [
             '✨ Premium splash screen animation',
@@ -720,7 +724,7 @@
 
     function createChangelogModal() {
         const modal = document.createElement('div');
-        modal.id = 'nova-changelog-modal';
+        modal.id = 'waddle-changelog-modal';
         modal.style.cssText = `
             position: fixed;
             inset: 0;
@@ -737,7 +741,7 @@
         const container = document.createElement('div');
         container.style.cssText = `
             background: rgba(17, 17, 17, 0.95);
-            border: 2px solid var(--nova-primary);
+            border: 2px solid var(--waddle-primary);
             border-radius: 16px;
             max-width: 600px;
             width: 100%;
@@ -749,14 +753,14 @@
 
         const title = document.createElement('h2');
         title.style.cssText = `
-            color: var(--nova-primary);
+            color: var(--waddle-primary);
             text-align: center;
             margin-bottom: 20px;
             font-size: 2rem;
             font-weight: 900;
             animation: slideInDown 0.5s ease;
         `;
-        title.textContent = 'Changelog! 📜';
+        title.textContent = '🐧 Waddle Changelog!';
         container.appendChild(title);
 
         Object.entries(CHANGELOG).forEach(([version, changes]) => {
@@ -770,7 +774,7 @@
 
             const versionTitle = document.createElement('h3');
             versionTitle.style.cssText = `
-                color: var(--nova-primary);
+                color: var(--waddle-primary);
                 margin-bottom: 10px;
                 font-size: 1.3rem;
                 font-weight: 700;
@@ -806,7 +810,7 @@
         closeBtn.style.cssText = `
             width: 100%;
             margin-top: 20px;
-            background: var(--nova-primary);
+            background: var(--waddle-primary);
             color: #000;
             border: none;
             padding: 12px;
@@ -828,38 +832,38 @@
 
     function switchTab(tabName) {
         state.activeTab = tabName;
-        document.querySelectorAll('.nova-tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.nova-tab-content').forEach(content => content.classList.remove('active'));
+        document.querySelectorAll('.waddle-tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.waddle-tab-content').forEach(content => content.classList.remove('active'));
         document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
         document.querySelector(`[data-content="${tabName}"]`).classList.add('active');
     }
 
     function createMenu() {
         const menuOverlay = document.createElement('div');
-        menuOverlay.id = 'nova-menu-overlay';
+        menuOverlay.id = 'waddle-menu-overlay';
         const menuHeader = document.createElement('div');
-        menuHeader.id = 'nova-menu-header';
-        menuHeader.innerHTML = `NovaCoreX 💎 <span style="font-size: 0.5em; color: #888; display: block; margin-top: 10px;">v${SCRIPT_VERSION}</span>`;
+        menuHeader.id = 'waddle-menu-header';
+        menuHeader.innerHTML = `🐧 Waddle <span style="font-size: 0.5em; color: #888; display: block; margin-top: 10px;">v${SCRIPT_VERSION}</span>`;
         menuOverlay.appendChild(menuHeader);
 
         const tabsContainer = document.createElement('div');
-        tabsContainer.id = 'nova-tabs';
+        tabsContainer.id = 'waddle-tabs';
         const featuresTab = document.createElement('button');
-        featuresTab.className = 'nova-tab-btn active';
+        featuresTab.className = 'waddle-tab-btn active';
         featuresTab.setAttribute('data-tab', 'features');
         featuresTab.textContent = '⚙️ Features';
         featuresTab.onclick = () => switchTab('features');
         tabsContainer.appendChild(featuresTab);
 
         const settingsTab = document.createElement('button');
-        settingsTab.className = 'nova-tab-btn';
+        settingsTab.className = 'waddle-tab-btn';
         settingsTab.setAttribute('data-tab', 'settings');
         settingsTab.textContent = '🎨 Settings';
         settingsTab.onclick = () => switchTab('settings');
         tabsContainer.appendChild(settingsTab);
 
         const aboutTab = document.createElement('button');
-        aboutTab.className = 'nova-tab-btn';
+        aboutTab.className = 'waddle-tab-btn';
         aboutTab.setAttribute('data-tab', 'about');
         aboutTab.textContent = 'ℹ️ About';
         aboutTab.onclick = () => switchTab('about');
@@ -868,16 +872,16 @@
         menuOverlay.appendChild(tabsContainer);
 
         const menuContent = document.createElement('div');
-        menuContent.id = 'nova-menu-content';
+        menuContent.id = 'waddle-menu-content';
 
         // Features
         const featuresContent = document.createElement('div');
-        featuresContent.className = 'nova-tab-content active';
+        featuresContent.className = 'waddle-tab-content active';
         featuresContent.setAttribute('data-content', 'features');
 
         const createButton = (text, onClick, tooltip) => {
             const btn = document.createElement('button');
-            btn.className = 'nova-menu-btn';
+            btn.className = 'waddle-menu-btn';
             btn.textContent = text;
             btn.addEventListener('click', onClick);
             if (tooltip) {
@@ -894,37 +898,37 @@
             return btn;
         };
 
-        const fpsBtn = createButton('FPS Counter', () => {
-            if (state.fpsShown) { state.fpsShown = false; stopFPSCounter(); fpsBtn.textContent = 'FPS Counter'; }
-            else { state.fpsShown = true; startFPSCounter(); fpsBtn.textContent = 'Hide FPS Counter'; }
+        const fpsBtn = createButton('FPS Counter 🐧', () => {
+            if (state.fpsShown) { state.fpsShown = false; stopFPSCounter(); fpsBtn.textContent = 'FPS Counter 🐧'; }
+            else { state.fpsShown = true; startFPSCounter(); fpsBtn.textContent = 'Hide FPS Counter ✓'; }
         }, 'Shows your current frames per second');
         featuresContent.appendChild(fpsBtn);
 
-        const cpsBtn = createButton('CPS Counter', () => {
-            if (state.cpsShown) { stopCPSCounter(); cpsBtn.textContent = 'CPS Counter'; state.cpsShown = false; }
-            else { startCPSCounter(); cpsBtn.textContent = 'Hide CPS Counter'; state.cpsShown = true; }
+        const cpsBtn = createButton('CPS Counter 🐧', () => {
+            if (state.cpsShown) { stopCPSCounter(); cpsBtn.textContent = 'CPS Counter 🐧'; state.cpsShown = false; }
+            else { startCPSCounter(); cpsBtn.textContent = 'Hide CPS Counter ✓'; state.cpsShown = true; }
         }, 'Shows your clicks per second');
         featuresContent.appendChild(cpsBtn);
 
-        const realTimeBtn = createButton('Real Time', () => {
-            if (state.realTimeShown) { stopRealTimeCounter(); realTimeBtn.textContent = 'Real Time'; state.realTimeShown = false; }
-            else { startRealTimeCounter(); realTimeBtn.textContent = 'Hide Real Time'; state.realTimeShown = true; }
+        const realTimeBtn = createButton('Real Time 🐧', () => {
+            if (state.realTimeShown) { stopRealTimeCounter(); realTimeBtn.textContent = 'Real Time 🐧'; state.realTimeShown = false; }
+            else { startRealTimeCounter(); realTimeBtn.textContent = 'Hide Real Time ✓'; state.realTimeShown = true; }
         }, 'Displays current time without fullscreen');
         featuresContent.appendChild(realTimeBtn);
 
-        const pingBtn = createButton('Ping Counter', () => {
-            if (state.pingShown) { stopPingCounter(); pingBtn.textContent = 'Ping Counter'; state.pingShown = false; }
-            else { startPingCounter(); pingBtn.textContent = 'Hide Ping Counter'; state.pingShown = true; }
+        const pingBtn = createButton('Ping Counter 🐧', () => {
+            if (state.pingShown) { stopPingCounter(); pingBtn.textContent = 'Ping Counter 🐧'; state.pingShown = false; }
+            else { startPingCounter(); pingBtn.textContent = 'Hide Ping Counter ✓'; state.pingShown = true; }
         }, 'Shows your network latency');
         featuresContent.appendChild(pingBtn);
 
-        const antiAfkBtn = createButton('Anti-AFK', () => {
-            if (state.antiAfkEnabled) { stopAntiAfk(); antiAfkBtn.textContent = 'Anti-AFK'; state.antiAfkEnabled = false; }
-            else { startAntiAfk(); antiAfkBtn.textContent = 'Disable Anti-AFK'; state.antiAfkEnabled = true; }
+        const antiAfkBtn = createButton('Anti-AFK 🐧', () => {
+            if (state.antiAfkEnabled) { stopAntiAfk(); antiAfkBtn.textContent = 'Anti-AFK 🐧'; state.antiAfkEnabled = false; }
+            else { startAntiAfk(); antiAfkBtn.textContent = 'Disable Anti-AFK ✓'; state.antiAfkEnabled = true; }
         }, 'Auto-jumps every 5 seconds to prevent kick');
         featuresContent.appendChild(antiAfkBtn);
 
-        const fullscreenBtn = createButton('Auto Fullscreen', () => {
+        const fullscreenBtn = createButton('Auto Fullscreen 🐧', () => {
             const elem = document.documentElement;
             if (!document.fullscreenElement) {
                 elem.requestFullscreen().catch(err => { console.error(`Fullscreen error: ${err.message}`); });
@@ -938,7 +942,7 @@
 
         // Settings
         const settingsContent = document.createElement('div');
-        settingsContent.className = 'nova-tab-content';
+        settingsContent.className = 'waddle-tab-content';
         settingsContent.setAttribute('data-content', 'settings');
 
         const colorSection = document.createElement('div');
@@ -954,8 +958,8 @@
         colorInput.addEventListener('change', (e) => { applyTheme(e.target.value); });
         colorInput.addEventListener('input', (e) => {
             const color = e.target.value;
-            document.documentElement.style.setProperty('--nova-primary', color);
-            document.documentElement.style.setProperty('--nova-shadow', color);
+            document.documentElement.style.setProperty('--waddle-primary', color);
+            document.documentElement.style.setProperty('--waddle-shadow', color);
         });
         colorSection.appendChild(colorInput);
         settingsContent.appendChild(colorSection);
@@ -993,8 +997,8 @@
         sessionDisplay.style.cssText = `
             width: 100%;
             background: rgba(0, 0, 0, 0.8);
-            border: 2px solid var(--nova-primary);
-            color: var(--nova-primary);
+            border: 2px solid var(--waddle-primary);
+            color: var(--waddle-primary);
             font-family: Segoe UI, sans-serif;
             font-weight: 700;
             font-size: 1.2rem;
@@ -1004,7 +1008,7 @@
             margin-top: 12px;
             box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
         `;
-        sessionDisplay.id = 'nova-session-display';
+        sessionDisplay.id = 'waddle-session-display';
         sessionDisplay.textContent = '⏱️ 00:00:00';
         sessionSection.appendChild(sessionDisplay);
         settingsContent.appendChild(sessionSection);
@@ -1013,7 +1017,7 @@
 
         // About
         const aboutContent = document.createElement('div');
-        aboutContent.className = 'nova-tab-content';
+        aboutContent.className = 'waddle-tab-content';
         aboutContent.setAttribute('data-content', 'about');
         aboutContent.style.cssText = 'flex-direction: column; gap: 16px;';
 
@@ -1033,13 +1037,13 @@
         creditsSection.innerHTML = `
     <div style="margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid rgba(0, 255, 255, 0.2);">
         <strong style="
-            color: var(--nova-primary);
+            color: var(--waddle-primary);
             font-size: 1rem;
             display: block;
             margin-bottom: 6px;
             text-shadow: 0 0 8px rgba(0,255,255,0.25);
         ">
-            ✨ NovaCoreX v${SCRIPT_VERSION}
+            🐧 Waddle v${SCRIPT_VERSION}
         </strong>
         <div style="font-size: 0.8rem; color: #666;">
             Premium Miniblox Enhancement
@@ -1069,7 +1073,7 @@
                  width="28" height="28"
                  style="border-radius: 50%; box-shadow: 0 0 8px rgba(243,156,18,0.35);">
             <div>
-                <strong style="color: #f39c12; font-size: 0.75rem;">🔧 Enhanced By</strong>
+                <strong style="color: #f39c12; font-size: 0.75rem;">🐧 Waddle Enhanced By</strong>
                 <div>
                     <a href="https://github.com/TheM1ddleM1n"
                        target="_blank"
@@ -1090,7 +1094,7 @@
         border-top: 1px solid rgba(0, 255, 255, 0.15);
         text-align: center;
     ">
-        MIT License • Open Source • Made with 💎
+        MIT License • Open Source • Made with 🐧
     </div>
 `;
         aboutContent.appendChild(creditsSection);
@@ -1122,7 +1126,7 @@
             enhancementsBtn.style.transform = 'translateY(0)';
         };
         enhancementsBtn.onclick = () => {
-            window.open(`https://github.com/${GITHUB_REPO}/issues/new?labels=enhancement&title=Enhancement%20Request&body=**NovaCoreX Version:** v${SCRIPT_VERSION}`, '_blank');
+            window.open(`https://github.com/${GITHUB_REPO}/issues/new?labels=enhancement&title=Enhancement%20Request&body=**Waddle Version:** v${SCRIPT_VERSION}`, '_blank');
         };
         aboutContent.appendChild(enhancementsBtn);
 
@@ -1152,7 +1156,7 @@
             bugBtn.style.transform = 'translateY(0)';
         };
         bugBtn.onclick = () => {
-            window.open(`https://github.com/${GITHUB_REPO}/issues/new?labels=bug&title=Bug%20Report&body=**NovaCoreX Version:** v${SCRIPT_VERSION}`, '_blank');
+            window.open(`https://github.com/${GITHUB_REPO}/issues/new?labels=bug&title=Bug%20Report&body=**Waddle Version:** v${SCRIPT_VERSION}`, '_blank');
         };
         aboutContent.appendChild(bugBtn);
 
@@ -1234,12 +1238,12 @@
                 }
             }
         } catch (e) {
-            console.error('[NovaCoreX] Failed to restore any settings:', e);
+            console.error('[Waddle] Failed to restore any settings:', e);
         }
     }
 
     function globalCleanup() {
-        console.log('[NovaCoreX] Cleaning up resources..');
+        console.log('[Waddle] Cleaning up resources..');
         stopFPSCounter();
         stopCPSCounter();
         stopRealTimeCounter();
@@ -1261,13 +1265,13 @@
         state.performanceLoopRunning = false;
         state.cpsClicks = [];
         state.pingStats.pingHistory = [];
-        console.log('[NovaCoreX] Cleanup complete!');
+        console.log('[Waddle] Cleanup complete!');
     }
 
     window.addEventListener('beforeunload', globalCleanup);
 
     function init() {
-        console.log(`[NovaCoreX] Initializing v${SCRIPT_VERSION}...`);
+        console.log(`[Waddle] Initializing v${SCRIPT_VERSION}...`);
         loadCustomColor();
         initSessionStats();
 
@@ -1281,8 +1285,8 @@
         const sessionDisplayInterval = setInterval(updateSessionDisplay, 1000);
         trackInterval(sessionDisplayInterval);
 
-        document.getElementById('nova-splash-play').onclick = () => {
-            const splash = document.getElementById('nova-splash-container');
+        document.getElementById('waddle-splash-play').onclick = () => {
+            const splash = document.getElementById('waddle-splash-container');
             splash.style.opacity = '0';
             const t = setTimeout(() => {
                 if (splash.parentElement) splash.remove();
@@ -1291,7 +1295,7 @@
                 const t3 = setTimeout(() => { hint.style.opacity = '0'; }, TIMING.HINT_TEXT_DURATION);
                 trackTimeout(t3);
                 restoreSavedState();
-                console.log('[NovaCoreX] Initialization completed!');
+                console.log('[Waddle] Initialization completed!');
             }, 800);
             trackTimeout(t);
         };
