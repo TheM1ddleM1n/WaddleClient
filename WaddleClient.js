@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         WaddleClient4Miniblox
 // @namespace    M1ddleM1n and Scripter on top!
-// @version      4.2
-// @description  Waddle V4.2 with high performance!
+// @version      4.4
+// @description  Waddle V4.4 with high performance and modern UI!
 // @author       Scripter, TheM1ddleM1n
 // @icon         https://raw.githubusercontent.com/TheM1ddleM1n/WaddleClient/refs/heads/main/WaddlePic.png
 // @match        https://miniblox.io/
@@ -22,7 +22,7 @@
     const SETTINGS_KEY = 'waddle_settings';
     const DEFAULT_MENU_KEY = '\\';
     const CUSTOM_COLOR_KEY = 'waddle_custom_color';
-    const SCRIPT_VERSION = '4.2';
+    const SCRIPT_VERSION = '4.4';
     const DEFAULT_COLOR = '#00ffff';
 
     const stateData = {
@@ -730,7 +730,7 @@
         timerCard.className = 'waddle-card';
         timerCard.style.textAlign = 'center';
         timerCard.innerHTML = `
-            <div class="waddle-card-header" style="justify-content: center;">⏱️ Session Time</div>
+            <div class="waddle-card-header" style="justify-content: center;">⏱️ Session Timer</div>
             <div id="waddle-session-timer" style="
                 font-size: 2.5rem;
                 font-weight: 900;
@@ -783,7 +783,7 @@
                 border-top: 1px solid rgba(0, 255, 255, 0.15);
                 text-align: center;
             ">
-                v${SCRIPT_VERSION} • MIT License • Made with 🐧
+                v${SCRIPT_VERSION} • MIT License • Made with 🗣️🔥
             </div>
         `;
         aboutContent.appendChild(creditsCard);
@@ -799,7 +799,7 @@
         enhancementsBtn.className = 'waddle-menu-btn';
         enhancementsBtn.textContent = '💡 Suggest';
         enhancementsBtn.onclick = () => {
-            window.open(`https://github.com/TheM1ddleM1n/NovaCoreX/issues/new?labels=enhancement&title=Enhancement%20Request&body=**Waddle Version:** v${SCRIPT_VERSION}`, '_blank');
+            window.open(`https://github.com/TheM1ddleM1n/WaddleClient/issues/new?labels=enhancement&title=Enhancement%20Request&body=**Waddle Version:** v${SCRIPT_VERSION}`, '_blank');
         };
         linksGrid.appendChild(enhancementsBtn);
 
@@ -807,7 +807,7 @@
         bugBtn.className = 'waddle-menu-btn';
         bugBtn.textContent = '🐛 Report Bug';
         bugBtn.onclick = () => {
-            window.open(`https://github.com/TheM1ddleM1n/NovaCoreX/issues/new?labels=bug&title=Bug%20Report&body=**Waddle Version:** v${SCRIPT_VERSION}`, '_blank');
+            window.open(`https://github.com/TheM1ddleM1n/WaddleClient/issues/new?labels=bug&title=Bug%20Report&body=**Waddle Version:** v${SCRIPT_VERSION}`, '_blank');
         };
         linksGrid.appendChild(bugBtn);
 
@@ -892,11 +892,11 @@
         setupKeyboardHandler();
         showToast(`Press ${stateData.menuKey} To Open Menu!`);
         setTimeout(() => restoreSavedState(), 100);
-
+        
         // Start session timer
         updateSessionTimer();
         stateData.intervals.sessionTimer = setInterval(updateSessionTimer, 1000);
-
+        
         console.log('[Waddle] Initialization completed!');
     }
 
