@@ -34,7 +34,7 @@
         cpsClicks: [], rafId: null,
         antiAfkCountdown: 5,
         performanceLoopRunning: false, activeRAFFeatures: new Set(),
-        pingStats: { currentPing: 0, averagePing: 0, peakPing: 0, minPing: Infinity, pingHistory: [] },
+        pingStats: { currentPing: 0, pingHistory: [] },
         sessionStats: {
             totalClicks: 0, totalKeys: 0, peakCPS: 0, peakFPS: 0, sessionCount: 0,
             startTime: null, clicksBySecond: [], fpsHistory: [], averageFPS: 0,
@@ -133,29 +133,29 @@
 @keyframes toastSlideOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
 @media (prefers-reduced-motion: reduce) { * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
 
-#waddle-menu-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(15px); z-index: 10000000; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 40px; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; user-select: none; contain: strict; will-change: opacity; }
+#waddle-menu-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(15px); z-index: 10000000; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 40px; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; user-select: none; }
 #waddle-menu-overlay.show { opacity: 1; pointer-events: auto; }
-#waddle-menu-header { font-family: Segoe UI, sans-serif; font-size: 3rem; font-weight: 900; color: var(--waddle-primary); text-shadow: 0 0 8px var(--waddle-shadow), 0 0 20px var(--waddle-shadow); margin-bottom: 30px; animation: slideInDown 0.4s ease; contain: layout style paint; }
-#waddle-tabs { display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 2px solid rgba(0, 255, 255, 0.2); animation: slideInDown 0.4s ease 0.1s backwards; contain: layout style paint; }
+#waddle-menu-header { font-family: Segoe UI, sans-serif; font-size: 3rem; font-weight: 900; color: var(--waddle-primary); text-shadow: 0 0 8px var(--waddle-shadow), 0 0 20px var(--waddle-shadow); margin-bottom: 30px; animation: slideInDown 0.4s ease; }
+#waddle-tabs { display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 2px solid rgba(0, 255, 255, 0.2); animation: slideInDown 0.4s ease 0.1s backwards; }
 .waddle-tab-btn { background: transparent; border: none; color: #999; font-family: Segoe UI, sans-serif; font-weight: 700; padding: 12px 20px; cursor: pointer; transition: color 0.2s ease, border-color 0.2s ease; border-bottom: 3px solid transparent; font-size: 1rem; position: relative; }
 .waddle-tab-btn:hover { color: var(--waddle-primary); }
 .waddle-tab-btn.active { color: var(--waddle-primary); border-bottom-color: var(--waddle-primary); box-shadow: 0 2px 10px rgba(0,255,255,0.3); }
-#waddle-menu-content { width: 320px; background: rgba(17, 17, 17, 0.9); border-radius: 16px; padding: 24px; color: white; font-size: 1.1rem; box-shadow: 0 0 20px rgba(0, 255, 255, 0.4), inset 0 0 20px rgba(0, 255, 255, 0.1); display: flex; flex-direction: column; gap: 24px; max-height: 70vh; overflow-y: auto; contain: layout style paint; border: 1px solid rgba(0, 255, 255, 0.3); animation: slideInUp 0.4s ease; }
+#waddle-menu-content { width: 320px; background: rgba(17, 17, 17, 0.9); border-radius: 16px; padding: 24px; color: white; font-size: 1.1rem; box-shadow: 0 0 20px rgba(0, 255, 255, 0.4), inset 0 0 20px rgba(0, 255, 255, 0.1); display: flex; flex-direction: column; gap: 24px; max-height: 70vh; overflow-y: auto; border: 1px solid rgba(0, 255, 255, 0.3); animation: slideInUp 0.4s ease; }
 .waddle-tab-content { display: none; }
 .waddle-tab-content.active { display: flex; flex-direction: column; gap: 12px; animation: slideInUp 0.3s ease; }
-.waddle-menu-btn { background: rgba(0, 0, 0, 0.8); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); font-family: Segoe UI, sans-serif; font-weight: 700; padding: 16px 20px; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; user-select: none; position: relative; overflow: hidden; contain: layout style paint; }
+.waddle-menu-btn { background: rgba(0, 0, 0, 0.8); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); font-family: Segoe UI, sans-serif; font-weight: 700; padding: 16px 20px; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; user-select: none; position: relative; overflow: hidden; }
 .waddle-menu-btn:hover { background: var(--waddle-primary); color: #000; transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0,255,255,0.4); }
-.counter { position: fixed; background: rgba(0, 255, 255, 0.9); color: #000; font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1.25rem; padding: 8px 14px; border-radius: 12px; box-shadow: 0 0 15px rgba(0, 255, 255, 0.7), inset 0 0 10px rgba(0,255,255,0.2); user-select: none; cursor: grab; z-index: 999999999; width: max-content; transition: box-shadow 0.15s ease; will-change: transform; animation: counterSlideIn 0.4s ease-out; contain: layout style paint; border: 1px solid rgba(0,255,255,0.5); }
+.counter { position: fixed; background: rgba(0, 255, 255, 0.9); color: #000; font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1.25rem; padding: 8px 14px; border-radius: 12px; box-shadow: 0 0 15px rgba(0, 255, 255, 0.7), inset 0 0 10px rgba(0,255,255,0.2); user-select: none; cursor: grab; z-index: 999999999; width: max-content; transition: box-shadow 0.15s ease; animation: counterSlideIn 0.4s ease-out; border: 1px solid rgba(0,255,255,0.5); }
 .counter.dragging { cursor: grabbing; transform: scale(1.08); box-shadow: 0 0 25px rgba(0, 255, 255, 0.9), inset 0 0 20px rgba(0,255,255,0.3); }
 .counter:hover:not(.dragging) { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 255, 255, 0.8); }
 .settings-section { border-top: 1px solid rgba(0, 255, 255, 0.3); padding-top: 24px; margin-top: 16px; }
 .settings-label { font-size: 0.9rem; color: var(--waddle-primary); margin-bottom: 10px; display: block; font-weight: 600; }
-.color-picker-input { width: 100%; height: 50px; border: 2px solid var(--waddle-primary); border-radius: 8px; cursor: pointer; background: rgba(0, 0, 0, 0.8); transition: box-shadow 0.2s ease; margin-top: 12px; contain: layout style paint; }
+.color-picker-input { width: 100%; height: 50px; border: 2px solid var(--waddle-primary); border-radius: 8px; cursor: pointer; background: rgba(0, 0, 0, 0.8); transition: box-shadow 0.2s ease; margin-top: 12px; }
 .color-picker-input:hover { box-shadow: 0 0 15px rgba(0, 255, 255, 0.6); }
-.keybind-input { width: 100%; background: rgba(0, 0, 0, 0.8); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1rem; padding: 8px 12px; border-radius: 8px; text-align: center; transition: box-shadow 0.2s ease; contain: layout style paint; }
+.keybind-input { width: 100%; background: rgba(0, 0, 0, 0.8); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1rem; padding: 8px 12px; border-radius: 8px; text-align: center; transition: box-shadow 0.2s ease; }
 .keybind-input:focus { outline: none; box-shadow: 0 0 15px rgba(0, 255, 255, 0.6); background: rgba(0, 255, 255, 0.15); }
 
-#waddle-toast { position: fixed; bottom: 60px; right: 50px; background: rgba(0, 0, 0, 0.95); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); padding: 16px 24px; border-radius: 12px; font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1rem; z-index: 10000001; box-shadow: 0 0 20px rgba(0, 255, 255, 0.5), inset 0 0 10px rgba(0, 255, 255, 0.2); animation: toastSlideIn 0.3s ease; pointer-events: none; max-width: 280px; text-align: center; contain: layout style paint; will-change: opacity, transform; }
+#waddle-toast { position: fixed; bottom: 60px; right: 50px; background: rgba(0, 0, 0, 0.95); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); padding: 16px 24px; border-radius: 12px; font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1rem; z-index: 10000001; box-shadow: 0 0 20px rgba(0, 255, 255, 0.5), inset 0 0 10px rgba(0, 255, 255, 0.2); animation: toastSlideIn 0.3s ease; pointer-events: none; max-width: 280px; text-align: center; }
 #waddle-toast.hide { animation: toastSlideOut 0.3s ease forwards; }
 `;
     document.head.appendChild(style);
@@ -416,10 +416,6 @@
             stateData.pingStats.currentPing = ping;
             stateData.pingStats.pingHistory.push(ping);
             if (stateData.pingStats.pingHistory.length > 60) stateData.pingStats.pingHistory.shift();
-            const sum = stateData.pingStats.pingHistory.reduce((a, b) => a + b, 0);
-            stateData.pingStats.averagePing = Math.round(sum / stateData.pingStats.pingHistory.length);
-            stateData.pingStats.peakPing = Math.max(...stateData.pingStats.pingHistory);
-            stateData.pingStats.minPing = Math.min(...stateData.pingStats.pingHistory);
             updateCounterText('ping', `PING: ${ping}ms`);
         });
     }
@@ -643,12 +639,8 @@
         colorInput.type = 'color';
         colorInput.className = 'color-picker-input';
         colorInput.value = stateData.customColor;
-        const debouncedApplyTheme = debounce(applyTheme, 100);
         colorInput.addEventListener('input', (e) => {
-            const color = e.target.value;
-            document.documentElement.style.setProperty('--waddle-primary', color);
-            document.documentElement.style.setProperty('--waddle-shadow', color);
-            debouncedApplyTheme(color);
+            applyTheme(e.target.value);
         });
         colorSection.appendChild(colorInput);
         settingsContent.appendChild(colorSection);
