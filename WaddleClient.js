@@ -15,14 +15,13 @@
 
     const TIMING = {
         HINT_TEXT_DURATION: 4000, FPS_UPDATE_INTERVAL: 500, CPS_UPDATE_INTERVAL: 250,
-        CPS_WINDOW: 1000, PING_UPDATE_INTERVAL: 2000, SAVE_DEBOUNCE: 500, STATS_UPDATE_INTERVAL: 10000,
+        CPS_WINDOW: 1000, PING_UPDATE_INTERVAL: 2000, SAVE_DEBOUNCE: 500,
         TOAST_DURATION: 3000
     };
 
     const SETTINGS_KEY = 'waddle_settings';
     const DEFAULT_MENU_KEY = '\\';
     const CUSTOM_COLOR_KEY = 'waddle_custom_color';
-    const SESSION_COUNT_KEY = 'waddle_session_count';
     const SCRIPT_VERSION = '4.2';
     const DEFAULT_COLOR = '#00ffff';
 
@@ -30,16 +29,11 @@
         fpsShown: false, cpsShown: false, realTimeShown: false, pingShown: false, antiAfkEnabled: false,
         menuKey: DEFAULT_MENU_KEY,
         counters: { fps: null, cps: null, realTime: null, ping: null, antiAfk: null },
-        intervals: { fps: null, cps: null, realTime: null, ping: null, antiAfk: null, statsUpdate: null },
+        intervals: { fps: null, cps: null, realTime: null, ping: null, antiAfk: null },
         cpsClicks: [], rafId: null,
         antiAfkCountdown: 5,
         performanceLoopRunning: false, activeRAFFeatures: new Set(),
         pingStats: { currentPing: 0, pingHistory: [] },
-        sessionStats: {
-            totalClicks: 0, totalKeys: 0, peakCPS: 0, peakFPS: 0, sessionCount: 0,
-            startTime: null, clicksBySecond: [], fpsHistory: [], averageFPS: 0,
-            averageCPS: 0, totalSessionTime: 0
-        },
         customColor: DEFAULT_COLOR,
         activeTab: 'features',
         keyboardHandler: null,
@@ -94,33 +88,6 @@
         } catch (e) {
             applyTheme(DEFAULT_COLOR);
         }
-    }
-
-    function initSessionStats() {
-        safeExecute(() => {
-            try {
-                const sessionCount = parseInt(localStorage.getItem(SESSION_COUNT_KEY) || '0') + 1;
-                stateData.sessionStats.sessionCount = sessionCount;
-                stateData.sessionStats.startTime = Date.now();
-                localStorage.setItem(SESSION_COUNT_KEY, sessionCount.toString());
-            } catch (e) {}
-            const intervalId = setInterval(updateStatsHistory, TIMING.STATS_UPDATE_INTERVAL);
-            stateData.intervals.statsUpdate = intervalId;
-        });
-    }
-
-    function updateStatsHistory() {
-        safeExecute(() => {
-            if (!stateData.sessionStats.startTime) return;
-            const now = Date.now();
-            const sessionTime = Math.floor((now - stateData.sessionStats.startTime) / 1000);
-            if (sessionTime > stateData.sessionStats.clicksBySecond.length) {
-                stateData.sessionStats.clicksBySecond.push(stateData.cpsClicks.length);
-                const sum = stateData.sessionStats.clicksBySecond.reduce((a, b) => a + b, 0);
-                stateData.sessionStats.averageCPS = (sum / stateData.sessionStats.clicksBySecond.length).toFixed(1);
-            }
-            stateData.sessionStats.totalSessionTime = sessionTime;
-        });
     }
 
     const style = document.createElement('style');
@@ -221,7 +188,6 @@
                     updateCounterText('fps', `FPS: ${fps}`);
                     lastFps = fps;
                 }
-                if (fps > stateData.sessionStats.peakFPS) stateData.sessionStats.peakFPS = fps;
                 frameCount = 0;
                 lastFpsUpdate = currentTime;
             }
@@ -314,10 +280,8 @@
             if (e.button === 0) {
                 const now = performance.now();
                 stateData.cpsClicks.push(now);
-                stateData.sessionStats.totalClicks++;
                 const cutoff = now - TIMING.CPS_WINDOW;
                 while (stateData.cpsClicks.length > 0 && stateData.cpsClicks[0] < cutoff) stateData.cpsClicks.shift();
-                if (stateData.cpsClicks.length > stateData.sessionStats.peakCPS) stateData.sessionStats.peakCPS = stateData.cpsClicks.length;
             }
         };
 
@@ -873,7 +837,7 @@
         }
 
         Object.values(stateData.intervals).forEach(interval => { if (interval) clearInterval(interval); });
-        stateData.intervals = { fps: null, cps: null, realTime: null, ping: null, antiAfk: null, statsUpdate: null };
+        stateData.intervals = { fps: null, cps: null, realTime: null, ping: null, antiAfk: null };
         stateData.cpsClicks = [];
         stateData.pingStats.pingHistory = [];
 
@@ -887,7 +851,6 @@
     function init() {
         console.log(`[Waddle] Initializing v${SCRIPT_VERSION}...`);
         loadCustomColor();
-        initSessionStats();
         createMenu();
         setupKeyboardHandler();
         showToast(`Press ${stateData.menuKey} To Open Menu!`);
