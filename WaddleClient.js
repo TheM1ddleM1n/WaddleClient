@@ -11,11 +11,11 @@
 
 (function() {
     'use strict';
-    document.title = '🐧 𝙒𝙖𝙙𝙙𝙡𝙚 𝙁𝙤𝙧 𝙈𝙞𝙣𝙞𝙗𝙡𝙤𝙭!';
+    document.title = '🐧 𝙒𝙖𝙙𝙙𝙡𝙚 4 𝙈𝙞𝙣𝙞𝙗𝙡𝙤𝙭!';
 
     const TIMING = {
         HINT_TEXT_DURATION: 4000, FPS_UPDATE_INTERVAL: 500, CPS_UPDATE_INTERVAL: 250,
-        CPS_WINDOW: 1000, PING_UPDATE_INTERVAL: 2000, SAVE_DEBOUNCE: 2000, STATS_UPDATE_INTERVAL: 10000,
+        CPS_WINDOW: 1000, PING_UPDATE_INTERVAL: 2000, SAVE_DEBOUNCE: 500, STATS_UPDATE_INTERVAL: 10000,
         TOAST_DURATION: 3000
     };
 
@@ -24,25 +24,16 @@
     const CUSTOM_COLOR_KEY = 'waddle_custom_color';
     const SESSION_COUNT_KEY = 'waddle_session_count';
     const SCRIPT_VERSION = '4.2';
-    const GITHUB_REPO = 'TheM1ddleM1n/NovaCoreX';
     const DEFAULT_COLOR = '#00ffff';
 
     const stateData = {
-        fpsShown: false, cpsShown: false, realTimeShown: false, pingShown: false, antiAfkEnabled: false, sessionTimerShown: false,
+        fpsShown: false, cpsShown: false, realTimeShown: false, pingShown: false, antiAfkEnabled: false,
         menuKey: DEFAULT_MENU_KEY,
-        counters: { fps: null, cps: null, realTime: null, ping: null, antiAfk: null, sessionTimer: null },
-        intervals: { fps: null, cps: null, realTime: null, ping: null, antiAfk: null, statsUpdate: null, sessionTimer: null },
-        drag: {
-            fps: { active: false, offsetX: 0, offsetY: 0 },
-            cps: { active: false, offsetX: 0, offsetY: 0 },
-            realTime: { active: false, offsetX: 0, offsetY: 0 },
-            ping: { active: false, offsetX: 0, offsetY: 0 },
-            antiAfk: { active: false, offsetX: 0, offsetY: 0 }
-        },
+        counters: { fps: null, cps: null, realTime: null, ping: null, antiAfk: null },
+        intervals: { fps: null, cps: null, realTime: null, ping: null, antiAfk: null, statsUpdate: null },
         cpsClicks: [], rafId: null,
-        cleanupFunctions: { fps: null, cps: null, realTime: null, ping: null, antiAfk: null },
         antiAfkCountdown: 5,
-        performanceLoopRunning: false, activeRAFFeatures: new Set(), eventListeners: new Map(),
+        performanceLoopRunning: false, activeRAFFeatures: new Set(),
         pingStats: { currentPing: 0, averagePing: 0, peakPing: 0, minPing: Infinity, pingHistory: [] },
         sessionStats: {
             totalClicks: 0, totalKeys: 0, peakCPS: 0, peakFPS: 0, sessionCount: 0,
@@ -50,33 +41,13 @@
             averageCPS: 0, totalSessionTime: 0
         },
         customColor: DEFAULT_COLOR,
-        pendingTimeouts: new Set(),
-        pendingIntervals: new Set(),
-        activeTab: 'features'
+        activeTab: 'features',
+        keyboardHandler: null,
+        menuOverlay: null
     };
-
-    const cachedElements = {};
-    let cpsClickListenerRef = null;
 
     function safeExecute(fn, fallback = null) {
         try { return fn(); } catch (e) { console.error('[Waddle Error]:', e); return fallback; }
-    }
-
-    function throttle(func, delay) {
-        let lastCall = 0, timeout;
-        return function(...args) {
-            const now = performance.now();
-            if (now - lastCall >= delay) {
-                lastCall = now;
-                func.apply(this, args);
-            } else if (!timeout) {
-                timeout = setTimeout(() => {
-                    lastCall = performance.now();
-                    timeout = null;
-                    func.apply(this, args);
-                }, delay - (now - lastCall));
-            }
-        };
     }
 
     function debounce(func, delay) {
@@ -85,24 +56,6 @@
             clearTimeout(timeoutId);
             timeoutId = setTimeout(() => func.apply(this, args), delay);
         };
-    }
-
-    function trackTimeout(id) {
-        stateData.pendingTimeouts.add(id);
-        return id;
-    }
-
-    function untrackTimeout(id) {
-        stateData.pendingTimeouts.delete(id);
-    }
-
-    function trackInterval(id) {
-        stateData.pendingIntervals.add(id);
-        return id;
-    }
-
-    function untrackInterval(id) {
-        stateData.pendingIntervals.delete(id);
     }
 
     function saveSettings() {
@@ -115,7 +68,8 @@
                     fps: stateData.counters.fps ? { left: stateData.counters.fps.style.left, top: stateData.counters.fps.style.top } : null,
                     cps: stateData.counters.cps ? { left: stateData.counters.cps.style.left, top: stateData.counters.cps.style.top } : null,
                     realTime: stateData.counters.realTime ? { left: stateData.counters.realTime.style.left, top: stateData.counters.realTime.style.top } : null,
-                    ping: stateData.counters.ping ? { left: stateData.counters.ping.style.left, top: stateData.counters.ping.style.top } : null
+                    ping: stateData.counters.ping ? { left: stateData.counters.ping.style.left, top: stateData.counters.ping.style.top } : null,
+                    antiAfk: stateData.counters.antiAfk ? { left: stateData.counters.antiAfk.style.left, top: stateData.counters.antiAfk.style.top } : null
                 }
             };
             try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
@@ -125,43 +79,17 @@
 
     const debouncedSave = debounce(saveSettings, TIMING.SAVE_DEBOUNCE);
 
-    const state = new Proxy(stateData, {
-        set(target, prop, value) {
-            const oldValue = target[prop];
-            target[prop] = value;
-            if ((prop.includes('Shown') || prop === 'customColor') && oldValue !== value) debouncedSave();
-            return true;
-        }
-    });
-
-    function addManagedListener(element, event, handler, id) {
-        if (!element) return;
-        element.addEventListener(event, handler, { passive: true });
-        if (!state.eventListeners.has(id)) state.eventListeners.set(id, []);
-        state.eventListeners.get(id).push({ element, event, handler });
-    }
-
-    function removeAllListeners(id) {
-        const listeners = state.eventListeners.get(id);
-        if (listeners) {
-            listeners.forEach(({ element, event, handler }) => {
-                if (element) element.removeEventListener(event, handler);
-            });
-            state.eventListeners.delete(id);
-        }
-    }
-
     function applyTheme(color) {
         document.documentElement.style.setProperty('--waddle-primary', color);
         document.documentElement.style.setProperty('--waddle-shadow', color);
-        state.customColor = color;
+        stateData.customColor = color;
         try { localStorage.setItem(CUSTOM_COLOR_KEY, color); } catch (e) {}
     }
 
     function loadCustomColor() {
         try {
             const savedColor = localStorage.getItem(CUSTOM_COLOR_KEY) || DEFAULT_COLOR;
-            state.customColor = savedColor;
+            stateData.customColor = savedColor;
             applyTheme(savedColor);
         } catch (e) {
             applyTheme(DEFAULT_COLOR);
@@ -172,27 +100,26 @@
         safeExecute(() => {
             try {
                 const sessionCount = parseInt(localStorage.getItem(SESSION_COUNT_KEY) || '0') + 1;
-                state.sessionStats.sessionCount = sessionCount;
-                state.sessionStats.startTime = Date.now();
+                stateData.sessionStats.sessionCount = sessionCount;
+                stateData.sessionStats.startTime = Date.now();
                 localStorage.setItem(SESSION_COUNT_KEY, sessionCount.toString());
             } catch (e) {}
             const intervalId = setInterval(updateStatsHistory, TIMING.STATS_UPDATE_INTERVAL);
-            state.intervals.statsUpdate = intervalId;
-            trackInterval(intervalId);
+            stateData.intervals.statsUpdate = intervalId;
         });
     }
 
     function updateStatsHistory() {
         safeExecute(() => {
-            if (!state.sessionStats.startTime) return;
+            if (!stateData.sessionStats.startTime) return;
             const now = Date.now();
-            const sessionTime = Math.floor((now - state.sessionStats.startTime) / 1000);
-            if (sessionTime > state.sessionStats.clicksBySecond.length) {
-                state.sessionStats.clicksBySecond.push(state.cpsClicks.length);
-                const sum = state.sessionStats.clicksBySecond.reduce((a, b) => a + b, 0);
-                state.sessionStats.averageCPS = (sum / state.sessionStats.clicksBySecond.length).toFixed(1);
+            const sessionTime = Math.floor((now - stateData.sessionStats.startTime) / 1000);
+            if (sessionTime > stateData.sessionStats.clicksBySecond.length) {
+                stateData.sessionStats.clicksBySecond.push(stateData.cpsClicks.length);
+                const sum = stateData.sessionStats.clicksBySecond.reduce((a, b) => a + b, 0);
+                stateData.sessionStats.averageCPS = (sum / stateData.sessionStats.clicksBySecond.length).toFixed(1);
             }
-            state.sessionStats.totalSessionTime = sessionTime;
+            stateData.sessionStats.totalSessionTime = sessionTime;
         });
     }
 
@@ -204,53 +131,48 @@
 @keyframes slideInUp { 0% { opacity: 0; transform: translateY(40px); } 100% { opacity: 1; transform: translateY(0); } }
 @keyframes toastSlideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes toastSlideOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
+@media (prefers-reduced-motion: reduce) { * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
 
-#waddle-persistent-header { position: fixed; top: 10px; left: 10px; font-family: Segoe UI, sans-serif; font-weight: 900; font-size: 1.5rem; color: var(--waddle-primary); text-shadow: 0 0 8px var(--waddle-shadow), 0 0 20px var(--waddle-shadow); user-select: none; z-index: 100000000; pointer-events: none; opacity: 0; transition: opacity 0.5s ease; contain: layout style paint; }
-#waddle-persistent-header.visible { opacity: 1; animation: slideInDown 0.6s ease; }
-#waddle-menu-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(15px); z-index: 10000000; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 40px; opacity: 0; pointer-events: none; transition: opacity 0.35s ease; user-select: none; contain: strict; }
+#waddle-menu-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(15px); z-index: 10000000; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 40px; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; user-select: none; contain: strict; will-change: opacity; }
 #waddle-menu-overlay.show { opacity: 1; pointer-events: auto; }
-#waddle-menu-header { font-family: Segoe UI, sans-serif; font-size: 3rem; font-weight: 900; color: var(--waddle-primary); text-shadow: 0 0 8px var(--waddle-shadow), 0 0 20px var(--waddle-shadow); margin-bottom: 30px; animation: slideInDown 0.5s ease; }
-#waddle-tabs { display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 2px solid rgba(0, 255, 255, 0.2); animation: slideInDown 0.6s ease 0.1s backwards; }
-.waddle-tab-btn { background: transparent; border: none; color: #999; font-family: Segoe UI, sans-serif; font-weight: 700; padding: 12px 20px; cursor: pointer; transition: all 0.3s ease; border-bottom: 3px solid transparent; font-size: 1rem; position: relative; }
-.waddle-tab-btn:hover { color: var(--waddle-primary); transform: translateY(-2px); }
+#waddle-menu-header { font-family: Segoe UI, sans-serif; font-size: 3rem; font-weight: 900; color: var(--waddle-primary); text-shadow: 0 0 8px var(--waddle-shadow), 0 0 20px var(--waddle-shadow); margin-bottom: 30px; animation: slideInDown 0.4s ease; contain: layout style paint; }
+#waddle-tabs { display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 2px solid rgba(0, 255, 255, 0.2); animation: slideInDown 0.4s ease 0.1s backwards; contain: layout style paint; }
+.waddle-tab-btn { background: transparent; border: none; color: #999; font-family: Segoe UI, sans-serif; font-weight: 700; padding: 12px 20px; cursor: pointer; transition: color 0.2s ease, border-color 0.2s ease; border-bottom: 3px solid transparent; font-size: 1rem; position: relative; }
+.waddle-tab-btn:hover { color: var(--waddle-primary); }
 .waddle-tab-btn.active { color: var(--waddle-primary); border-bottom-color: var(--waddle-primary); box-shadow: 0 2px 10px rgba(0,255,255,0.3); }
-#waddle-menu-content { width: 320px; background: rgba(17, 17, 17, 0.9); border-radius: 16px; padding: 24px; color: white; font-size: 1.1rem; box-shadow: 0 0 20px rgba(0, 255, 255, 0.4), inset 0 0 20px rgba(0, 255, 255, 0.1); display: flex; flex-direction: column; gap: 24px; max-height: 70vh; overflow-y: auto; contain: layout style paint; border: 1px solid rgba(0, 255, 255, 0.3); animation: slideInUp 0.5s ease; }
+#waddle-menu-content { width: 320px; background: rgba(17, 17, 17, 0.9); border-radius: 16px; padding: 24px; color: white; font-size: 1.1rem; box-shadow: 0 0 20px rgba(0, 255, 255, 0.4), inset 0 0 20px rgba(0, 255, 255, 0.1); display: flex; flex-direction: column; gap: 24px; max-height: 70vh; overflow-y: auto; contain: layout style paint; border: 1px solid rgba(0, 255, 255, 0.3); animation: slideInUp 0.4s ease; }
 .waddle-tab-content { display: none; }
-.waddle-tab-content.active { display: flex; flex-direction: column; gap: 12px; animation: slideInUp 0.4s ease; }
-.waddle-menu-btn { background: rgba(0, 0, 0, 0.8); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); font-family: Segoe UI, sans-serif; font-weight: 700; padding: 16px 20px; border-radius: 10px; cursor: pointer; transition: all 0.3s ease; user-select: none; will-change: transform; position: relative; overflow: hidden; }
-.waddle-menu-btn:hover { background: var(--waddle-primary); color: #000; transform: translateY(-3px); box-shadow: 0 5px 20px rgba(0,255,255,0.4); }
-.counter { position: fixed; background: rgba(0, 255, 255, 0.9); color: #000; font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1.25rem; padding: 8px 14px; border-radius: 12px; box-shadow: 0 0 15px rgba(0, 255, 255, 0.7), inset 0 0 10px rgba(0,255,255,0.2); user-select: none; cursor: grab; z-index: 999999999; width: max-content; transition: all 0.2s ease; will-change: transform; animation: counterSlideIn 0.5s ease-out; contain: layout style paint; border: 1px solid rgba(0,255,255,0.5); }
+.waddle-tab-content.active { display: flex; flex-direction: column; gap: 12px; animation: slideInUp 0.3s ease; }
+.waddle-menu-btn { background: rgba(0, 0, 0, 0.8); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); font-family: Segoe UI, sans-serif; font-weight: 700; padding: 16px 20px; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; user-select: none; position: relative; overflow: hidden; contain: layout style paint; }
+.waddle-menu-btn:hover { background: var(--waddle-primary); color: #000; transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0,255,255,0.4); }
+.counter { position: fixed; background: rgba(0, 255, 255, 0.9); color: #000; font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1.25rem; padding: 8px 14px; border-radius: 12px; box-shadow: 0 0 15px rgba(0, 255, 255, 0.7), inset 0 0 10px rgba(0,255,255,0.2); user-select: none; cursor: grab; z-index: 999999999; width: max-content; transition: box-shadow 0.15s ease; will-change: transform; animation: counterSlideIn 0.4s ease-out; contain: layout style paint; border: 1px solid rgba(0,255,255,0.5); }
 .counter.dragging { cursor: grabbing; transform: scale(1.08); box-shadow: 0 0 25px rgba(0, 255, 255, 0.9), inset 0 0 20px rgba(0,255,255,0.3); }
 .counter:hover:not(.dragging) { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 255, 255, 0.8); }
 .settings-section { border-top: 1px solid rgba(0, 255, 255, 0.3); padding-top: 24px; margin-top: 16px; }
 .settings-label { font-size: 0.9rem; color: var(--waddle-primary); margin-bottom: 10px; display: block; font-weight: 600; }
-.color-picker-input { width: 100%; height: 50px; border: 2px solid var(--waddle-primary); border-radius: 8px; cursor: pointer; background: rgba(0, 0, 0, 0.8); transition: all 0.3s ease; margin-top: 12px; }
-.color-picker-input:hover { box-shadow: 0 0 15px rgba(0, 255, 255, 0.6); transform: scale(1.02); }
-.keybind-input { width: 100%; background: rgba(0, 0, 0, 0.8); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1rem; padding: 8px 12px; border-radius: 8px; text-align: center; transition: all 0.3s ease; }
-.keybind-input:focus { outline: none; box-shadow: 0 0 15px rgba(0, 255, 255, 0.6); background: rgba(0, 255, 255, 0.15); transform: scale(1.02); }
+.color-picker-input { width: 100%; height: 50px; border: 2px solid var(--waddle-primary); border-radius: 8px; cursor: pointer; background: rgba(0, 0, 0, 0.8); transition: box-shadow 0.2s ease; margin-top: 12px; contain: layout style paint; }
+.color-picker-input:hover { box-shadow: 0 0 15px rgba(0, 255, 255, 0.6); }
+.keybind-input { width: 100%; background: rgba(0, 0, 0, 0.8); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1rem; padding: 8px 12px; border-radius: 8px; text-align: center; transition: box-shadow 0.2s ease; contain: layout style paint; }
+.keybind-input:focus { outline: none; box-shadow: 0 0 15px rgba(0, 255, 255, 0.6); background: rgba(0, 255, 255, 0.15); }
 
-#waddle-toast { position: fixed; bottom: 60px; right: 50px; background: rgba(0, 0, 0, 0.95); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); padding: 16px 24px; border-radius: 12px; font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1rem; z-index: 10000001; box-shadow: 0 0 20px rgba(0, 255, 255, 0.5), inset 0 0 10px rgba(0, 255, 255, 0.2); animation: toastSlideIn 0.4s ease; pointer-events: none; max-width: 280px; text-align: center; }
-#waddle-toast.hide { animation: toastSlideOut 0.4s ease forwards; }
+#waddle-toast { position: fixed; bottom: 60px; right: 50px; background: rgba(0, 0, 0, 0.95); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); padding: 16px 24px; border-radius: 12px; font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1rem; z-index: 10000001; box-shadow: 0 0 20px rgba(0, 255, 255, 0.5), inset 0 0 10px rgba(0, 255, 255, 0.2); animation: toastSlideIn 0.3s ease; pointer-events: none; max-width: 280px; text-align: center; contain: layout style paint; will-change: opacity, transform; }
+#waddle-toast.hide { animation: toastSlideOut 0.3s ease forwards; }
 `;
     document.head.appendChild(style);
 
     function showToast(message) {
         const existing = document.getElementById('waddle-toast');
-        if (existing) existing.remove();
+        existing?.remove();
 
         const toast = document.createElement('div');
         toast.id = 'waddle-toast';
         toast.textContent = message;
         document.body.appendChild(toast);
 
-        const timeout = setTimeout(() => {
+        setTimeout(() => {
             toast.classList.add('hide');
-            const removeTimeout = setTimeout(() => {
-                if (toast.parentElement) toast.remove();
-            }, 400);
-            trackTimeout(removeTimeout);
+            setTimeout(() => toast.parentElement?.removeChild(toast), 300);
         }, TIMING.TOAST_DURATION);
-        trackTimeout(timeout);
 
         return toast;
     }
@@ -266,90 +188,98 @@
         textSpan.className = 'counter-time-text';
         textSpan.textContent = initialText;
         counter.appendChild(textSpan);
+        counter._textSpan = textSpan;
         document.body.appendChild(counter);
 
         if (isDraggable && counterType) {
-            state.cleanupFunctions[counterType] = setupDragging(counter, counterType);
+            setupDragging(counter, counterType);
         }
         return counter;
     }
 
     function updateCounterText(counterType, text) {
-        if (!state.counters[counterType]) return;
-        const textSpan = state.counters[counterType].querySelector('.counter-time-text');
-        if (textSpan) textSpan.textContent = text;
+        const counter = stateData.counters[counterType];
+        if (!counter || !counter._textSpan) return;
+        counter._textSpan.textContent = text;
     }
 
     function startPerformanceLoop() {
-        if (state.performanceLoopRunning) return;
-        state.performanceLoopRunning = true;
-        let lastFpsUpdate = performance.now(), frameCount = 0;
+        if (stateData.performanceLoopRunning) return;
+        stateData.performanceLoopRunning = true;
+        let lastFpsUpdate = performance.now(), frameCount = 0, lastFps = 0;
         const loop = (currentTime) => {
-            if (!state.performanceLoopRunning || state.activeRAFFeatures.size === 0) {
-                state.performanceLoopRunning = false;
-                state.rafId = null;
+            if (!stateData.performanceLoopRunning || stateData.activeRAFFeatures.size === 0) {
+                stateData.performanceLoopRunning = false;
+                stateData.rafId = null;
                 return;
             }
             frameCount++;
             const elapsed = currentTime - lastFpsUpdate;
-            if (elapsed >= TIMING.FPS_UPDATE_INTERVAL && state.counters.fps) {
+            if (elapsed >= TIMING.FPS_UPDATE_INTERVAL && stateData.counters.fps) {
                 const fps = Math.round((frameCount * 1000) / elapsed);
-                updateCounterText('fps', `FPS: ${fps}`);
-                if (fps > state.sessionStats.peakFPS) state.sessionStats.peakFPS = fps;
+                if (fps !== lastFps) {
+                    updateCounterText('fps', `FPS: ${fps}`);
+                    lastFps = fps;
+                }
+                if (fps > stateData.sessionStats.peakFPS) stateData.sessionStats.peakFPS = fps;
                 frameCount = 0;
                 lastFpsUpdate = currentTime;
             }
-            state.rafId = requestAnimationFrame(loop);
+            stateData.rafId = requestAnimationFrame(loop);
         };
-        state.rafId = requestAnimationFrame(loop);
+        stateData.rafId = requestAnimationFrame(loop);
     }
 
     function stopPerformanceLoop() {
-        state.activeRAFFeatures.delete('fps');
-        if (state.activeRAFFeatures.size === 0 && state.rafId) {
-            cancelAnimationFrame(state.rafId);
-            state.rafId = null;
-            state.performanceLoopRunning = false;
+        stateData.activeRAFFeatures.delete('fps');
+        if (stateData.activeRAFFeatures.size === 0 && stateData.rafId) {
+            cancelAnimationFrame(stateData.rafId);
+            stateData.rafId = null;
+            stateData.performanceLoopRunning = false;
         }
     }
 
-    function createPersistentHeader() {
-        const header = document.createElement('div');
-        header.id = 'waddle-persistent-header';
-        header.textContent = '🐧 Waddle';
-        document.body.appendChild(header);
-        cachedElements.header = header;
-        return header;
-    }
-
     function setupDragging(element, counterType) {
-        const dragState = state.drag[counterType];
-        const listenerId = `drag_${counterType}`;
+        let rafId = null;
         const onMouseDown = (e) => {
-            dragState.active = true;
-            dragState.offsetX = e.clientX - element.getBoundingClientRect().left;
-            dragState.offsetY = e.clientY - element.getBoundingClientRect().top;
+            element._dragging = true;
+            element._offsetX = e.clientX - element.getBoundingClientRect().left;
+            element._offsetY = e.clientY - element.getBoundingClientRect().top;
             element.classList.add('dragging');
         };
         const onMouseUp = () => {
-            if (dragState.active) {
-                dragState.active = false;
+            if (element._dragging) {
+                element._dragging = false;
                 element.classList.remove('dragging');
+                if (rafId) cancelAnimationFrame(rafId);
                 debouncedSave();
             }
         };
-        const onMouseMove = throttle((e) => {
-            if (dragState.active && element.parentElement) {
-                const newX = Math.max(10, Math.min(window.innerWidth - element.offsetWidth - 10, e.clientX - dragState.offsetX));
-                const newY = Math.max(10, Math.min(window.innerHeight - element.offsetHeight - 10, e.clientY - dragState.offsetY));
-                element.style.left = `${newX}px`;
-                element.style.top = `${newY}px`;
+        const onMouseMove = (e) => {
+            if (element._dragging && element.parentElement) {
+                element._pendingX = e.clientX;
+                element._pendingY = e.clientY;
+                if (!rafId) {
+                    rafId = requestAnimationFrame(() => {
+                        const rect = element.getBoundingClientRect();
+                        const newX = Math.max(10, Math.min(window.innerWidth - rect.width - 10, element._pendingX - element._offsetX));
+                        const newY = Math.max(10, Math.min(window.innerHeight - rect.height - 10, element._pendingY - element._offsetY));
+                        element.style.left = `${newX}px`;
+                        element.style.top = `${newY}px`;
+                        rafId = null;
+                    });
+                }
             }
-        }, 32);
-        addManagedListener(element, 'mousedown', onMouseDown, listenerId);
-        addManagedListener(window, 'mouseup', onMouseUp, listenerId);
-        addManagedListener(window, 'mousemove', onMouseMove, listenerId);
-        return () => removeAllListeners(listenerId);
+        };
+        element.addEventListener('mousedown', onMouseDown, { passive: true });
+        window.addEventListener('mouseup', onMouseUp, { passive: true });
+        window.addEventListener('mousemove', onMouseMove, { passive: true });
+        element._dragCleanup = () => {
+            element.removeEventListener('mousedown', onMouseDown);
+            window.removeEventListener('mouseup', onMouseUp);
+            window.removeEventListener('mousemove', onMouseMove);
+            if (rafId) cancelAnimationFrame(rafId);
+        };
     }
 
     function createFPSCounter() {
@@ -357,20 +287,19 @@
             id: 'fps-counter', counterType: 'fps', initialText: 'FPS: 0',
             position: { left: '50px', top: '80px' }, isDraggable: true
         });
-        state.counters.fps = counter;
+        stateData.counters.fps = counter;
         return counter;
     }
 
     function startFPSCounter() {
-        if (!state.counters.fps) createFPSCounter();
-        state.activeRAFFeatures.add('fps');
-        if (!state.performanceLoopRunning) startPerformanceLoop();
+        if (!stateData.counters.fps) createFPSCounter();
+        stateData.activeRAFFeatures.add('fps');
+        if (!stateData.performanceLoopRunning) startPerformanceLoop();
     }
 
     function stopFPSCounter() {
-        state.fpsShown = false;
-        if (state.cleanupFunctions.fps) { state.cleanupFunctions.fps(); state.cleanupFunctions.fps = null; }
-        if (state.counters.fps) { state.counters.fps.remove(); state.counters.fps = null; }
+        if (stateData.counters.fps?._dragCleanup) stateData.counters.fps._dragCleanup();
+        if (stateData.counters.fps) { stateData.counters.fps.remove(); stateData.counters.fps = null; }
         stopPerformanceLoop();
     }
 
@@ -379,48 +308,41 @@
             id: 'cps-counter', counterType: 'cps', initialText: 'CPS: 0',
             position: { left: '50px', top: '150px' }, isDraggable: true
         });
-        state.counters.cps = counter;
-        cpsClickListenerRef = (e) => {
+        stateData.counters.cps = counter;
+
+        const cpsClickListener = (e) => {
             if (e.button === 0) {
                 const now = performance.now();
-                state.cpsClicks.push(now);
-                state.sessionStats.totalClicks++;
+                stateData.cpsClicks.push(now);
+                stateData.sessionStats.totalClicks++;
                 const cutoff = now - TIMING.CPS_WINDOW;
-                while (state.cpsClicks.length > 0 && state.cpsClicks[0] < cutoff) state.cpsClicks.shift();
-                if (state.cpsClicks.length > state.sessionStats.peakCPS) state.sessionStats.peakCPS = state.cpsClicks.length;
+                while (stateData.cpsClicks.length > 0 && stateData.cpsClicks[0] < cutoff) stateData.cpsClicks.shift();
+                if (stateData.cpsClicks.length > stateData.sessionStats.peakCPS) stateData.sessionStats.peakCPS = stateData.cpsClicks.length;
             }
         };
-        addManagedListener(window, 'mousedown', cpsClickListenerRef, 'cps_clicks');
-        const originalCleanup = state.cleanupFunctions.cps;
-        state.cleanupFunctions.cps = () => {
-            if (originalCleanup) originalCleanup();
-            removeAllListeners('cps_clicks');
-        };
+
+        window.addEventListener('mousedown', cpsClickListener, { passive: true });
+        counter._cpsListener = cpsClickListener;
         return counter;
     }
 
-    function updateCPSCounter() {
-        updateCounterText('cps', `CPS: ${state.cpsClicks.length}`);
-    }
-
     function startCPSCounter() {
-        if (!state.counters.cps) createCPSCounter();
-        state.cpsClicks = [];
+        if (!stateData.counters.cps) createCPSCounter();
+        stateData.cpsClicks = [];
         const intervalId = setInterval(() => {
             const cutoff = performance.now() - TIMING.CPS_WINDOW;
-            while (state.cpsClicks.length > 0 && state.cpsClicks[0] < cutoff) state.cpsClicks.shift();
-            updateCPSCounter();
+            while (stateData.cpsClicks.length > 0 && stateData.cpsClicks[0] < cutoff) stateData.cpsClicks.shift();
+            updateCounterText('cps', `CPS: ${stateData.cpsClicks.length}`);
         }, TIMING.CPS_UPDATE_INTERVAL);
-        state.intervals.cps = intervalId;
-        trackInterval(intervalId);
+        stateData.intervals.cps = intervalId;
     }
 
     function stopCPSCounter() {
-        state.cpsShown = false;
-        if (state.cleanupFunctions.cps) { state.cleanupFunctions.cps(); state.cleanupFunctions.cps = null; }
-        if (state.counters.cps) { state.counters.cps.remove(); state.counters.cps = null; }
-        if (state.intervals.cps) { clearInterval(state.intervals.cps); untrackInterval(state.intervals.cps); state.intervals.cps = null; }
-        state.cpsClicks = [];
+        if (stateData.counters.cps?._cpsListener) window.removeEventListener('mousedown', stateData.counters.cps._cpsListener);
+        if (stateData.counters.cps?._dragCleanup) stateData.counters.cps._dragCleanup();
+        if (stateData.counters.cps) { stateData.counters.cps.remove(); stateData.counters.cps = null; }
+        if (stateData.intervals.cps) { clearInterval(stateData.intervals.cps); stateData.intervals.cps = null; }
+        stateData.cpsClicks = [];
     }
 
     function createRealTimeCounter() {
@@ -438,12 +360,12 @@
         counter.style.textShadow = '0 0 8px var(--waddle-primary), 0 0 15px var(--waddle-primary)';
         counter.style.fontSize = '1.5rem';
         counter.style.padding = '0';
-        state.counters.realTime = counter;
+        stateData.counters.realTime = counter;
         return counter;
     }
 
     function updateRealTime() {
-        if (!state.counters.realTime) return;
+        if (!stateData.counters.realTime) return;
         const now = new Date();
         let hours = now.getHours();
         const minutes = now.getMinutes().toString().padStart(2, '0');
@@ -454,16 +376,15 @@
     }
 
     function startRealTimeCounter() {
-        if (!state.counters.realTime) createRealTimeCounter();
+        if (!stateData.counters.realTime) createRealTimeCounter();
         updateRealTime();
         const intervalId = setInterval(updateRealTime, 1000);
-        state.intervals.realTime = intervalId;
-        trackInterval(intervalId);
+        stateData.intervals.realTime = intervalId;
     }
 
     function stopRealTimeCounter() {
-        if (state.counters.realTime) { state.counters.realTime.remove(); state.counters.realTime = null; }
-        if (state.intervals.realTime) { clearInterval(state.intervals.realTime); untrackInterval(state.intervals.realTime); state.intervals.realTime = null; }
+        if (stateData.counters.realTime) { stateData.counters.realTime.remove(); stateData.counters.realTime = null; }
+        if (stateData.intervals.realTime) { clearInterval(stateData.intervals.realTime); stateData.intervals.realTime = null; }
     }
 
     function createPingCounter() {
@@ -471,7 +392,7 @@
             id: 'ping-counter', counterType: 'ping', initialText: 'PING: 0ms',
             position: { left: '50px', top: '220px' }, isDraggable: true
         });
-        state.counters.ping = counter;
+        stateData.counters.ping = counter;
         return counter;
     }
 
@@ -492,30 +413,29 @@
 
     function updatePingCounter() {
         measurePing().then(ping => {
-            state.pingStats.currentPing = ping;
-            state.pingStats.pingHistory.push(ping);
-            if (state.pingStats.pingHistory.length > 60) state.pingStats.pingHistory.shift();
-            const sum = state.pingStats.pingHistory.reduce((a, b) => a + b, 0);
-            state.pingStats.averagePing = Math.round(sum / state.pingStats.pingHistory.length);
-            state.pingStats.peakPing = Math.max(...state.pingStats.pingHistory);
-            state.pingStats.minPing = Math.min(...state.pingStats.pingHistory);
+            stateData.pingStats.currentPing = ping;
+            stateData.pingStats.pingHistory.push(ping);
+            if (stateData.pingStats.pingHistory.length > 60) stateData.pingStats.pingHistory.shift();
+            const sum = stateData.pingStats.pingHistory.reduce((a, b) => a + b, 0);
+            stateData.pingStats.averagePing = Math.round(sum / stateData.pingStats.pingHistory.length);
+            stateData.pingStats.peakPing = Math.max(...stateData.pingStats.pingHistory);
+            stateData.pingStats.minPing = Math.min(...stateData.pingStats.pingHistory);
             updateCounterText('ping', `PING: ${ping}ms`);
         });
     }
 
     function startPingCounter() {
-        if (!state.counters.ping) createPingCounter();
+        if (!stateData.counters.ping) createPingCounter();
         updatePingCounter();
         const intervalId = setInterval(updatePingCounter, TIMING.PING_UPDATE_INTERVAL);
-        state.intervals.ping = intervalId;
-        trackInterval(intervalId);
+        stateData.intervals.ping = intervalId;
     }
 
     function stopPingCounter() {
-        if (state.cleanupFunctions.ping) { state.cleanupFunctions.ping(); state.cleanupFunctions.ping = null; }
-        if (state.counters.ping) { state.counters.ping.remove(); state.counters.ping = null; }
-        if (state.intervals.ping) { clearInterval(state.intervals.ping); untrackInterval(state.intervals.ping); state.intervals.ping = null; }
-        state.pingStats.pingHistory = [];
+        if (stateData.counters.ping?._dragCleanup) stateData.counters.ping._dragCleanup();
+        if (stateData.counters.ping) { stateData.counters.ping.remove(); stateData.counters.ping = null; }
+        if (stateData.intervals.ping) { clearInterval(stateData.intervals.ping); stateData.intervals.ping = null; }
+        stateData.pingStats.pingHistory = [];
     }
 
     function createAntiAfkCounter() {
@@ -523,7 +443,7 @@
             id: 'anti-afk-counter', counterType: 'antiAfk', initialText: '🐧 Jumping in 5s',
             position: { left: '50px', top: '290px' }, isDraggable: true
         });
-        state.counters.antiAfk = counter;
+        stateData.counters.antiAfk = counter;
         return counter;
     }
 
@@ -531,79 +451,36 @@
         const down = new KeyboardEvent("keydown", { key: " ", code: "Space", keyCode: 32, which: 32, bubbles: true });
         const up = new KeyboardEvent("keyup", { key: " ", code: "Space", keyCode: 32, which: 32, bubbles: true });
         window.dispatchEvent(down);
-        const t = setTimeout(() => window.dispatchEvent(up), 50);
-        trackTimeout(t);
+        setTimeout(() => window.dispatchEvent(up), 50);
     }
 
     function updateAntiAfkCounter() {
-        updateCounterText('antiAfk', `🐧 Jumping in ${state.antiAfkCountdown}s`);
+        updateCounterText('antiAfk', `🐧 Jumping in ${stateData.antiAfkCountdown}s`);
     }
 
     function startAntiAfk() {
-        if (!state.counters.antiAfk) createAntiAfkCounter();
-        state.antiAfkCountdown = 5;
+        if (!stateData.counters.antiAfk) createAntiAfkCounter();
+        stateData.antiAfkCountdown = 5;
         updateAntiAfkCounter();
         const intervalId = setInterval(() => {
-            state.antiAfkCountdown--;
+            stateData.antiAfkCountdown--;
             updateAntiAfkCounter();
-            if (state.antiAfkCountdown <= 0) {
+            if (stateData.antiAfkCountdown <= 0) {
                 pressSpace();
-                state.antiAfkCountdown = 5;
+                stateData.antiAfkCountdown = 5;
             }
         }, 1000);
-        state.intervals.antiAfk = intervalId;
-        trackInterval(intervalId);
+        stateData.intervals.antiAfk = intervalId;
     }
 
     function stopAntiAfk() {
-        if (state.cleanupFunctions.antiAfk) { state.cleanupFunctions.antiAfk(); state.cleanupFunctions.antiAfk = null; }
-        if (state.counters.antiAfk) { state.counters.antiAfk.remove(); state.counters.antiAfk = null; }
-        if (state.intervals.antiAfk) { clearInterval(state.intervals.antiAfk); untrackInterval(state.intervals.antiAfk); state.intervals.antiAfk = null; }
-    }
-
-    function createSessionTimerCounter() {
-        const counter = createCounterElement({
-            id: 'session-timer-counter', counterType: null, initialText: '⏱️ 00:00:00',
-            position: { left: '50px', top: '360px' }, isDraggable: false
-        });
-        state.counters.sessionTimer = counter;
-        return counter;
-    }
-
-    function updateSessionTimer() {
-        if (!state.counters.sessionTimer || !state.sessionStats.startTime) return;
-        const elapsed = Math.floor((Date.now() - state.sessionStats.startTime) / 1000);
-        const hours = String(Math.floor(elapsed / 3600)).padStart(2, '0');
-        const minutes = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
-        const seconds = String(elapsed % 60).padStart(2, '0');
-        updateCounterText('sessionTimer', `⏱️ ${hours}:${minutes}:${seconds}`);
-    }
-
-    function startSessionTimer() {
-        if (!state.counters.sessionTimer) createSessionTimerCounter();
-        updateSessionTimer();
-        const intervalId = setInterval(updateSessionTimer, 1000);
-        state.intervals.sessionTimer = intervalId;
-        trackInterval(intervalId);
-    }
-
-    function stopSessionTimer() {
-        if (state.counters.sessionTimer) { state.counters.sessionTimer.remove(); state.counters.sessionTimer = null; }
-        if (state.intervals.sessionTimer) { clearInterval(state.intervals.sessionTimer); untrackInterval(state.intervals.sessionTimer); state.intervals.sessionTimer = null; }
-    }
-
-    function updateSessionDisplay() {
-        const display = document.getElementById('waddle-session-display');
-        if (!display || !state.sessionStats.startTime) return;
-        const elapsed = Math.floor((Date.now() - state.sessionStats.startTime) / 1000);
-        const hours = String(Math.floor(elapsed / 3600)).padStart(2, '0');
-        const minutes = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
-        const seconds = String(elapsed % 60).padStart(2, '0');
-        display.textContent = `⏱️ ${hours}:${minutes}:${seconds}`;
+        if (stateData.counters.antiAfk?._dragCleanup) stateData.counters.antiAfk._dragCleanup();
+        if (stateData.counters.antiAfk) { stateData.counters.antiAfk.remove(); stateData.counters.antiAfk = null; }
+        if (stateData.intervals.antiAfk) { clearInterval(stateData.intervals.antiAfk); stateData.intervals.antiAfk = null; }
     }
 
     function switchTab(tabName) {
-        state.activeTab = tabName;
+        stateData.activeTab = tabName;
         document.querySelectorAll('.waddle-tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.waddle-tab-content').forEach(content => content.classList.remove('active'));
         document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
@@ -660,32 +537,82 @@
         };
 
         const fpsBtn = createButton('FPS Counter 🐧', () => {
-            if (state.fpsShown) { state.fpsShown = false; stopFPSCounter(); fpsBtn.textContent = 'FPS Counter 🐧'; showToast('FPS Counter Disabled ✓'); }
-            else { state.fpsShown = true; startFPSCounter(); fpsBtn.textContent = 'Hide FPS Counter ✓'; showToast('FPS Counter Enabled ✓'); }
+            if (stateData.fpsShown) {
+                stateData.fpsShown = false;
+                stopFPSCounter();
+                fpsBtn.textContent = 'FPS Counter 🐧';
+                showToast('FPS Counter Disabled ✓');
+            }
+            else {
+                stateData.fpsShown = true;
+                startFPSCounter();
+                fpsBtn.textContent = 'Hide FPS Counter ✓';
+                showToast('FPS Counter Enabled ✓');
+            }
         });
         featuresContent.appendChild(fpsBtn);
 
         const cpsBtn = createButton('CPS Counter 🐧', () => {
-            if (state.cpsShown) { stopCPSCounter(); cpsBtn.textContent = 'CPS Counter 🐧'; state.cpsShown = false; showToast('CPS Counter Disabled ✓'); }
-            else { startCPSCounter(); cpsBtn.textContent = 'Hide CPS Counter ✓'; state.cpsShown = true; showToast('CPS Counter Enabled ✓'); }
+            if (stateData.cpsShown) {
+                stateData.cpsShown = false;
+                stopCPSCounter();
+                cpsBtn.textContent = 'CPS Counter 🐧';
+                showToast('CPS Counter Disabled ✓');
+            }
+            else {
+                stateData.cpsShown = true;
+                startCPSCounter();
+                cpsBtn.textContent = 'Hide CPS Counter ✓';
+                showToast('CPS Counter Enabled ✓');
+            }
         });
         featuresContent.appendChild(cpsBtn);
 
         const realTimeBtn = createButton('Real Time 🐧', () => {
-            if (state.realTimeShown) { stopRealTimeCounter(); realTimeBtn.textContent = 'Real Time 🐧'; state.realTimeShown = false; showToast('Real Time Disabled ✓'); }
-            else { startRealTimeCounter(); realTimeBtn.textContent = 'Hide Real Time ✓'; state.realTimeShown = true; showToast('Real Time Enabled ✓'); }
+            if (stateData.realTimeShown) {
+                stateData.realTimeShown = false;
+                stopRealTimeCounter();
+                realTimeBtn.textContent = 'Real Time 🐧';
+                showToast('Real Time Disabled ✓');
+            }
+            else {
+                stateData.realTimeShown = true;
+                startRealTimeCounter();
+                realTimeBtn.textContent = 'Hide Real Time ✓';
+                showToast('Real Time Enabled ✓');
+            }
         });
         featuresContent.appendChild(realTimeBtn);
 
         const pingBtn = createButton('Ping Counter 🐧', () => {
-            if (state.pingShown) { stopPingCounter(); pingBtn.textContent = 'Ping Counter 🐧'; state.pingShown = false; showToast('Ping Counter Disabled ✓'); }
-            else { startPingCounter(); pingBtn.textContent = 'Hide Ping Counter ✓'; state.pingShown = true; showToast('Ping Counter Enabled ✓'); }
+            if (stateData.pingShown) {
+                stateData.pingShown = false;
+                stopPingCounter();
+                pingBtn.textContent = 'Ping Counter 🐧';
+                showToast('Ping Counter Disabled ✓');
+            }
+            else {
+                stateData.pingShown = true;
+                startPingCounter();
+                pingBtn.textContent = 'Hide Ping Counter ✓';
+                showToast('Ping Counter Enabled ✓');
+            }
         });
         featuresContent.appendChild(pingBtn);
 
         const antiAfkBtn = createButton('Anti-AFK 🐧', () => {
-            if (state.antiAfkEnabled) { stopAntiAfk(); antiAfkBtn.textContent = 'Anti-AFK 🐧'; state.antiAfkEnabled = false; showToast('Anti-AFK Disabled ✓'); }
-            else { startAntiAfk(); antiAfkBtn.textContent = 'Disable Anti-AFK ✓'; state.antiAfkEnabled = true; showToast('Anti-AFK Enabled ✓'); }
+            if (stateData.antiAfkEnabled) {
+                stateData.antiAfkEnabled = false;
+                stopAntiAfk();
+                antiAfkBtn.textContent = 'Anti-AFK 🐧';
+                showToast('Anti-AFK Disabled ✓');
+            }
+            else {
+                stateData.antiAfkEnabled = true;
+                startAntiAfk();
+                antiAfkBtn.textContent = 'Disable Anti-AFK ✓';
+                showToast('Anti-AFK Enabled ✓');
+            }
         });
         featuresContent.appendChild(antiAfkBtn);
 
@@ -715,15 +642,13 @@
         const colorInput = document.createElement('input');
         colorInput.type = 'color';
         colorInput.className = 'color-picker-input';
-        colorInput.value = state.customColor;
-        colorInput.addEventListener('change', (e) => {
-            applyTheme(e.target.value);
-            showToast(`🎨 Theme changed to ${e.target.value.toUpperCase()}`);
-        });
+        colorInput.value = stateData.customColor;
+        const debouncedApplyTheme = debounce(applyTheme, 100);
         colorInput.addEventListener('input', (e) => {
             const color = e.target.value;
             document.documentElement.style.setProperty('--waddle-primary', color);
             document.documentElement.style.setProperty('--waddle-shadow', color);
+            debouncedApplyTheme(color);
         });
         colorSection.appendChild(colorInput);
         settingsContent.appendChild(colorSection);
@@ -737,44 +662,19 @@
         const keybindInput = document.createElement('input');
         keybindInput.type = 'text';
         keybindInput.className = 'keybind-input';
-        keybindInput.value = state.menuKey;
+        keybindInput.value = stateData.menuKey;
         keybindInput.readOnly = true;
         keybindInput.placeholder = 'Press a key...';
         keybindInput.addEventListener('keydown', (e) => {
             e.preventDefault();
-            if (e.key === 'Escape') { keybindInput.value = state.menuKey; keybindInput.blur(); return; }
-            state.menuKey = e.key;
+            if (e.key === 'Escape') { keybindInput.value = stateData.menuKey; keybindInput.blur(); return; }
+            stateData.menuKey = e.key;
             keybindInput.value = e.key;
             keybindInput.blur();
+            saveSettings();
         });
         keybindSection.appendChild(keybindInput);
         settingsContent.appendChild(keybindSection);
-
-        const sessionSection = document.createElement('div');
-        sessionSection.className = 'settings-section';
-        const sessionLabel = document.createElement('label');
-        sessionLabel.className = 'settings-label';
-        sessionLabel.textContent = 'Session Time:';
-        sessionSection.appendChild(sessionLabel);
-        const sessionDisplay = document.createElement('div');
-        sessionDisplay.style.cssText = `
-            width: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid var(--waddle-primary);
-            color: var(--waddle-primary);
-            font-family: Segoe UI, sans-serif;
-            font-weight: 700;
-            font-size: 1.2rem;
-            padding: 12px;
-            border-radius: 8px;
-            text-align: center;
-            margin-top: 12px;
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
-        `;
-        sessionDisplay.id = 'waddle-session-display';
-        sessionDisplay.textContent = '⏱️ 00:00:00';
-        sessionSection.appendChild(sessionDisplay);
-        settingsContent.appendChild(sessionSection);
 
         menuContent.appendChild(settingsContent);
 
@@ -886,7 +786,7 @@
             enhancementsBtn.style.transform = 'translateY(0)';
         };
         enhancementsBtn.onclick = () => {
-            window.open(`https://github.com/${GITHUB_REPO}/issues/new?labels=enhancement&title=Enhancement%20Request&body=**Waddle Version:** v${SCRIPT_VERSION}`, '_blank');
+            window.open(`https://github.com/TheM1ddleM1n/NovaCoreX/issues/new?labels=enhancement&title=Enhancement%20Request&body=**Waddle Version:** v${SCRIPT_VERSION}`, '_blank');
         };
         aboutContent.appendChild(enhancementsBtn);
 
@@ -916,7 +816,7 @@
             bugBtn.style.transform = 'translateY(0)';
         };
         bugBtn.onclick = () => {
-            window.open(`https://github.com/${GITHUB_REPO}/issues/new?labels=bug&title=Bug%20Report&body=**Waddle Version:** v${SCRIPT_VERSION}`, '_blank');
+            window.open(`https://github.com/TheM1ddleM1n/NovaCoreX/issues/new?labels=bug&title=Bug%20Report&body=**Waddle Version:** v${SCRIPT_VERSION}`, '_blank');
         };
         aboutContent.appendChild(bugBtn);
 
@@ -924,26 +824,20 @@
         menuOverlay.appendChild(menuContent);
         document.body.appendChild(menuOverlay);
         menuOverlay.addEventListener('click', (e) => { if (e.target === menuOverlay) closeMenu(); });
-        cachedElements.menu = menuOverlay;
+        stateData.menuOverlay = menuOverlay;
         return menuOverlay;
     }
 
     function openMenu() {
-        if (cachedElements.menu) {
-            cachedElements.menu.classList.add('show');
-            if (cachedElements.header) cachedElements.header.classList.remove('visible');
-        }
+        if (stateData.menuOverlay) stateData.menuOverlay.classList.add('show');
     }
 
     function closeMenu() {
-        if (cachedElements.menu) {
-            cachedElements.menu.classList.remove('show');
-            if (cachedElements.header) cachedElements.header.classList.add('visible');
-        }
+        if (stateData.menuOverlay) stateData.menuOverlay.classList.remove('show');
     }
 
     function toggleMenu() {
-        if (cachedElements.menu && cachedElements.menu.classList.contains('show')) {
+        if (stateData.menuOverlay && stateData.menuOverlay.classList.contains('show')) {
             closeMenu();
         } else {
             openMenu();
@@ -951,17 +845,16 @@
     }
 
     function setupKeyboardHandler() {
-        const keyHandler = (e) => {
-            if (e.key === state.menuKey) {
+        stateData.keyboardHandler = (e) => {
+            if (e.key === stateData.menuKey) {
                 e.preventDefault();
                 toggleMenu();
-            } else if (e.key === 'Escape' && cachedElements.menu && cachedElements.menu.classList.contains('show')) {
+            } else if (e.key === 'Escape' && stateData.menuOverlay && stateData.menuOverlay.classList.contains('show')) {
                 e.preventDefault();
                 closeMenu();
             }
         };
-        window.addEventListener('keydown', keyHandler);
-        state.eventListeners.set('keyboard', [{ element: window, event: 'keydown', handler: keyHandler }]);
+        window.addEventListener('keydown', stateData.keyboardHandler);
     }
 
     function restoreSavedState() {
@@ -969,35 +862,9 @@
             const saved = localStorage.getItem(SETTINGS_KEY);
             if (!saved) return;
             const settings = JSON.parse(saved);
-            if (settings.menuKey) {
-                state.menuKey = settings.menuKey;
-            }
-            if (settings.fpsShown) {
-                startFPSCounter();
-                state.fpsShown = true;
-                if (settings.positions?.fps && state.counters.fps) {
-                    state.counters.fps.style.left = settings.positions.fps.left;
-                    state.counters.fps.style.top = settings.positions.fps.top;
-                }
-            }
-            if (settings.cpsShown) {
-                startCPSCounter();
-                state.cpsShown = true;
-            }
-            if (settings.realTimeShown) {
-                startRealTimeCounter();
-                state.realTimeShown = true;
-            }
-            if (settings.pingShown) {
-                startPingCounter();
-                state.pingShown = true;
-                if (settings.positions?.ping && state.counters.ping) {
-                    state.counters.ping.style.left = settings.positions.ping.left;
-                    state.counters.ping.style.top = settings.positions.ping.top;
-                }
-            }
+            if (settings.menuKey) stateData.menuKey = settings.menuKey;
         } catch (e) {
-            console.error('[Waddle] Failed to restore any settings:', e);
+            console.error('[Waddle] Failed to restore settings:', e);
         }
     }
 
@@ -1008,22 +875,18 @@
         stopRealTimeCounter();
         stopPingCounter();
         stopAntiAfk();
-        stopSessionTimer();
-        state.eventListeners.forEach((listeners) => {
-            listeners.forEach(({ element, event, handler }) => {
-                if (element) element.removeEventListener(event, handler);
-            });
-        });
-        state.eventListeners.clear();
-        Object.values(state.intervals).forEach(interval => { if (interval) { clearInterval(interval); untrackInterval(interval); } });
-        state.pendingTimeouts.forEach(timeout => clearTimeout(timeout));
-        state.pendingIntervals.forEach(interval => clearInterval(interval));
-        state.pendingTimeouts.clear();
-        state.pendingIntervals.clear();
-        if (state.rafId) cancelAnimationFrame(state.rafId);
-        state.performanceLoopRunning = false;
-        state.cpsClicks = [];
-        state.pingStats.pingHistory = [];
+
+        if (stateData.keyboardHandler) {
+            window.removeEventListener('keydown', stateData.keyboardHandler);
+        }
+
+        Object.values(stateData.intervals).forEach(interval => { if (interval) clearInterval(interval); });
+        stateData.intervals = { fps: null, cps: null, realTime: null, ping: null, antiAfk: null, statsUpdate: null };
+        stateData.cpsClicks = [];
+        stateData.pingStats.pingHistory = [];
+
+        if (stateData.rafId) cancelAnimationFrame(stateData.rafId);
+        stateData.performanceLoopRunning = false;
         console.log('[Waddle] Cleanup complete!');
     }
 
@@ -1033,19 +896,16 @@
         console.log(`[Waddle] Initializing v${SCRIPT_VERSION}...`);
         loadCustomColor();
         initSessionStats();
-
-        const header = createPersistentHeader();
-        const menu = createMenu();
+        createMenu();
         setupKeyboardHandler();
+        showToast(`Press ${stateData.menuKey} To Open Menu!`);
 
-        // Show toast notification on startup
-        showToast(`Press ${state.menuKey} To Open Menu!`);
+        if (requestIdleCallback) {
+            requestIdleCallback(() => restoreSavedState());
+        } else {
+            setTimeout(() => restoreSavedState(), 100);
+        }
 
-        // Update session display every second
-        const sessionDisplayInterval = setInterval(updateSessionDisplay, 1000);
-        trackInterval(sessionDisplayInterval);
-
-        restoreSavedState();
         console.log('[Waddle] Initialization completed!');
     }
 
