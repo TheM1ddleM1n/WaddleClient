@@ -1,4 +1,4 @@
-# 🐧 Waddle Client 4 Miniblox
+# 🐧 WaddleClient4Miniblox
 
 ![Version](https://img.shields.io/badge/version-4.4-00ffff?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-00ffff?style=for-the-badge)
@@ -195,35 +195,9 @@ Waddle saves your preferences in localStorage:
 - 🐧 Improved performance
 
 ### v4.2
-- 📊 Initial release
 - Basic counter functionality
 - Menu system
 - Anti-AFK feature
-
-## 🤝 Contributing
-
-Contributions are welcome! Here's how you can help:
-
-### Reporting Bugs
-1. Check existing issues first
-2. Include detailed steps to reproduce
-3. Mention browser and OS
-4. Include console errors if any
-5. Use the bug report template
-
-### Suggesting Features
-1. Check if feature already requested
-2. Describe the feature clearly
-3. Explain use case and benefits
-4. Include mockups if applicable
-5. Use the enhancement template
-
-### Pull Requests
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit PR with description
 
 ## 📄 License
 
@@ -256,7 +230,7 @@ SOFTWARE.
 ## 👥 Credits
 
 **Original Creator**  
-[@Scripter132132](https://github.com/Scripter132132) - Initial development and core features (made NovaCore)
+[@Scripter132132](https://github.com/Scripter132132) - Initial development and core features (made NovaCore client)
 
 **Enhanced By**  
 [@TheM1ddleM1n](https://github.com/TheM1ddleM1n) - UI redesign, optimizations, and new features
@@ -274,7 +248,7 @@ This is a third-party enhancement script. Use at your own risk. The developers a
 ---
 
 <p align="center">
-  Made with 🐧 by the Waddle Team
+  Made with 🐧 by the Waddle Team!
 </p>
 
 <p align="center">
