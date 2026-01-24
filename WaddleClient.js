@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         WaddleClient4Miniblox
 // @namespace    M1ddleM1n and Scripter on top!
-// @version      4.4
-// @description  Waddle V4.4 with high performance & modern UI++
+// @version      4.7
+// @description  Waddle V4.7 with visual key display & modern UI++
 // @author       Scripter, TheM1ddleM1n
 // @icon         https://raw.githubusercontent.com/TheM1ddleM1n/WaddleClient/refs/heads/main/WaddlePic.png
 // @match        https://miniblox.io/
@@ -14,23 +14,24 @@
     document.title = '🐧 𝙒𝙖𝙙𝙙𝙡𝙚 4 𝙈𝙞𝙣𝙞𝙗𝙡𝙤𝙭!';
 
     const TIMING = {
-        HINT_TEXT_DURATION: 4000, FPS_UPDATE_INTERVAL: 500, CPS_UPDATE_INTERVAL: 250,
-        CPS_WINDOW: 1000, PING_UPDATE_INTERVAL: 2000, SAVE_DEBOUNCE: 500,
-        TOAST_DURATION: 3000
+        HINT_TEXT_DURATION: 4000, FPS_UPDATE_INTERVAL: 500,
+        PING_UPDATE_INTERVAL: 2000, SAVE_DEBOUNCE: 500,
+        TOAST_DURATION: 3000, KEY_HIGHLIGHT_DURATION: 150
     };
 
     const SETTINGS_KEY = 'waddle_settings';
     const DEFAULT_MENU_KEY = '\\';
     const CUSTOM_COLOR_KEY = 'waddle_custom_color';
-    const SCRIPT_VERSION = '4.4';
+    const SCRIPT_VERSION = '4.7';
     const DEFAULT_COLOR = '#00ffff';
 
     const stateData = {
-        fpsShown: false, cpsShown: false, realTimeShown: false, pingShown: false, antiAfkEnabled: false,
+        fpsShown: false, realTimeShown: false, pingShown: false, antiAfkEnabled: false, keyDisplayShown: false,
         menuKey: DEFAULT_MENU_KEY,
-        counters: { fps: null, cps: null, realTime: null, ping: null, antiAfk: null },
-        intervals: { fps: null, cps: null, realTime: null, ping: null, antiAfk: null, sessionTimer: null },
-        cpsClicks: [], rafId: null,
+        counters: { fps: null, realTime: null, ping: null, antiAfk: null, keyDisplay: null },
+        intervals: { fps: null, realTime: null, ping: null, antiAfk: null, sessionTimer: null },
+        keyStates: { w: false, a: false, s: false, d: false, space: false, lmb: false, rmb: false },
+        rafId: null,
         antiAfkCountdown: 5,
         performanceLoopRunning: false, activeRAFFeatures: new Set(),
         pingStats: { currentPing: 0 },
@@ -53,14 +54,15 @@
         try {
             const settings = {
                 version: SCRIPT_VERSION,
-                fpsShown: stateData.fpsShown, cpsShown: stateData.cpsShown, realTimeShown: stateData.realTimeShown,
-                pingShown: stateData.pingShown, menuKey: stateData.menuKey,
+                fpsShown: stateData.fpsShown, realTimeShown: stateData.realTimeShown,
+                pingShown: stateData.pingShown, keyDisplayShown: stateData.keyDisplayShown,
+                menuKey: stateData.menuKey,
                 positions: {
                     fps: stateData.counters.fps ? { left: stateData.counters.fps.style.left, top: stateData.counters.fps.style.top } : null,
-                    cps: stateData.counters.cps ? { left: stateData.counters.cps.style.left, top: stateData.counters.cps.style.top } : null,
                     realTime: stateData.counters.realTime ? { left: stateData.counters.realTime.style.left, top: stateData.counters.realTime.style.top } : null,
                     ping: stateData.counters.ping ? { left: stateData.counters.ping.style.left, top: stateData.counters.ping.style.top } : null,
-                    antiAfk: stateData.counters.antiAfk ? { left: stateData.counters.antiAfk.style.left, top: stateData.counters.antiAfk.style.top } : null
+                    antiAfk: stateData.counters.antiAfk ? { left: stateData.counters.antiAfk.style.left, top: stateData.counters.antiAfk.style.top } : null,
+                    keyDisplay: stateData.counters.keyDisplay ? { left: stateData.counters.keyDisplay.style.left, top: stateData.counters.keyDisplay.style.top } : null
                 }
             };
             localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
@@ -123,6 +125,19 @@
 .counter { position: fixed; background: rgba(0, 255, 255, 0.9); color: #000; font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1.25rem; padding: 8px 14px; border-radius: 12px; box-shadow: 0 0 15px rgba(0, 255, 255, 0.7), inset 0 0 10px rgba(0,255,255,0.2); user-select: none; cursor: grab; z-index: 999999999; width: max-content; transition: box-shadow 0.15s ease; animation: counterSlideIn 0.4s ease-out; border: 1px solid rgba(0,255,255,0.5); }
 .counter.dragging { cursor: grabbing; transform: scale(1.08); box-shadow: 0 0 25px rgba(0, 255, 255, 0.9), inset 0 0 20px rgba(0,255,255,0.3); }
 .counter:hover:not(.dragging) { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 255, 255, 0.8); }
+
+.key-display-container { position: fixed; cursor: grab; z-index: 999999999; animation: counterSlideIn 0.4s ease-out; user-select: none; }
+.key-display-container.dragging { cursor: grabbing; }
+
+.key-display-grid { display: grid; gap: 6px; }
+
+.key-box { background: rgba(80, 80, 80, 0.8); border: 3px solid rgba(150, 150, 150, 0.6); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', sans-serif; font-weight: 900; font-size: 1.1rem; color: #ddd; transition: all 0.1s ease; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.1); width: 50px; height: 50px; }
+
+.key-box.active { background: var(--waddle-primary); border-color: var(--waddle-primary); color: #000; box-shadow: 0 0 20px var(--waddle-shadow), 0 0 30px var(--waddle-shadow), inset 0 2px 8px rgba(255, 255, 255, 0.3); transform: scale(0.95); }
+
+.mouse-box { width: 70px; height: 50px; font-size: 0.85rem; }
+
+.space-box { grid-column: 1 / -1; width: 100%; height: 40px; font-size: 0.9rem; }
 
 .settings-label { font-size: 0.9rem; color: var(--waddle-primary); margin-bottom: 10px; display: block; font-weight: 600; }
 .color-picker-input { width: 100%; height: 50px; border: 2px solid var(--waddle-primary); border-radius: 8px; cursor: pointer; background: rgba(0, 0, 0, 0.8); transition: box-shadow 0.2s ease; margin-top: 12px; }
@@ -277,44 +292,194 @@
         stopPerformanceLoop();
     }
 
-    function createCPSCounter() {
-        const counter = createCounterElement({
-            id: 'cps-counter', counterType: 'cps', initialText: 'CPS: 0',
-            position: { left: '50px', top: '150px' }, isDraggable: true
-        });
-        stateData.counters.cps = counter;
+    // Visual Key Display
+    function createKeyDisplay() {
+        const container = document.createElement('div');
+        container.id = 'key-display-container';
+        container.className = 'key-display-container';
+        container.style.left = '50px';
+        container.style.top = '150px';
 
-        const cpsClickListener = (e) => {
-            if (e.button === 0) {
-                const now = performance.now();
-                stateData.cpsClicks.push(now);
-                const cutoff = now - TIMING.CPS_WINDOW;
-                while (stateData.cpsClicks.length > 0 && stateData.cpsClicks[0] < cutoff) stateData.cpsClicks.shift();
+        const grid = document.createElement('div');
+        grid.className = 'key-display-grid';
+        grid.style.gridTemplateColumns = '50px 50px 50px';
+        grid.style.gridTemplateRows = 'auto auto auto';
+
+        // W key (top center)
+        const wBox = document.createElement('div');
+        wBox.className = 'key-box';
+        wBox.textContent = 'W';
+        wBox.style.gridColumn = '2';
+        wBox.style.gridRow = '1';
+        wBox._key = 'w';
+
+        // A, S, D keys (bottom row)
+        const aBox = document.createElement('div');
+        aBox.className = 'key-box';
+        aBox.textContent = 'A';
+        aBox.style.gridColumn = '1';
+        aBox.style.gridRow = '2';
+        aBox._key = 'a';
+
+        const sBox = document.createElement('div');
+        sBox.className = 'key-box';
+        sBox.textContent = 'S';
+        sBox.style.gridColumn = '2';
+        sBox.style.gridRow = '2';
+        sBox._key = 's';
+
+        const dBox = document.createElement('div');
+        dBox.className = 'key-box';
+        dBox.textContent = 'D';
+        dBox.style.gridColumn = '3';
+        dBox.style.gridRow = '2';
+        dBox._key = 'd';
+
+        // Mouse buttons row
+        const mouseRow = document.createElement('div');
+        mouseRow.style.display = 'grid';
+        mouseRow.style.gridTemplateColumns = '70px 70px';
+        mouseRow.style.gap = '6px';
+        mouseRow.style.marginTop = '6px';
+
+        const lmbBox = document.createElement('div');
+        lmbBox.className = 'key-box mouse-box';
+        lmbBox.textContent = 'LMB';
+        lmbBox._key = 'lmb';
+
+        const rmbBox = document.createElement('div');
+        rmbBox.className = 'key-box mouse-box';
+        rmbBox.textContent = 'RMB';
+        rmbBox._key = 'rmb';
+
+        mouseRow.appendChild(lmbBox);
+        mouseRow.appendChild(rmbBox);
+
+        // Space bar
+        const spaceBox = document.createElement('div');
+        spaceBox.className = 'key-box space-box';
+        spaceBox.textContent = 'SPACE';
+        spaceBox.style.marginTop = '6px';
+        spaceBox._key = 'space';
+
+        grid.appendChild(wBox);
+        grid.appendChild(aBox);
+        grid.appendChild(sBox);
+        grid.appendChild(dBox);
+
+        container.appendChild(grid);
+        container.appendChild(mouseRow);
+        container.appendChild(spaceBox);
+
+        document.body.appendChild(container);
+
+        // Store references
+        container._keyBoxes = {
+            w: wBox, a: aBox, s: sBox, d: dBox,
+            space: spaceBox, lmb: lmbBox, rmb: rmbBox
+        };
+
+        setupDragging(container, 'keyDisplay');
+        stateData.counters.keyDisplay = container;
+        return container;
+    }
+
+    function updateKeyDisplay(key, isPressed) {
+        if (!stateData.counters.keyDisplay) return;
+        const keyBox = stateData.counters.keyDisplay._keyBoxes[key];
+        if (!keyBox) return;
+
+        if (isPressed) {
+            keyBox.classList.add('active');
+        } else {
+            keyBox.classList.remove('active');
+        }
+    }
+
+    function startKeyDisplay() {
+        if (!stateData.counters.keyDisplay) createKeyDisplay();
+
+        const keyListener = (e) => {
+            if (stateData.menuOverlay && stateData.menuOverlay.classList.contains('show')) return;
+            const key = e.key.toLowerCase();
+
+            if (key === 'w' || key === 'a' || key === 's' || key === 'd') {
+                stateData.keyStates[key] = true;
+                updateKeyDisplay(key, true);
+            } else if (e.key === ' ' || e.code === 'Space') {
+                stateData.keyStates.space = true;
+                updateKeyDisplay('space', true);
             }
         };
 
-        window.addEventListener('mousedown', cpsClickListener, { passive: true });
-        counter._cpsListener = cpsClickListener;
-        return counter;
+        const keyUpListener = (e) => {
+            const key = e.key.toLowerCase();
+
+            if (key === 'w' || key === 'a' || key === 's' || key === 'd') {
+                stateData.keyStates[key] = false;
+                updateKeyDisplay(key, false);
+            } else if (e.key === ' ' || e.code === 'Space') {
+                stateData.keyStates.space = false;
+                updateKeyDisplay('space', false);
+            }
+        };
+
+        const mouseDownListener = (e) => {
+            if (e.button === 0) {
+                stateData.keyStates.lmb = true;
+                updateKeyDisplay('lmb', true);
+            } else if (e.button === 2) {
+                stateData.keyStates.rmb = true;
+                updateKeyDisplay('rmb', true);
+            }
+        };
+
+        const mouseUpListener = (e) => {
+            if (e.button === 0) {
+                stateData.keyStates.lmb = false;
+                updateKeyDisplay('lmb', false);
+            } else if (e.button === 2) {
+                stateData.keyStates.rmb = false;
+                updateKeyDisplay('rmb', false);
+            }
+        };
+
+        window.addEventListener('keydown', keyListener, { passive: true });
+        window.addEventListener('keyup', keyUpListener, { passive: true });
+        window.addEventListener('mousedown', mouseDownListener, { passive: true });
+        window.addEventListener('mouseup', mouseUpListener, { passive: true });
+
+        stateData.counters.keyDisplay._keyListener = keyListener;
+        stateData.counters.keyDisplay._keyUpListener = keyUpListener;
+        stateData.counters.keyDisplay._mouseDownListener = mouseDownListener;
+        stateData.counters.keyDisplay._mouseUpListener = mouseUpListener;
     }
 
-    function startCPSCounter() {
-        if (!stateData.counters.cps) createCPSCounter();
-        stateData.cpsClicks = [];
-        const intervalId = setInterval(() => {
-            const cutoff = performance.now() - TIMING.CPS_WINDOW;
-            while (stateData.cpsClicks.length > 0 && stateData.cpsClicks[0] < cutoff) stateData.cpsClicks.shift();
-            updateCounterText('cps', `CPS: ${stateData.cpsClicks.length}`);
-        }, TIMING.CPS_UPDATE_INTERVAL);
-        stateData.intervals.cps = intervalId;
-    }
+    function stopKeyDisplay() {
+        if (stateData.counters.keyDisplay?._keyListener) {
+            window.removeEventListener('keydown', stateData.counters.keyDisplay._keyListener);
+        }
+        if (stateData.counters.keyDisplay?._keyUpListener) {
+            window.removeEventListener('keyup', stateData.counters.keyDisplay._keyUpListener);
+        }
+        if (stateData.counters.keyDisplay?._mouseDownListener) {
+            window.removeEventListener('mousedown', stateData.counters.keyDisplay._mouseDownListener);
+        }
+        if (stateData.counters.keyDisplay?._mouseUpListener) {
+            window.removeEventListener('mouseup', stateData.counters.keyDisplay._mouseUpListener);
+        }
+        if (stateData.counters.keyDisplay?._dragCleanup) {
+            stateData.counters.keyDisplay._dragCleanup();
+        }
+        if (stateData.counters.keyDisplay) {
+            stateData.counters.keyDisplay.remove();
+            stateData.counters.keyDisplay = null;
+        }
 
-    function stopCPSCounter() {
-        if (stateData.counters.cps?._cpsListener) window.removeEventListener('mousedown', stateData.counters.cps._cpsListener);
-        if (stateData.counters.cps?._dragCleanup) stateData.counters.cps._dragCleanup();
-        if (stateData.counters.cps) { stateData.counters.cps.remove(); stateData.counters.cps = null; }
-        if (stateData.intervals.cps) { clearInterval(stateData.intervals.cps); stateData.intervals.cps = null; }
-        stateData.cpsClicks = [];
+        // Reset key states
+        Object.keys(stateData.keyStates).forEach(key => {
+            stateData.keyStates[key] = false;
+        });
     }
 
     function createRealTimeCounter() {
@@ -462,7 +627,7 @@
     function resetCounterPositions() {
         const defaultPositions = {
             fps: { left: '50px', top: '80px' },
-            cps: { left: '50px', top: '150px' },
+            keyDisplay: { left: '50px', top: '150px' },
             ping: { left: '50px', top: '220px' },
             antiAfk: { left: '50px', top: '290px' }
         };
@@ -561,24 +726,6 @@
         });
         displayGrid.appendChild(fpsBtn);
 
-        const cpsBtn = createButton('CPS 🐧', () => {
-            if (stateData.cpsShown) {
-                stateData.cpsShown = false;
-                stopCPSCounter();
-                cpsBtn.textContent = 'CPS 🐧';
-                cpsBtn.classList.remove('active');
-                showToast('CPS Disabled ✓');
-            }
-            else {
-                stateData.cpsShown = true;
-                startCPSCounter();
-                cpsBtn.textContent = 'CPS ✓';
-                cpsBtn.classList.add('active');
-                showToast('CPS Enabled ✓');
-            }
-        });
-        displayGrid.appendChild(cpsBtn);
-
         const pingBtn = createButton('Ping 🐧', () => {
             if (stateData.pingShown) {
                 stateData.pingShown = false;
@@ -614,6 +761,24 @@
             }
         });
         displayGrid.appendChild(realTimeBtn);
+
+        const keyDisplayBtn = createButton('Key Display 🐧', () => {
+            if (stateData.keyDisplayShown) {
+                stateData.keyDisplayShown = false;
+                stopKeyDisplay();
+                keyDisplayBtn.textContent = 'Key Display 🐧';
+                keyDisplayBtn.classList.remove('active');
+                showToast('Key Display Disabled ✓');
+            }
+            else {
+                stateData.keyDisplayShown = true;
+                startKeyDisplay();
+                keyDisplayBtn.textContent = 'Key Display ✓';
+                keyDisplayBtn.classList.add('active');
+                showToast('Key Display Enabled ✓');
+            }
+        });
+        displayGrid.appendChild(keyDisplayBtn);
 
         displayCard.appendChild(displayGrid);
         featuresContent.appendChild(displayCard);
@@ -865,18 +1030,21 @@
     function globalCleanup() {
         console.log('[Waddle] Cleaning up resources..');
         stopFPSCounter();
-        stopCPSCounter();
         stopRealTimeCounter();
         stopPingCounter();
         stopAntiAfk();
+        stopKeyDisplay();
 
         if (stateData.keyboardHandler) {
             window.removeEventListener('keydown', stateData.keyboardHandler);
         }
 
         Object.values(stateData.intervals).forEach(interval => { if (interval) clearInterval(interval); });
-        stateData.intervals = { fps: null, cps: null, realTime: null, ping: null, antiAfk: null, sessionTimer: null };
-        stateData.cpsClicks = [];
+        stateData.intervals = { fps: null, realTime: null, ping: null, antiAfk: null, sessionTimer: null };
+
+        Object.keys(stateData.keyStates).forEach(key => {
+            stateData.keyStates[key] = false;
+        });
 
         if (stateData.rafId) cancelAnimationFrame(stateData.rafId);
         stateData.performanceLoopRunning = false;
@@ -892,11 +1060,11 @@
         setupKeyboardHandler();
         showToast(`Press ${stateData.menuKey} To Open Menu!`);
         setTimeout(() => restoreSavedState(), 100);
-        
+
         // Start session timer
         updateSessionTimer();
         stateData.intervals.sessionTimer = setInterval(updateSessionTimer, 1000);
-        
+
         console.log('[Waddle] Initialization completed!');
     }
 
