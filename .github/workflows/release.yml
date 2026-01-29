@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Extract version from tag
         id: version
@@ -27,11 +29,70 @@ jobs:
             exit 1
           fi
 
+      - name: Generate changelog
+        id: changelog
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          if [ -z "$PREV_TAG" ]; then
+            # First release
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" --reverse)
+          else
+            # Compare with previous tag
+            CHANGELOG=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" --reverse)
+          fi
+          
+          # Escape newlines for multiline output
+          CHANGELOG="${CHANGELOG//'%'/'%25'}"
+          CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
+          CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
+          
+          echo "CHANGELOG<<EOF" >> $GITHUB_ENV
+          git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" --reverse >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Update CHANGELOG.md
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          DATE=$(date +"%B %d, %Y")
+          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          # Create header for new version
+          {
+            echo "# Changelog"
+            echo ""
+            echo "## [v${VERSION}] - ${DATE}"
+            echo ""
+            if [ -z "$PREV_TAG" ]; then
+              git log --pretty=format:"- %s (%h)" --reverse
+            else
+              git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" --reverse
+            fi
+            echo ""
+            echo "---"
+            echo ""
+            # Append existing changelog
+            if [ -f CHANGELOG.md ]; then
+              tail -n +2 CHANGELOG.md
+            fi
+          } > CHANGELOG.md.tmp
+          
+          mv CHANGELOG.md.tmp CHANGELOG.md
+
+      - name: Commit changelog
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "docs: update changelog for v${{ steps.version.outputs.VERSION }}" || true
+          git push
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: WaddleClient.js
-          generate_release_notes: true
+          body_path: CHANGELOG.md
           draft: false
           prerelease: false
         env:
