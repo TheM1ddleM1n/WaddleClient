@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WaddleClient
 // @namespace    M1ddleM1n and Scripter on top
-// @version      5.1
+// @version      5.2
 // @description  Waddle V5.1 RELEASE!
 // @author       Scripter, TheM1ddleM1n
 // @icon         https://raw.githubusercontent.com/TheM1ddleM1n/WaddleClient/refs/heads/main/Penguin.png
