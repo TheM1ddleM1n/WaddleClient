@@ -564,7 +564,7 @@ A: We update regularly based on community feedback and bug reports. Major update
 ---
 
 <p align="center">
-  <b>Made with 🗣️🔥 by the Waddle Team</b>
+  <b>Made by the Waddle Team</b>
 </p>
 
 <p align="center">
