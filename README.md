@@ -1,4 +1,4 @@
-# 🐧 WaddleClient4Miniblox
+# 🐧 WaddleClient
 
 ![Version](https://img.shields.io/badge/version-4.7-00ffff?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-00ffff?style=for-the-badge)
@@ -448,7 +448,7 @@ If counters get stuck or you want to restore defaults:
 
 **Enhanced & Maintained By**  
 [@TheM1ddleM1n](https://github.com/TheM1ddleM1n)  
-*UI redesign, performance optimizations, new features, and ongoing development*
+*UI redesign, performance optimizations, new features, and const development*
 
 ### Special Thanks
 
@@ -530,7 +530,7 @@ A: All settings are stored locally in your browser's localStorage.
 ---
 
 <p align="center">
-  <b>Made with 🗣️🔥 by the Waddle Team! 🐧</b>
+  <b>Made by the Waddle Team </b>
 </p>
 
 <p align="center">
