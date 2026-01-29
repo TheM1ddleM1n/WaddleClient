@@ -1007,9 +1007,16 @@ function createPermanentCrosshair() {
                         <a href="https://github.com/TheM1ddleM1n" target="_blank" style="color: #aaa; font-size: 0.85rem; text-decoration: none;">@TheM1ddleM1n</a>
                     </div>
                 </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #00ffff, #0099ff); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 0 0 8px rgba(0,255,255,0.35);">🤖</div>
+                    <div style="flex: 1;">
+                        <div style="color: #00ffff; font-size: 0.75rem; font-weight: 600;">🤖 Release Automation</div>
+                        <span style="color: #aaa; font-size: 0.85rem;">🐧Bot</span>
+                    </div>
+                </div>
             </div>
             <div style="font-size: 0.7rem; color: #555; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0, 255, 255, 0.15); text-align: center;">
-                v${SCRIPT_VERSION} • MIT License • Made by TheM1ddleM1n
+                v${SCRIPT_VERSION} • MIT License • Made with 🗣️🔥
             </div>
         `;
         aboutContent.appendChild(creditsCard);
@@ -1023,13 +1030,13 @@ function createPermanentCrosshair() {
         const suggestBtn = document.createElement('button');
         suggestBtn.className = 'waddle-menu-btn';
         suggestBtn.textContent = '💡 Suggest';
-        suggestBtn.onclick = () => window.open(`https://github.com/TheM1ddleM1n/WaddleClient/issues/new?labels=enhancement&title=Enhancement%20Request&body=**Waddle Version:** v${SCRIPT_VERSION}`, '_blank');
+        suggestBtn.onclick = () => window.open(`https://github.com/TheM1ddleM1n/WaddleClient/issues/new?template=feature_request.md`, '_blank');
         linksGrid.appendChild(suggestBtn);
 
         const bugBtn = document.createElement('button');
         bugBtn.className = 'waddle-menu-btn';
         bugBtn.textContent = '🐛 Report Bug';
-        bugBtn.onclick = () => window.open(`https://github.com/TheM1ddleM1n/WaddleClient/issues/new?labels=bug&title=Bug%20Report&body=**Waddle Version:** v${SCRIPT_VERSION}`, '_blank');
+        bugBtn.onclick = () => window.open(`https://github.com/TheM1ddleM1n/WaddleClient/issues/new?template=bug_report.md`, '_blank');
         linksGrid.appendChild(bugBtn);
 
         linksCard.appendChild(linksGrid);
