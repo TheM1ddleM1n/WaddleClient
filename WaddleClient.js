@@ -2,7 +2,7 @@
 // @name         WaddleClient
 // @namespace    M1ddleM1n and Scripter on top
 // @version      5.3
-// @description  Waddle V5.1 RELEASE!
+// @description  Waddle V5.3 RELEASE!
 // @author       Scripter, TheM1ddleM1n
 // @icon         https://raw.githubusercontent.com/TheM1ddleM1n/WaddleClient/refs/heads/main/Penguin.png
 // @match        https://miniblox.io/
