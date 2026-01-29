@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         WaddleClient
-// @namespace    M1ddleM1n and Scripter on top!
+// @namespace    M1ddleM1n and Scripter on top
 // @version      4.9
-// @description  Waddle V4.9 - Consolidated state, optimized, cleaner
+// @description  Waddle V4.9 - Consolidated code
 // @author       Scripter, TheM1ddleM1n
 // @icon         https://raw.githubusercontent.com/TheM1ddleM1n/WaddleClient/refs/heads/main/WaddlePic.png
 // @match        https://miniblox.io/
@@ -11,7 +11,7 @@
 
 (function() {
     'use strict';
-    document.title = '🐧 𝙒𝙖𝙙𝙙𝙡𝙚!';
+    document.title = '𝙒𝙖𝙙𝙙𝙡𝙚';
 
     // ==================== CONSTANTS ====================
     const TIMING = Object.freeze({
