@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Verify version matches script
+        run: |
+          SCRIPT_VERSION=$(grep -oP '@version\s+\K[0-9.]+' WaddleClient.js)
+          if [ "${{ steps.version.outputs.VERSION }}" != "$SCRIPT_VERSION" ]; then
+            echo "Tag version (${{ steps.version.outputs.VERSION }}) doesn't match script version ($SCRIPT_VERSION)"
+            exit 1
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: WaddleClient.js
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
