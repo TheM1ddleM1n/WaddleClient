@@ -1,4 +1,4 @@
-name: Release
+name: Bump Version
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
         type: string
 
 jobs:
-  create-release:
+  bump-version:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -17,8 +17,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Validate version input
         id: version
@@ -42,11 +40,6 @@ jobs:
           
           # Update README.md badge
           sed -i "s/badge\/version-[0-9.]*-/badge\/version-${VERSION}-/" README.md
-          
-          # Update CHANGELOG.md header (if it exists)
-          if grep -q "## \[Unreleased\]" CHANGELOG.md; then
-            sed -i "s/## \[Unreleased\]/## [v${VERSION}] - $(date +"%B %d, %Y")\n\n## [Unreleased]/" CHANGELOG.md
-          fi
 
       - name: Verify version consistency
         run: |
@@ -65,26 +58,10 @@ jobs:
             exit 1
           fi
 
-      - name: Commit all updates
+      - name: Commit version bump
         run: |
           git config user.name "🐧Bot"
           git config user.email "bot@waddleclient.dev"
-          git add WaddleClient.js README.md CHANGELOG.md
+          git add WaddleClient.js README.md
           git commit -m "chore: bump version to v${{ steps.version.outputs.VERSION }}" || true
           git push
-
-      - name: Create Release Tag
-        run: |
-          git tag v${{ steps.version.outputs.VERSION }} || true
-          git push --tags || true
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v${{ steps.version.outputs.VERSION }}
-          files: WaddleClient.js
-          body_path: CHANGELOG.md
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
