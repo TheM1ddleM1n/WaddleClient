@@ -67,8 +67,8 @@ jobs:
 
       - name: Commit all updates
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "🐧Bot"
+          git config user.email "🐧Bot@users.noreply.github.com"
           git add WaddleClient.js README.md CHANGELOG.md
           git commit -m "chore: bump version to v${{ steps.version.outputs.VERSION }}" || true
           git push
