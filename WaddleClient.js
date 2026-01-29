@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         WaddleClient
 // @namespace    M1ddleM1n and Scripter on top
-// @version      4.9
-// @description  Waddle V4.9 - Consolidated code
+// @version      5.0
+// @description  Waddle V5.0 - Crosshair + Dynamic Menu Hue
 // @author       Scripter, TheM1ddleM1n
 // @icon         https://raw.githubusercontent.com/TheM1ddleM1n/WaddleClient/refs/heads/main/WaddlePic.png
 // @match        https://miniblox.io/
@@ -25,9 +25,9 @@
 
     const SETTINGS_KEY = 'waddle_settings';
     const DEFAULT_MENU_KEY = '\\';
-    const CUSTOM_COLOR_KEY = 'waddle_custom_color';
-    const SCRIPT_VERSION = '4.9';
-    const DEFAULT_COLOR = '#00ffff';
+    const CUSTOM_HUE_KEY = 'waddle_custom_hue';
+    const SCRIPT_VERSION = '5.0';
+    const DEFAULT_HUE = 180; // Cyan
 
     const MESSAGES = Object.freeze({
         ENABLED: (feature) => `${feature} Enabled ✓`,
@@ -85,7 +85,7 @@
         },
         ui: {
             menuKey: DEFAULT_MENU_KEY,
-            customColor: DEFAULT_COLOR,
+            customHue: DEFAULT_HUE,
             activeTab: 'features',
             menuOverlay: null,
             tabElements: { buttons: {}, content: {} }
@@ -100,7 +100,8 @@
             realTime: null,
             ping: null,
             antiAfk: null,
-            keyDisplay: null
+            keyDisplay: null,
+            crosshair: null
         },
         input: {
             keys: { w: false, a: false, s: false, d: false, space: false, lmb: false, rmb: false },
@@ -135,20 +136,33 @@
         }, duration);
     }
 
-    function applyTheme(color) {
-        document.documentElement.style.setProperty('--waddle-primary', color);
-        document.documentElement.style.setProperty('--waddle-shadow', color);
-        state.ui.customColor = color;
-        try { localStorage.setItem(CUSTOM_COLOR_KEY, color); } catch (e) {}
+    function hueToColor(hue) {
+        return `hsl(${hue}, 100%, 50%)`;
     }
 
-    function loadCustomColor() {
+    function applyTheme(hue) {
+        const color = hueToColor(hue);
+        document.documentElement.style.setProperty('--waddle-primary', color);
+        document.documentElement.style.setProperty('--waddle-shadow', color);
+        state.ui.customHue = hue;
+
+        // Update crosshair color if it exists
+        if (state.counters.crosshair) {
+            const lines = state.counters.crosshair.querySelectorAll('div');
+            lines.forEach(line => line.style.backgroundColor = color);
+        }
+
+        try { localStorage.setItem(CUSTOM_HUE_KEY, hue.toString()); } catch (e) {}
+    }
+
+    function loadCustomHue() {
         try {
-            const savedColor = localStorage.getItem(CUSTOM_COLOR_KEY) || DEFAULT_COLOR;
-            state.ui.customColor = savedColor;
-            applyTheme(savedColor);
+            const savedHue = localStorage.getItem(CUSTOM_HUE_KEY);
+            const hueValue = savedHue ? parseInt(savedHue) : DEFAULT_HUE;
+            state.ui.customHue = hueValue;
+            applyTheme(hueValue);
         } catch (e) {
-            applyTheme(DEFAULT_COLOR);
+            applyTheme(DEFAULT_HUE);
         }
     }
 
@@ -171,7 +185,7 @@
                 version: SCRIPT_VERSION,
                 features: state.features,
                 menuKey: state.ui.menuKey,
-                customColor: state.ui.customColor,
+                customHue: state.ui.customHue,
                 positions: Object.fromEntries(
                     Object.entries(state.counters)
                         .filter(([_, counter]) => counter)
@@ -200,6 +214,11 @@
 @keyframes toastSlideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes toastSlideOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
 @media (prefers-reduced-motion: reduce) { * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+
+/* Hide default Miniblox crosshair */
+.css-xhoozx, [class*="crosshair"], img[src*="crosshair"] {
+    display: none !important;
+}
 
 #waddle-menu-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(15px); z-index: 10000000; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 40px; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; user-select: none; }
 #waddle-menu-overlay.show { opacity: 1; pointer-events: auto; }
@@ -236,15 +255,121 @@
 .space-box { grid-column: 1 / -1; width: 100%; height: 40px; font-size: 0.9rem; }
 
 .settings-label { font-size: 0.9rem; color: var(--waddle-primary); margin-bottom: 10px; display: block; font-weight: 600; }
-.color-picker-input { width: 100%; height: 50px; border: 2px solid var(--waddle-primary); border-radius: 8px; cursor: pointer; background: rgba(0, 0, 0, 0.8); transition: box-shadow 0.2s ease; margin-top: 12px; }
-.color-picker-input:hover { box-shadow: 0 0 15px rgba(0, 255, 255, 0.6); }
+
+.hue-slider { width: 100%; height: 8px; border-radius: 5px; background: linear-gradient(to right,
+    hsl(0,100%,50%), hsl(30,100%,50%), hsl(60,100%,50%), hsl(90,100%,50%), hsl(120,100%,50%),
+    hsl(150,100%,50%), hsl(180,100%,50%), hsl(210,100%,50%), hsl(240,100%,50%), hsl(270,100%,50%),
+    hsl(300,100%,50%), hsl(330,100%,50%), hsl(360,100%,50%));
+    cursor: pointer; margin: 8px 0; appearance: none; -webkit-appearance: none; outline: none; }
+.hue-slider::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: white; border: 3px solid var(--waddle-primary); cursor: pointer; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+.hue-slider::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: white; border: 3px solid var(--waddle-primary); cursor: pointer; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+
+.hue-display { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.hue-color-preview { width: 40px; height: 40px; border-radius: 8px; border: 2px solid var(--waddle-primary); box-shadow: 0 0 10px rgba(0,255,255,0.5); }
+.hue-value-text { color: var(--waddle-primary); font-weight: 700; font-family: 'Courier New', monospace; font-size: 0.9rem; }
+
 .keybind-input { width: 100%; background: rgba(0, 0, 0, 0.8); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1rem; padding: 8px 12px; border-radius: 8px; text-align: center; transition: box-shadow 0.2s ease; }
 .keybind-input:focus { outline: none; box-shadow: 0 0 15px rgba(0, 255, 255, 0.6); background: rgba(0, 255, 255, 0.15); }
 
 #waddle-toast { position: fixed; bottom: 60px; right: 50px; background: rgba(0, 0, 0, 0.95); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); padding: 16px 24px; border-radius: 12px; font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1rem; z-index: 10000001; box-shadow: 0 0 20px rgba(0, 255, 255, 0.5), inset 0 0 10px rgba(0, 255, 255, 0.2); animation: toastSlideIn 0.3s ease; pointer-events: none; max-width: 280px; text-align: center; }
 #waddle-toast.hide { animation: toastSlideOut 0.3s ease forwards; }
+
+/* Crosshair styling */
+#waddle-crosshair { display: block !important; z-index: 5000 !important; }
 `;
         document.head.appendChild(style);
+    }
+
+    // ==================== CROSSHAIR SYSTEM ====================
+    function createPermanentCrosshair() {
+        const crosshairContainer = document.createElement('div');
+        crosshairContainer.id = 'waddle-crosshair';
+        Object.assign(crosshairContainer.style, {
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: '5000',
+            pointerEvents: 'none',
+            display: 'block'
+        });
+
+        const targetColor = hueToColor(state.ui.customHue);
+
+        // Center dot
+        const centerDot = document.createElement('div');
+        Object.assign(centerDot.style, {
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            width: '3px',
+            height: '3px',
+            backgroundColor: targetColor,
+            borderRadius: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: '1'
+        });
+        crosshairContainer.appendChild(centerDot);
+
+        // Top line
+        const topLine = document.createElement('div');
+        Object.assign(topLine.style, {
+            position: 'absolute',
+            top: 'calc(50% - 10px)',
+            left: '50%',
+            width: '1.5px',
+            height: '6px',
+            backgroundColor: targetColor,
+            transform: 'translateX(-50%)',
+            zIndex: '1'
+        });
+        crosshairContainer.appendChild(topLine);
+
+        // Bottom line
+        const bottomLine = document.createElement('div');
+        Object.assign(bottomLine.style, {
+            position: 'absolute',
+            top: 'calc(50% + 4px)',
+            left: '50%',
+            width: '1.5px',
+            height: '6px',
+            backgroundColor: targetColor,
+            transform: 'translateX(-50%)',
+            zIndex: '1'
+        });
+        crosshairContainer.appendChild(bottomLine);
+
+        // Left line
+        const leftLine = document.createElement('div');
+        Object.assign(leftLine.style, {
+            position: 'absolute',
+            left: 'calc(50% - 10px)',
+            top: '50%',
+            width: '6px',
+            height: '1.5px',
+            backgroundColor: targetColor,
+            transform: 'translateY(-50%)',
+            zIndex: '1'
+        });
+        crosshairContainer.appendChild(leftLine);
+
+        // Right line
+        const rightLine = document.createElement('div');
+        Object.assign(rightLine.style, {
+            position: 'absolute',
+            left: 'calc(50% + 4px)',
+            top: '50%',
+            width: '6px',
+            height: '1.5px',
+            backgroundColor: targetColor,
+            transform: 'translateY(-50%)',
+            zIndex: '1'
+        });
+        crosshairContainer.appendChild(rightLine);
+
+        document.body.appendChild(crosshairContainer);
+        state.counters.crosshair = crosshairContainer;
+        return crosshairContainer;
     }
 
     // ==================== COUNTER CREATION ====================
@@ -776,19 +901,39 @@
         const themeCard = document.createElement('div');
         themeCard.className = 'waddle-card';
         themeCard.innerHTML = '<div class="waddle-card-header">🎨 Theme</div>';
-        const colorLabel = document.createElement('label');
-        colorLabel.className = 'settings-label';
-        colorLabel.textContent = 'Primary Color:';
-        themeCard.appendChild(colorLabel);
-        const colorInput = document.createElement('input');
-        colorInput.type = 'color';
-        colorInput.className = 'color-picker-input';
-        colorInput.value = state.ui.customColor;
-        colorInput.addEventListener('input', (e) => {
-            applyTheme(e.target.value);
+
+        const hueLabel = document.createElement('label');
+        hueLabel.className = 'settings-label';
+        hueLabel.textContent = 'Menu & Crosshair Hue:';
+        themeCard.appendChild(hueLabel);
+
+        const hueSlider = document.createElement('input');
+        hueSlider.type = 'range';
+        hueSlider.className = 'hue-slider';
+        hueSlider.min = '0';
+        hueSlider.max = '360';
+        hueSlider.value = state.ui.customHue;
+        hueSlider.addEventListener('input', (e) => {
+            const hue = parseInt(e.target.value);
+            applyTheme(hue);
+            hueColorPreview.style.background = hueToColor(hue);
+            hueValueText.textContent = `${hue}°`;
             debouncedSave();
         });
-        themeCard.appendChild(colorInput);
+        themeCard.appendChild(hueSlider);
+
+        const hueDisplay = document.createElement('div');
+        hueDisplay.className = 'hue-display';
+        const hueColorPreview = document.createElement('div');
+        hueColorPreview.className = 'hue-color-preview';
+        hueColorPreview.style.background = hueToColor(state.ui.customHue);
+        hueDisplay.appendChild(hueColorPreview);
+        const hueValueText = document.createElement('span');
+        hueValueText.className = 'hue-value-text';
+        hueValueText.textContent = `${state.ui.customHue}°`;
+        hueDisplay.appendChild(hueValueText);
+        themeCard.appendChild(hueDisplay);
+
         settingsContent.appendChild(themeCard);
 
         const controlsCard = document.createElement('div');
@@ -938,6 +1083,7 @@
             if (!saved) return;
             const settings = JSON.parse(saved);
             if (settings.menuKey) state.ui.menuKey = settings.menuKey;
+            if (settings.customHue !== undefined) state.ui.customHue = settings.customHue;
             if (settings.features) Object.assign(state.features, settings.features);
         } catch (e) {
             console.error('[Waddle] Failed to restore settings:', e);
@@ -971,7 +1117,8 @@
     function init() {
         console.log(MESSAGES.INIT_START);
         injectStyles();
-        loadCustomColor();
+        loadCustomHue();
+        createPermanentCrosshair();
         createMenu();
         setupKeyboardHandler();
         showToast(MESSAGES.MENU_PROMPT(state.ui.menuKey));
