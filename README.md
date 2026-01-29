@@ -437,6 +437,7 @@ All settings are stored locally in your browser's localStorage:
 - 🌈 Replaced color picker with dynamic hue slider (0-360°)
 - 🔄 Crosshair auto-syncs with theme hue
 - ✨ Improved visual feedback with hue preview
+- 👀 Crosshair is **bolder**
 
 **Improvements:**
 - 🎨 Hue slider provides smooth spectrum control
