@@ -1,20 +1,21 @@
 # 🐧 WaddleClient
 
-![Version](https://img.shields.io/badge/version-4.9-00ffff?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-5.0-00ffff?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-00ffff?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/platform-Miniblox-00ffff?style=for-the-badge)
 
-> **A premium enhancement client for Miniblox featuring a modern card-based UI, real-time performance monitoring, and powerful quality-of-life features.**
+> **A premium enhancement client for Miniblox featuring a modern card-based UI, real-time performance monitoring, permanent target crosshair, and powerful quality-of-life features.**
 
 ---
 
 ## 🌟 Highlights
 
+- 🎯 **Permanent Target Crosshair** - Always-on target crosshair that matches your theme color
 - 🎨 **Beautiful Modern UI** - Sleek card-based design with smooth animations and intuitive tabbed interface
 - 📊 **Real-Time Monitoring** - FPS, Ping, CPS, and Clock displays with live performance tracking
 - ⌨️ **Visual Key Display** - See your WASD, Space, and mouse inputs in real-time with instant visual feedback
 - 🛠️ **Smart Utilities** - Anti-AFK protection and fullscreen toggle for uninterrupted gameplay
-- 🎯 **Fully Customizable** - Drag counters anywhere, change colors, set custom keybinds, and persist all settings
+- 🎨 **Fully Customizable** - Dynamic hue slider, drag counters anywhere, set custom keybinds, and persist all settings
 - ⚡ **Optimized Performance** - Efficient RAF loops with minimal memory footprint and zero external dependencies
 - 💾 **Persistent Settings** - All your preferences automatically saved to localStorage
 
@@ -82,14 +83,28 @@ If the auto-install doesn't work, follow these steps:
 
 ### Pro Tips
 
-- **Customize colors:** Settings tab → Pick your favorite color
+- **Customize theme:** Settings tab → Drag hue slider to your favorite color
 - **Change menu key:** Settings tab → Click keybind field → Press your new key
 - **Move counters:** Click and drag any counter to reposition it
 - **Reset layout:** Settings tab → "Reset Counter Positions" button
+- **Crosshair auto-colors:** Your crosshair always matches your selected theme hue
 
 ---
 
 ## ✨ Features
+
+### 🎯 Permanent Target Crosshair
+
+Always-visible crosshair at the center of your screen. Automatically changes color to match your selected theme hue.
+
+- **Style:** Target design with center dot and four directional lines
+- **Position:** Fixed at screen center (50%, 50%)
+- **Color:** Synced with theme hue slider (0-360°)
+- **Always On:** Persistent - no toggle needed, always active
+- **Replaces:** Hides default Miniblox crosshair
+- **Usage:** Improves aim precision and consistency
+
+---
 
 ### 📊 Display Counters
 
@@ -98,7 +113,7 @@ If the auto-install doesn't work, follow these steps:
 Shows your current frames per second for performance monitoring. Updates every 500ms and helps identify performance drops during gameplay.
 
 - **Draggable:** ✅ Yes
-- **Color:** Cyan/Green gradient
+- **Color:** Cyan/Custom theme color
 - **Update Rate:** Every 500ms
 - **Technology:** RequestAnimationFrame loop
 - **Usage:** Monitor performance and identify lag spikes
@@ -166,25 +181,34 @@ One-click fullscreen activation using the browser's native fullscreen API. Quick
 
 ## 🎨 Customization
 
-### Theme Colors
+### Theme Hue Slider
 
-Personalize your entire UI with custom colors.
+Personalize your entire UI with a dynamic hue slider. Choose any color across the full 360° spectrum.
 
 1. Open menu → **🎨 Settings** tab
-2. Click the color picker
-3. Choose your desired color
-4. Changes apply instantly to all UI elements
+2. Find **"Menu & Crosshair Hue"** section
+3. Drag the slider to your desired hue (0-360°)
+4. See a live color preview next to the slider
+5. Changes apply instantly to menu, crosshair, and all UI elements
 
-The theme color affects counters, buttons, borders, and shadows throughout the interface.
+**What it affects:**
+- Menu header text and shadows
+- All button borders and hover states
+- Counter backgrounds and glows
+- Crosshair color
+- Tab active indicators
+- Input field borders
 
-**Default:** `#00ffff` (Cyan)
+**Popular hue values:**
+- `0°` = Red
+- `30°` = Orange
+- `60°` = Yellow
+- `120°` = Green
+- `180°` = Cyan (default)
+- `240°` = Blue
+- `300°` = Magenta
 
-**Tip:** The theme color is applied to:
-- All UI borders and accents
-- Counter backgrounds
-- Button hover states
-- Text shadows and glows
-- Active state indicators
+**Tip:** Hue slider provides smooth, real-time color transitions across the entire spectrum!
 
 ### Custom Keybind
 
@@ -235,7 +259,7 @@ All settings are stored locally in your browser's localStorage:
 
 - Counter positions (for all draggable counters)
 - Enabled/disabled states for each feature
-- Custom theme color
+- Custom theme hue (0-360)
 - Custom menu keybind
 - Settings version tracking
 
@@ -244,7 +268,7 @@ All settings are stored locally in your browser's localStorage:
 **Storage Structure:**
 ```json
 {
-  "version": "4.9",
+  "version": "5.0",
   "features": {
     "fps": false,
     "ping": false,
@@ -253,7 +277,7 @@ All settings are stored locally in your browser's localStorage:
     "keyDisplay": false
   },
   "menuKey": "\\",
-  "customColor": "#00ffff",
+  "customHue": 180,
   "positions": {
     "fps": { "left": "50px", "top": "80px" },
     "keyDisplay": { "left": "50px", "top": "150px" },
@@ -313,6 +337,17 @@ All settings are stored locally in your browser's localStorage:
 - If not, click it to enable
 - Counters should appear within 1-2 seconds
 
+### Crosshair Not Showing
+
+**Try these solutions:**
+
+1. Refresh the page (Ctrl+R)
+2. Check if the crosshair is behind other UI elements
+3. Verify Miniblox game has loaded fully
+4. Try changing the hue slider to see if it updates
+
+**Note:** Crosshair is always enabled and permanent - no toggle needed!
+
 ### Settings Not Saving
 
 **Possible causes & solutions:**
@@ -328,6 +363,21 @@ All settings are stored locally in your browser's localStorage:
 3. Find localhost in Storage
 4. Clear localStorage (except for important data)
 
+### Hue Slider Not Working
+
+**Try these solutions:**
+
+1. Drag the slider all the way left (0°) then right (360°)
+2. Refresh the page
+3. Check console for JavaScript errors
+4. Ensure you're using a modern browser (ES6+ support)
+
+**Expected behavior:**
+- Slider updates color preview in real-time
+- Menu header changes color immediately
+- Crosshair color syncs with slider position
+- All changes save automatically
+
 ### Performance Issues
 
 **If you experience lag:**
@@ -340,7 +390,7 @@ All settings are stored locally in your browser's localStorage:
 
 **Performance tips:**
 - FPS counter has minimal impact
-- Anti-AFK uses simple intervals (very lightweight)
+- Ping counter uses simple intervals (very lightweight)
 - Key Display monitors events efficiently
 - Only enable features you actively use
 
@@ -349,7 +399,8 @@ All settings are stored locally in your browser's localStorage:
 - Ping Counter: ~0.05% CPU usage
 - Key Display: ~0.2% CPU usage
 - Anti-AFK: ~0.01% CPU usage
-- Total with all features: ~0.35% CPU usage (negligible)
+- Crosshair: ~0.02% CPU usage (negligible)
+- Total with all features: ~0.38% CPU usage (negligible)
 
 ### KeyStrokes Not Detecting
 
@@ -379,7 +430,21 @@ All settings are stored locally in your browser's localStorage:
 
 ## 📝 Changelog
 
-### v4.9 (Latest) - January 2026
+### v5.0 (Latest) - January 2026 ⭐
+
+**Major Features:**
+- 🎯 Added permanent Target crosshair at screen center
+- 🌈 Replaced color picker with dynamic hue slider (0-360°)
+- 🔄 Crosshair auto-syncs with theme hue
+- ✨ Improved visual feedback with hue preview
+
+**Improvements:**
+- 🎨 Hue slider provides smooth spectrum control
+- 📊 Better color preview display
+- ⚡ Optimized crosshair rendering
+- 🔧 Consolidated hue management system
+
+### v4.9 - January 2026
 
 **Improvements:**
 - 🔧 Consolidated state management for cleaner code
@@ -424,7 +489,7 @@ All settings are stored locally in your browser's localStorage:
 [@Scripter132132](https://github.com/Scripter132132) - Initial development and core architecture
 
 **Enhanced & Maintained By**  
-[@TheM1ddleM1n](https://github.com/TheM1ddleM1n) - UI redesign, performance optimization, and ongoing development
+[@TheM1ddleM1n](https://github.com/TheM1ddleM1n) - UI redesign, performance optimization, crosshair system, and ongoing development
 
 **Special Thanks**
 - Miniblox community for feedback and testing
@@ -536,11 +601,15 @@ A: Go to the [Issues page](https://github.com/TheM1ddleM1n/WaddleClient/issues) 
 
 **Q: Can I customize the position of the clock?**
 
-A: The clock is fixed to the bottom-right corner to minimize gameplay interference. However, you can change its color along with other UI elements in the Settings tab.
+A: The clock is fixed to the bottom-right corner to minimize gameplay interference. However, you can change its color along with other UI elements using the hue slider.
+
+**Q: Can I move the crosshair?**
+
+A: The crosshair is fixed to the center of your screen (50%, 50%) for precision aiming. It cannot be moved, but you can customize its color with the hue slider.
 
 **Q: Will this affect my game performance?**
 
-A: WaddleClient has minimal performance impact (less than 0.35% CPU with all features enabled). Most players won't notice any difference in gameplay performance.
+A: WaddleClient has minimal performance impact (less than 0.38% CPU with all features enabled). Most players won't notice any difference in gameplay performance.
 
 **Q: Can I use this on other websites?**
 
@@ -549,6 +618,14 @@ A: WaddleClient is specifically designed for Miniblox. It will only run on minib
 **Q: How often is this updated?**
 
 A: We update regularly based on community feedback and bug reports. Major updates typically happen every 1-2 months, with hotfixes as needed.
+
+**Q: How do I change the crosshair style?**
+
+A: v5.0 features a permanent Target-style crosshair. The design cannot be changed, but you can customize the color using the hue slider in Settings.
+
+**Q: Does the crosshair hide when I open the menu?**
+
+A: No, the crosshair is permanent and stays visible at all times, even when the menu is open.
 
 ---
 
