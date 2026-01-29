@@ -6,7 +6,6 @@
 // @author       Scripter, TheM1ddleM1n
 // @icon         https://raw.githubusercontent.com/TheM1ddleM1n/WaddleClient/refs/heads/main/WaddlePic.png
 // @match        https://miniblox.io/
-// @grant        none
 // ==/UserScript==
 
 (function() {
