@@ -1,6 +1,6 @@
 # 🐧 WaddleClient
 
-![Version](https://img.shields.io/badge/version-5.3.3-00ffff?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-5.4-00ffff?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-00ffff?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/platform-Miniblox-00ffff?style=for-the-badge)
 

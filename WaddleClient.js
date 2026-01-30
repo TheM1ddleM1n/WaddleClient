@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WaddleClient
 // @namespace    M1ddleM1n and Scripter on top
-// @version      5.3.3
+// @version      5.4
 // @description  Waddle V5.3 RELEASE!
 // @author       Scripter, TheM1ddleM1n
 // @icon         https://raw.githubusercontent.com/TheM1ddleM1n/WaddleClient/refs/heads/main/Penguin.png
@@ -26,7 +26,7 @@
     const SETTINGS_KEY = 'waddle_settings';
     const DEFAULT_MENU_KEY = '\\';
     const CUSTOM_HUE_KEY = 'waddle_custom_hue';
-    const SCRIPT_VERSION = '5.3.3';
+    const SCRIPT_VERSION = '5.4';
     const DEFAULT_HUE = 180; // Cyan
 
     const MESSAGES = Object.freeze({
