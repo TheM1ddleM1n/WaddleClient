@@ -1,9 +1,9 @@
 ---
-name: 🐛 Bug Report
+name: Bug Report
 about: Report a bug or issue you've encountered
 title: '[Bug] '
 labels: bug
-assignees: ''
+assignees: 'TheM1ddleM1n'
 ---
 
 ## Description
@@ -22,12 +22,11 @@ What should happen?
 What actually happens?
 
 ## WaddleClient Information
-- **Version:** (Check menu header: e.g., v5.0)
-- **Browser:** (e.g., Chrome 131, Firefox 133)
-- **Browser Version:** 
+- **Version of Client:** (Check menu header: e.g., v4.8)
+- **Browser Version:** (example: Chrome 144, Firefox 133)
 - **Operating System:** (Windows, macOS, Linux, etc.)
 
-## Affected Features
+## Affected Features?
 - [ ] FPS Counter
 - [ ] Ping Counter
 - [ ] Real-Time Clock
@@ -38,12 +37,12 @@ What actually happens?
 - [ ] Settings
 - [ ] Other: ___
 
-## Error Messages
+## Any Error Messages?
 ```
 Paste any error messages from the browser console (F12 > Console tab)
 ```
 
-## Additional Context
+## Additional things you would like to say!
 Any other context about the problem? Screenshots, videos, or logs are helpful!
 
 ## Checklist
