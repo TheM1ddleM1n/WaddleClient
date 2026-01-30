@@ -432,7 +432,7 @@ All settings are stored locally in your browser's localStorage:
 
 ## 📝 Changelog
 
-## [5.3.3] - 29/01/26
+## [5.4] - 29/01/26
 - made a new .github/workflows structure with bump.yml
 - and bug/enhancement format
 
