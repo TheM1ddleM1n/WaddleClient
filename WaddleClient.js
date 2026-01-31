@@ -17,6 +17,100 @@
     const SETTINGS_KEY = 'waddle_settings';
     const NEON_GREEN = '#39ff14';
 
+    // Feature config - eliminates toggleFeature() if/else chains
+    const FEATURES = {
+        fps: {
+            id: 'fps-counter',
+            label: 'FPS',
+            icon: '🐧',
+            category: 'display',
+            position: { left: '50px', top: '80px' },
+            draggable: true,
+            create() {
+                const counter = createCounter(this.id, 'FPS: 0', this.position, this.draggable);
+                state.fpsActive = true;
+                startPerformanceLoop();
+                return counter;
+            },
+            destroy() {
+                stopPerformanceLoop();
+                removeElement(this.id);
+            }
+        },
+        realTime: {
+            id: 'real-time-counter',
+            label: 'Clock',
+            icon: '🐧',
+            category: 'display',
+            position: { left: 'auto', top: 'auto', right: '30px', bottom: '30px' },
+            draggable: false,
+            create() {
+                const counter = createCounter(this.id, '00:00:00 AM', { left: '0px', top: '0px' }, false);
+                counter.style.left = 'auto';
+                counter.style.top = 'auto';
+                counter.style.right = '30px';
+                counter.style.bottom = '30px';
+                counter.style.background = 'transparent';
+                counter.style.boxShadow = 'none';
+                counter.style.border = 'none';
+                counter.style.textShadow = '0 0 8px var(--waddle-primary), 0 0 15px var(--waddle-primary)';
+                counter.style.fontSize = '1.5rem';
+                counter.style.padding = '0';
+                updateRealTime();
+                state.intervals.realTime = setInterval(updateRealTime, 1000);
+                return counter;
+            },
+            destroy() {
+                clearInterval(state.intervals.realTime);
+                removeElement(this.id);
+            }
+        },
+        antiAfk: {
+            id: 'anti-afk-counter',
+            label: 'Anti-AFK',
+            icon: '🐧',
+            category: 'utilities',
+            position: { left: '50px', top: '290px' },
+            draggable: true,
+            create() {
+                const counter = createCounter(this.id, '🐧 Jumping in 5s', this.position, this.draggable);
+                state.antiAfkCountdown = 5;
+                state.intervals.antiAfk = setInterval(() => {
+                    state.antiAfkCountdown--;
+                    const el = document.getElementById(this.id);
+                    if (el) el._textSpan.textContent = `🐧 Jumping in ${state.antiAfkCountdown}s`;
+                    if (state.antiAfkCountdown <= 0) {
+                        pressSpace();
+                        state.antiAfkCountdown = 5;
+                    }
+                }, 1000);
+                return counter;
+            },
+            destroy() {
+                clearInterval(state.intervals.antiAfk);
+                removeElement(this.id);
+            }
+        },
+        keyDisplay: {
+            id: 'key-display-container',
+            label: 'Key Display',
+            icon: '🐧',
+            category: 'display',
+            position: { left: '50px', top: '150px' },
+            draggable: true,
+            create() {
+                createKeyDisplay();
+                setupKeyDisplayListeners();
+                return document.getElementById(this.id);
+            },
+            destroy() {
+                removeKeyDisplayListeners();
+                removeElement(this.id);
+                Object.keys(state.keys).forEach(key => { state.keys[key] = false; });
+            }
+        }
+    };
+
     const state = {
         fps: false,
         realTime: false,
@@ -26,10 +120,6 @@
         menuOverlay: null,
         tabButtons: {},
         tabContent: {},
-        fpsFpsCounter: null,
-        fpsRealTimeCounter: null,
-        fpsAntiAfkCounter: null,
-        fpsKeyDisplay: null,
         crosshair: null,
         rafId: null,
         fpsActive: false,
@@ -38,11 +128,22 @@
         startTime: Date.now(),
         antiAfkCountdown: 5,
         keys: { w: false, a: false, s: false, d: false, space: false, lmb: false, rmb: false },
-        listeners: {}
+        listeners: {},
+        dragListeners: new WeakMap()
     };
 
+    // Simplified settings - queries DOM instead of manually mapping
     function saveSettings() {
         try {
+            const positions = {};
+            const draggableIds = ['fps-counter', 'anti-afk-counter', 'key-display-container'];
+            draggableIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    positions[id] = { left: el.style.left, top: el.style.top };
+                }
+            });
+
             localStorage.setItem(SETTINGS_KEY, JSON.stringify({
                 version: SCRIPT_VERSION,
                 features: {
@@ -51,11 +152,7 @@
                     antiAfk: state.antiAfk,
                     keyDisplay: state.keyDisplay
                 },
-                positions: {
-                    fps: state.fpsFpsCounter ? { left: state.fpsFpsCounter.style.left, top: state.fpsFpsCounter.style.top } : { left: '50px', top: '80px' },
-                    keyDisplay: state.fpsKeyDisplay ? { left: state.fpsKeyDisplay.style.left, top: state.fpsKeyDisplay.style.top } : { left: '50px', top: '150px' },
-                    antiAfk: state.fpsAntiAfkCounter ? { left: state.fpsAntiAfkCounter.style.left, top: state.fpsAntiAfkCounter.style.top } : { left: '50px', top: '290px' }
-                }
+                positions
             }));
         } catch (e) {}
     }
@@ -70,6 +167,20 @@
             toast.classList.add('hide');
             setTimeout(() => toast.remove(), 300);
         }, duration);
+    }
+
+    function removeElement(id) {
+        const el = document.getElementById(id);
+        if (el) {
+            const listeners = state.dragListeners.get(el);
+            if (listeners) {
+                el.removeEventListener('mousedown', listeners.mouseDown);
+                window.removeEventListener('mouseup', listeners.mouseUp);
+                window.removeEventListener('mousemove', listeners.mouseMove);
+                if (listeners.rafId) cancelAnimationFrame(listeners.rafId);
+            }
+            el.remove();
+        }
     }
 
     function injectStyles() {
@@ -148,20 +259,22 @@
         crosshairContainer.appendChild(svg);
         document.body.appendChild(crosshairContainer);
         state.crosshair = crosshairContainer;
-
         return crosshairContainer;
     }
 
-    function createCounterElement(id, text, position, isDraggable = true) {
+    // Factory function for counter creation (consolidates counter creation)
+    function createCounter(id, text, position, isDraggable = true) {
         const counter = document.createElement('div');
         counter.id = id;
         counter.className = 'counter';
         counter.style.left = position.left;
         counter.style.top = position.top;
+
         const textSpan = document.createElement('span');
         textSpan.textContent = text;
         counter.appendChild(textSpan);
         counter._textSpan = textSpan;
+
         document.body.appendChild(counter);
 
         if (isDraggable) setupDragging(counter);
@@ -170,12 +283,14 @@
 
     function setupDragging(element) {
         let rafId = null;
+
         const onMouseDown = (e) => {
             element._dragging = true;
             element._offsetX = e.clientX - element.getBoundingClientRect().left;
             element._offsetY = e.clientY - element.getBoundingClientRect().top;
             element.classList.add('dragging');
         };
+
         const onMouseUp = () => {
             if (element._dragging) {
                 element._dragging = false;
@@ -184,6 +299,7 @@
                 saveSettings();
             }
         };
+
         const onMouseMove = (e) => {
             if (element._dragging && element.parentElement) {
                 element._pendingX = e.clientX;
@@ -200,15 +316,13 @@
                 }
             }
         };
+
         element.addEventListener('mousedown', onMouseDown);
         window.addEventListener('mouseup', onMouseUp);
         window.addEventListener('mousemove', onMouseMove);
-        element._dragCleanup = () => {
-            element.removeEventListener('mousedown', onMouseDown);
-            window.removeEventListener('mouseup', onMouseUp);
-            window.removeEventListener('mousemove', onMouseMove);
-            if (rafId) cancelAnimationFrame(rafId);
-        };
+
+        // Store listeners in WeakMap for cleanup (replaces _dragCleanup)
+        state.dragListeners.set(element, { mouseDown: onMouseDown, mouseUp: onMouseUp, mouseMove: onMouseMove, rafId });
     }
 
     function startPerformanceLoop() {
@@ -221,11 +335,14 @@
             }
             frameCount++;
             const elapsed = currentTime - lastFpsUpdate;
-            if (elapsed >= 500 && state.fpsFpsCounter) {
-                const fps = Math.round((frameCount * 1000) / elapsed);
-                if (fps !== lastFps) {
-                    state.fpsFpsCounter._textSpan.textContent = `FPS: ${fps}`;
-                    lastFps = fps;
+            if (elapsed >= 500) {
+                const fpsCounter = document.getElementById('fps-counter');
+                if (fpsCounter) {
+                    const fps = Math.round((frameCount * 1000) / elapsed);
+                    if (fps !== lastFps) {
+                        fpsCounter._textSpan.textContent = `FPS: ${fps}`;
+                        lastFps = fps;
+                    }
                 }
                 frameCount = 0;
                 lastFpsUpdate = currentTime;
@@ -244,14 +361,15 @@
     }
 
     function updateRealTime() {
-        if (!state.fpsRealTimeCounter) return;
+        const realTimeCounter = document.getElementById('real-time-counter');
+        if (!realTimeCounter) return;
         const now = new Date();
         let hours = now.getHours();
         const minutes = now.getMinutes().toString().padStart(2, '0');
         const seconds = now.getSeconds().toString().padStart(2, '0');
         const ampm = hours >= 12 ? 'PM' : 'AM';
         hours = hours % 12 || 12;
-        state.fpsRealTimeCounter._textSpan.textContent = `${hours}:${minutes}:${seconds} ${ampm}`;
+        realTimeCounter._textSpan.textContent = `${hours}:${minutes}:${seconds} ${ampm}`;
     }
 
     function pressSpace() {
@@ -259,10 +377,6 @@
         const up = new KeyboardEvent("keyup", { key: " ", code: "Space", keyCode: 32, which: 32, bubbles: true });
         window.dispatchEvent(down);
         setTimeout(() => window.dispatchEvent(up), 50);
-    }
-
-    function updateAntiAfkCounter() {
-        state.fpsAntiAfkCounter._textSpan.textContent = `🐧 Jumping in ${state.antiAfkCountdown}s`;
     }
 
     function createKeyDisplay() {
@@ -329,12 +443,14 @@
 
         container._keyBoxes = keyBoxes;
         setupDragging(container);
-        state.fpsKeyDisplay = container;
         return container;
     }
 
     function updateKeyDisplay(key, isPressed) {
-        state.fpsKeyDisplay?._keyBoxes?.[key]?.classList.toggle('active', isPressed);
+        const container = document.getElementById('key-display-container');
+        if (container?._keyBoxes?.[key]) {
+            container._keyBoxes[key].classList.toggle('active', isPressed);
+        }
     }
 
     function setupKeyDisplayListeners() {
@@ -392,80 +508,25 @@
         state.listeners = {};
     }
 
+    // Simplified toggleFeature using FEATURES config
     function toggleFeature(featureName) {
+        const feature = FEATURES[featureName];
+        if (!feature) return;
+
         const newState = !state[featureName];
         state[featureName] = newState;
 
-        if (featureName === 'fps') {
-            if (newState) {
-                if (!state.fpsFpsCounter) state.fpsFpsCounter = createCounterElement('fps-counter', 'FPS: 0', { left: '50px', top: '80px' }, true);
-                state.fpsActive = true;
-                startPerformanceLoop();
-            } else {
-                stopPerformanceLoop();
-                state.fpsFpsCounter?._dragCleanup?.();
-                state.fpsFpsCounter?.remove();
-                state.fpsFpsCounter = null;
-            }
-        } else if (featureName === 'realTime') {
-            if (newState) {
-                if (!state.fpsRealTimeCounter) {
-                    state.fpsRealTimeCounter = createCounterElement('real-time-counter', '00:00:00 AM', { left: '0px', top: '0px' }, false);
-                    state.fpsRealTimeCounter.style.left = 'auto';
-                    state.fpsRealTimeCounter.style.top = 'auto';
-                    state.fpsRealTimeCounter.style.right = '30px';
-                    state.fpsRealTimeCounter.style.bottom = '30px';
-                    state.fpsRealTimeCounter.style.background = 'transparent';
-                    state.fpsRealTimeCounter.style.boxShadow = 'none';
-                    state.fpsRealTimeCounter.style.border = 'none';
-                    state.fpsRealTimeCounter.style.textShadow = '0 0 8px var(--waddle-primary), 0 0 15px var(--waddle-primary)';
-                    state.fpsRealTimeCounter.style.fontSize = '1.5rem';
-                    state.fpsRealTimeCounter.style.padding = '0';
-                }
-                updateRealTime();
-                state.intervals.realTime = setInterval(updateRealTime, 1000);
-            } else {
-                clearInterval(state.intervals.realTime);
-                state.fpsRealTimeCounter?.remove();
-                state.fpsRealTimeCounter = null;
-            }
-        } else if (featureName === 'antiAfk') {
-            if (newState) {
-                if (!state.fpsAntiAfkCounter) state.fpsAntiAfkCounter = createCounterElement('anti-afk-counter', '🐧 Jumping in 5s', { left: '50px', top: '290px' }, true);
-                state.antiAfkCountdown = 5;
-                updateAntiAfkCounter();
-                state.intervals.antiAfk = setInterval(() => {
-                    state.antiAfkCountdown--;
-                    updateAntiAfkCounter();
-                    if (state.antiAfkCountdown <= 0) {
-                        pressSpace();
-                        state.antiAfkCountdown = 5;
-                    }
-                }, 1000);
-            } else {
-                clearInterval(state.intervals.antiAfk);
-                state.fpsAntiAfkCounter?._dragCleanup?.();
-                state.fpsAntiAfkCounter?.remove();
-                state.fpsAntiAfkCounter = null;
-            }
-        } else if (featureName === 'keyDisplay') {
-            if (newState) {
-                if (!state.fpsKeyDisplay) createKeyDisplay();
-                setupKeyDisplayListeners();
-            } else {
-                removeKeyDisplayListeners();
-                state.fpsKeyDisplay?._dragCleanup?.();
-                state.fpsKeyDisplay?.remove();
-                state.fpsKeyDisplay = null;
-                Object.keys(state.keys).forEach(key => { state.keys[key] = false; });
-            }
+        if (newState) {
+            feature.create();
+        } else {
+            feature.destroy();
         }
 
         saveSettings();
         return newState;
     }
 
-    function createFeatureCard(title, features) {
+    function createFeatureCard(title, featureKeys) {
         const card = document.createElement('div');
         card.className = 'waddle-card';
         card.innerHTML = `<div class="waddle-card-header">${title}</div>`;
@@ -473,15 +534,16 @@
         const grid = document.createElement('div');
         grid.className = 'waddle-card-grid';
 
-        features.forEach(({ label, feature, icon }) => {
+        featureKeys.forEach(featureKey => {
+            const feature = FEATURES[featureKey];
             const btn = document.createElement('button');
             btn.className = 'waddle-menu-btn';
-            btn.textContent = `${label} ${icon}`;
+            btn.textContent = `${feature.label} ${feature.icon}`;
             btn.onclick = () => {
-                const enabled = toggleFeature(feature);
-                btn.textContent = `${label} ${enabled ? '✓' : icon}`;
+                const enabled = toggleFeature(featureKey);
+                btn.textContent = `${feature.label} ${enabled ? '✓' : feature.icon}`;
                 btn.classList.toggle('active', enabled);
-                showToast(`${label} ${enabled ? 'Enabled' : 'Disabled'} ✓`);
+                showToast(`${feature.label} ${enabled ? 'Enabled' : 'Disabled'} ✓`);
             };
             grid.appendChild(btn);
         });
@@ -545,16 +607,10 @@
         const featuresContent = document.createElement('div');
         featuresContent.className = 'waddle-tab-content active';
 
-        const displayCard = createFeatureCard('📊 Display Counters', [
-            { label: 'FPS', feature: 'fps', icon: '🐧' },
-            { label: 'Clock', feature: 'realTime', icon: '🐧' },
-            { label: 'Key Display', feature: 'keyDisplay', icon: '🐧' }
-        ]);
+        const displayCard = createFeatureCard('📊 Display Counters', ['fps', 'realTime', 'keyDisplay']);
         featuresContent.appendChild(displayCard);
 
-        const utilCard = createFeatureCard('🛠️ Utilities', [
-            { label: 'Anti-AFK', feature: 'antiAfk', icon: '🐧' }
-        ]);
+        const utilCard = createFeatureCard('🛠️ Utilities', ['antiAfk']);
         featuresContent.appendChild(utilCard);
 
         menuContent.appendChild(featuresContent);
@@ -606,16 +662,22 @@
         linksGrid.className = 'waddle-card-grid';
 
         const suggestBtn = document.createElement('button');
-        suggestBtn.className = 'waddle-menu-btn';
-        suggestBtn.textContent = 'Suggest Feature';
-        suggestBtn.onclick = () => window.open('https://github.com/TheM1ddleM1n/WaddleClient/issues/new?labels=enhancement', '_blank');
-        linksGrid.appendChild(suggestBtn);
+suggestBtn.className = 'waddle-menu-btn';
+suggestBtn.textContent = 'Suggest Feature';
+suggestBtn.onclick = () => window.open(
+    'https://github.com/TheM1ddleM1n/WaddleClient/issues/new?template=feature_request.md',
+    '_blank'
+);
+linksGrid.appendChild(suggestBtn);
 
-        const bugBtn = document.createElement('button');
-        bugBtn.className = 'waddle-menu-btn';
-        bugBtn.textContent = 'Report Bug';
-        bugBtn.onclick = () => window.open('https://github.com/TheM1ddleM1n/WaddleClient/issues/new?labels=bug', '_blank');
-        linksGrid.appendChild(bugBtn);
+const bugBtn = document.createElement('button');
+bugBtn.className = 'waddle-menu-btn';
+bugBtn.textContent = 'Report Bug';
+bugBtn.onclick = () => window.open(
+    'https://github.com/TheM1ddleM1n/WaddleClient/issues/new?template=bug_report.md',
+    '_blank'
+);
+linksGrid.appendChild(bugBtn);
 
         linksCard.appendChild(linksGrid);
         aboutContent.appendChild(linksCard);
@@ -670,10 +732,11 @@
     }
 
     function globalCleanup() {
-        if (state.fps) toggleFeature('fps');
-        if (state.realTime) toggleFeature('realTime');
-        if (state.antiAfk) toggleFeature('antiAfk');
-        if (state.keyDisplay) toggleFeature('keyDisplay');
+        Object.keys(state).forEach(key => {
+            if (state[key] && typeof state[key] === 'boolean' && key in FEATURES) {
+                if (state[key]) toggleFeature(key);
+            }
+        });
 
         if (state.keyboardHandler) {
             window.removeEventListener('keydown', state.keyboardHandler);
