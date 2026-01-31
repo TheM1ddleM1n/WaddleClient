@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WaddleClient
 // @namespace    https://github.com/TheM1ddleM1n/WaddleClient
-// @version      5.5
+// @version      5.8
 // @description  M1ddleM1n and Scripter on top
 // @author       Scripter, TheM1ddleM1n
 // @icon         https://raw.githubusercontent.com/TheM1ddleM1n/WaddleClient/refs/heads/main/Penguin.png
@@ -12,111 +12,61 @@
     'use strict';
     document.title = '𝙒𝙖𝙙𝙙𝙡𝙚';
 
-    // ==================== CONSTANTS ====================
-    const TIMING = Object.freeze({
-        HINT_TEXT_DURATION: 4000,
-        FPS_UPDATE_INTERVAL: 500,
-        SAVE_DEBOUNCE: 500,
-        TOAST_DURATION: 3000,
-        KEY_HIGHLIGHT_DURATION: 150,
-        SESSION_UPDATE: 1000
-    });
-
+    const MENU_KEY = '\\';
+    const SCRIPT_VERSION = '5.8';
     const SETTINGS_KEY = 'waddle_settings';
-    const MENU_KEY = '\\'; // Hardcoded
-    const CUSTOM_HUE_KEY = 'waddle_custom_hue';
-    const SCRIPT_VERSION = '5.5';
-    const DEFAULT_HUE = 180; // Cyan
 
-    const MESSAGES = Object.freeze({
-        ENABLED: (feature) => `${feature} Enabled ✓`,
-        DISABLED: (feature) => `${feature} Disabled ✓`,
-        POSITIONS_RESET: 'Positions Reset! 🐧',
-        MENU_PROMPT: `Press ${MENU_KEY} To Open Menu!`,
-        CLEANUP_START: '[Waddle] Cleaning up resources..',
-        CLEANUP_DONE: '[Waddle] Cleanup complete!',
-        INIT_START: `[Waddle] Initializing v${SCRIPT_VERSION}...`,
-        INIT_DONE: '[Waddle] Initialization completed!',
-        STORAGE_ERROR: '[Waddle] Storage quota exceeded'
-    });
-
-    const DEFAULT_POSITIONS = Object.freeze({
-        fps: { left: '50px', top: '80px' },
-        keyDisplay: { left: '50px', top: '150px' },
-        antiAfk: { left: '50px', top: '220px' }
-    });
-
-    const COUNTER_CONFIGS = Object.freeze({
-        fps: { id: 'fps-counter', text: 'FPS: 0', pos: DEFAULT_POSITIONS.fps, icon: '🐧', draggable: true },
-        realTime: { id: 'real-time-counter', text: '00:00:00 AM', pos: null, icon: '🐧', draggable: false },
-        antiAfk: { id: 'anti-afk-counter', text: '🐧 Jumping in 5s', pos: DEFAULT_POSITIONS.antiAfk, icon: '🐧', draggable: true }
-    });
-
-    const FEATURE_CARDS = Object.freeze([
-        {
-            title: '📊 Display Counters',
-            features: [
-                { label: 'FPS', feature: 'fps', icon: '🐧' },
-                { label: 'Clock', feature: 'realTime', icon: '🐧' },
-                { label: 'Key Display', feature: 'keyDisplay', icon: '🐧' }
-            ]
-        },
-        {
-            title: '🛠️ Utilities',
-            features: [
-                { label: 'Anti-AFK', feature: 'antiAfk', icon: '🐧' },
-                { label: 'Fullscreen', feature: 'fullscreen', icon: '🐧', special: true }
-            ]
-        }
-    ]);
-
-    // ==================== CONSOLIDATED STATE OBJECT ====================
-    const state = {
-        features: {
-            fps: false,
-            realTime: false,
-            antiAfk: false,
-            keyDisplay: false
-        },
-        ui: {
-            customHue: DEFAULT_HUE,
-            activeTab: 'features',
-            menuOverlay: null,
-            tabElements: { buttons: {}, content: {} }
-        },
-        performance: {
-            rafId: null,
-            activeRAFFeatures: new Set(),
-            intervals: {}
-        },
-        counters: {
-            fps: null,
-            realTime: null,
-            antiAfk: null,
-            keyDisplay: null,
-            crosshair: null
-        },
-        input: {
-            keys: { w: false, a: false, s: false, d: false, space: false, lmb: false, rmb: false },
-            listeners: {}
-        },
-        session: {
-            keyboardHandler: null,
-            startTime: Date.now(),
-            antiAfkCountdown: 5
-        }
+    const THEMES = {
+        cyan: '#00ffff',
+        neon: '#39ff14'
     };
 
-    // ==================== UTILITY FUNCTIONS ====================
-    function debounce(func, delay) {
-        let timeoutId;
-        return function(...args) {
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => func.apply(this, args), delay);
-        };
+    const state = {
+        fps: false,
+        realTime: false,
+        antiAfk: false,
+        keyDisplay: false,
+        theme: 'cyan',
+        activeTab: 'features',
+        menuOverlay: null,
+        tabButtons: {},
+        tabContent: {},
+        fpsFpsCounter: null,
+        fpsRealTimeCounter: null,
+        fpsAntiAfkCounter: null,
+        fpsKeyDisplay: null,
+        crosshair: null,
+        rafId: null,
+        fpsActive: false,
+        intervals: {},
+        keyboardHandler: null,
+        startTime: Date.now(),
+        antiAfkCountdown: 5,
+        keys: { w: false, a: false, s: false, d: false, space: false, lmb: false, rmb: false },
+        listeners: {}
+    };
+
+    function saveSettings() {
+        try {
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+                version: SCRIPT_VERSION,
+                features: {
+                    fps: state.fps,
+                    realTime: state.realTime,
+                    antiAfk: state.antiAfk,
+                    keyDisplay: state.keyDisplay
+                },
+                theme: state.theme,
+                positions: {
+                    fps: state.fpsFpsCounter ? { left: state.fpsFpsCounter.style.left, top: state.fpsFpsCounter.style.top } : { left: '50px', top: '80px' },
+                    keyDisplay: state.fpsKeyDisplay ? { left: state.fpsKeyDisplay.style.left, top: state.fpsKeyDisplay.style.top } : { left: '50px', top: '150px' },
+                    antiAfk: state.fpsAntiAfkCounter ? { left: state.fpsAntiAfkCounter.style.left, top: state.fpsAntiAfkCounter.style.top } : { left: '50px', top: '290px' }
+                }
+            }));
+        } catch (e) {}
     }
 
-    function showToast(message, duration = TIMING.TOAST_DURATION) {
+    function showToast(message, duration = 3000) {
         document.getElementById('waddle-toast')?.remove();
         const toast = document.createElement('div');
         toast.id = 'waddle-toast';
@@ -128,47 +78,29 @@
         }, duration);
     }
 
-    function hueToColor(hue) {
-        return `hsl(${hue}, 100%, 50%)`;
-    }
-
-    function applyTheme(hue) {
-        const color = hueToColor(hue);
+    function applyTheme(themeName) {
+        const color = THEMES[themeName];
         document.documentElement.style.setProperty('--waddle-primary', color);
         document.documentElement.style.setProperty('--waddle-shadow', color);
-        state.ui.customHue = hue;
-
-        // Update crosshair SVG elements
-        if (state.counters.crosshair) {
-            const svg = state.counters.crosshair.querySelector('svg');
-            if (svg) {
-                const elements = svg.querySelectorAll('circle, line');
-                elements.forEach(el => {
-                    if (el.tagName === 'circle') {
-                        el.setAttribute('fill', color);
-                    } else if (el.tagName === 'line') {
-                        el.setAttribute('stroke', color);
-                    }
-                });
-            }
-        }
-
-        try { localStorage.setItem(CUSTOM_HUE_KEY, hue.toString()); } catch (e) {}
+        state.theme = themeName;
+        saveSettings();
     }
 
-    function loadCustomHue() {
+    function loadTheme() {
         try {
-            const savedHue = localStorage.getItem(CUSTOM_HUE_KEY);
-            const hueValue = savedHue ? parseInt(savedHue) : DEFAULT_HUE;
-            state.ui.customHue = hueValue;
-            applyTheme(hueValue);
+            const saved = localStorage.getItem(SETTINGS_KEY);
+            if (saved) {
+                const settings = JSON.parse(saved);
+                if (settings.theme) state.theme = settings.theme;
+            }
+            applyTheme(state.theme);
         } catch (e) {
-            applyTheme(DEFAULT_HUE);
+            applyTheme('cyan');
         }
     }
 
     function formatSessionTime() {
-        const elapsed = Math.floor((Date.now() - state.session.startTime) / 1000);
+        const elapsed = Math.floor((Date.now() - state.startTime) / 1000);
         const hours = Math.floor(elapsed / 3600);
         const minutes = Math.floor((elapsed % 3600) / 60);
         const seconds = elapsed % 60;
@@ -180,104 +112,57 @@
         if (timerElement) timerElement.textContent = formatSessionTime();
     }
 
-    function saveSettings() {
-        try {
-            const settings = {
-                version: SCRIPT_VERSION,
-                features: state.features,
-                customHue: state.ui.customHue,
-                positions: Object.fromEntries(
-                    Object.entries(state.counters)
-                        .filter(([_, counter]) => counter)
-                        .map(([type, counter]) => [
-                            type,
-                            { left: counter.style.left, top: counter.style.top }
-                        ])
-                )
-            };
-            localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-        } catch (e) {
-            if (e.name === 'QuotaExceededError') console.error(MESSAGES.STORAGE_ERROR);
-        }
-    }
-
-    const debouncedSave = debounce(saveSettings, TIMING.SAVE_DEBOUNCE);
-
-    // ==================== DOM & STYLING ====================
     function injectStyles() {
         const style = document.createElement('style');
         style.textContent = `
-:root { --waddle-primary: #00ffff; --waddle-shadow: #00ffff; --waddle-bg-dark: #000000; }
-@keyframes counterSlideIn { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
-@keyframes slideInDown { 0% { opacity: 0; transform: translateY(-40px); } 100% { opacity: 1; transform: translateY(0); } }
-@keyframes slideInUp { 0% { opacity: 0; transform: translateY(40px); } 100% { opacity: 1; transform: translateY(0); } }
-@keyframes toastSlideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes toastSlideOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
-@media (prefers-reduced-motion: reduce) { * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+:root { --waddle-primary: #00ffff; --waddle-shadow: #00ffff; }
 
-/* Hide default Miniblox crosshair */
-.css-xhoozx, [class*="crosshair"], img[src*="crosshair"] {
-    display: none !important;
-}
+.css-xhoozx, [class*="crosshair"], img[src*="crosshair"] { display: none !important; }
 
-#waddle-menu-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(15px); z-index: 10000000; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 40px; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; user-select: none; }
+#waddle-menu-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); z-index: 10000000; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 40px; opacity: 0; pointer-events: none; transition: opacity 0.3s; user-select: none; }
 #waddle-menu-overlay.show { opacity: 1; pointer-events: auto; }
-#waddle-menu-header { font-family: Segoe UI, sans-serif; font-size: 3rem; font-weight: 900; color: var(--waddle-primary); text-shadow: 0 0 8px var(--waddle-shadow), 0 0 20px var(--waddle-shadow); margin-bottom: 30px; animation: slideInDown 0.4s ease; }
-#waddle-tabs { display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 2px solid rgba(0, 255, 255, 0.2); animation: slideInDown 0.4s ease 0.1s backwards; }
-.waddle-tab-btn { background: transparent; border: none; color: #999; font-family: Segoe UI, sans-serif; font-weight: 700; padding: 12px 20px; cursor: pointer; transition: color 0.2s ease, border-color 0.2s ease; border-bottom: 3px solid transparent; font-size: 1rem; position: relative; }
-.waddle-tab-btn:hover { color: var(--waddle-primary); }
-.waddle-tab-btn.active { color: var(--waddle-primary); border-bottom-color: var(--waddle-primary); box-shadow: 0 2px 10px rgba(0,255,255,0.3); }
-#waddle-menu-content { width: 600px; background: rgba(17, 17, 17, 0.9); border-radius: 16px; padding: 24px; color: white; font-size: 1rem; box-shadow: 0 0 20px rgba(0, 255, 255, 0.4), inset 0 0 20px rgba(0, 255, 255, 0.1); display: flex; flex-direction: column; gap: 20px; max-height: 70vh; overflow-y: auto; border: 1px solid rgba(0, 255, 255, 0.3); animation: slideInUp 0.4s ease; }
+#waddle-menu-header { font-family: Segoe UI, sans-serif; font-size: 3rem; font-weight: 900; color: var(--waddle-primary); text-shadow: 0 0 8px var(--waddle-shadow), 0 0 20px var(--waddle-shadow); margin-bottom: 30px; }
+#waddle-tabs { display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 2px solid rgba(0, 255, 255, 0.2); }
+.waddle-tab-btn { background: transparent; border: none; color: #999; font-family: Segoe UI, sans-serif; font-weight: 700; padding: 12px 20px; cursor: pointer; transition: color 0.2s; border-bottom: 3px solid transparent; font-size: 1rem; }
+.waddle-tab-btn.active { color: var(--waddle-primary); border-bottom-color: var(--waddle-primary); }
+#waddle-menu-content { width: 600px; background: rgba(17, 17, 17, 0.9); border-radius: 16px; padding: 24px; color: white; font-size: 1rem; box-shadow: 0 0 20px rgba(0, 255, 255, 0.4); display: flex; flex-direction: column; gap: 20px; max-height: 70vh; overflow-y: auto; border: 1px solid rgba(0, 255, 255, 0.3); }
 .waddle-tab-content { display: none; }
-.waddle-tab-content.active { display: flex; flex-direction: column; gap: 16px; animation: slideInUp 0.3s ease; }
+.waddle-tab-content.active { display: flex; flex-direction: column; gap: 16px; }
 
-.waddle-card { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.2); border-radius: 12px; padding: 16px; transition: all 0.3s ease; }
-.waddle-card:hover { border-color: rgba(0, 255, 255, 0.4); box-shadow: 0 0 15px rgba(0, 255, 255, 0.15); }
-.waddle-card-header { font-size: 1.1rem; font-weight: 700; color: var(--waddle-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.waddle-card { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.2); border-radius: 12px; padding: 16px; }
+.waddle-card-header { font-size: 1.1rem; font-weight: 700; color: var(--waddle-primary); margin-bottom: 12px; }
 .waddle-card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-.waddle-menu-btn { background: rgba(0, 0, 0, 0.8); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); font-family: Segoe UI, sans-serif; font-weight: 700; padding: 12px 16px; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; user-select: none; position: relative; overflow: hidden; font-size: 0.95rem; }
-.waddle-menu-btn:hover { background: var(--waddle-primary); color: #000; transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0,255,255,0.4); }
-.waddle-menu-btn.active { background: rgba(0, 255, 255, 0.2); border-color: var(--waddle-primary); }
+.waddle-menu-btn { background: rgba(0, 0, 0, 0.8); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); font-family: Segoe UI, sans-serif; font-weight: 700; padding: 12px 16px; border-radius: 10px; cursor: pointer; transition: all 0.2s; font-size: 0.95rem; }
+.waddle-menu-btn:hover { background: var(--waddle-primary); color: #000; }
+.waddle-menu-btn.active { background: rgba(0, 255, 255, 0.2); }
 
-.counter { position: fixed; background: rgba(0, 255, 255, 0.9); color: #000; font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1.25rem; padding: 8px 14px; border-radius: 12px; box-shadow: 0 0 15px rgba(0, 255, 255, 0.7), inset 0 0 10px rgba(0,255,255,0.2); user-select: none; cursor: grab; z-index: 999999999; width: max-content; transition: box-shadow 0.15s ease; animation: counterSlideIn 0.4s ease-out; border: 1px solid rgba(0,255,255,0.5); }
-.counter.dragging { cursor: grabbing; transform: scale(1.08); box-shadow: 0 0 25px rgba(0, 255, 255, 0.9), inset 0 0 20px rgba(0,255,255,0.3); }
-.counter:hover:not(.dragging) { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 255, 255, 0.8); }
+.counter { position: fixed; background: rgba(0, 255, 255, 0.9); color: #000; font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1.25rem; padding: 8px 14px; border-radius: 12px; box-shadow: 0 0 15px rgba(0, 255, 255, 0.7); user-select: none; cursor: grab; z-index: 999999999; width: max-content; border: 1px solid rgba(0,255,255,0.5); }
+.counter.dragging { cursor: grabbing; transform: scale(1.08); }
 
-.key-display-container { position: fixed; cursor: grab; z-index: 999999999; animation: counterSlideIn 0.4s ease-out; user-select: none; }
+.key-display-container { position: fixed; cursor: grab; z-index: 999999999; user-select: none; }
 .key-display-container.dragging { cursor: grabbing; }
 .key-display-grid { display: grid; gap: 6px; }
 
-.key-box { background: rgba(80, 80, 80, 0.8); border: 3px solid rgba(150, 150, 150, 0.6); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', sans-serif; font-weight: 900; font-size: 1.1rem; color: #ddd; transition: all 0.1s ease; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.1); width: 50px; height: 50px; }
-.key-box.active { background: var(--waddle-primary); border-color: var(--waddle-primary); color: #000; box-shadow: 0 0 20px var(--waddle-shadow), 0 0 30px var(--waddle-shadow), inset 0 2px 8px rgba(255, 255, 255, 0.3); transform: scale(0.95); }
+.key-box { background: rgba(80, 80, 80, 0.8); border: 3px solid rgba(150, 150, 150, 0.6); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', sans-serif; font-weight: 900; font-size: 1.1rem; color: #ddd; width: 50px; height: 50px; }
+.key-box.active { background: var(--waddle-primary); border-color: var(--waddle-primary); color: #000; }
 
-.mouse-box { width: 70px; height: 50px; font-size: 0.85rem; }
+.mouse-box { width: 70px; }
 .space-box { grid-column: 1 / -1; width: 100%; height: 40px; font-size: 0.9rem; }
 
-.settings-label { font-size: 0.9rem; color: var(--waddle-primary); margin-bottom: 10px; display: block; font-weight: 600; }
+.theme-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.theme-btn { background: rgba(0, 0, 0, 0.8); border: 2px solid #666; color: white; font-family: Segoe UI, sans-serif; font-weight: 700; padding: 12px 16px; border-radius: 10px; cursor: pointer; transition: all 0.2s; font-size: 0.95rem; }
+.theme-btn:hover { border-color: var(--waddle-primary); }
+.theme-btn.active { background: var(--waddle-primary); border-color: var(--waddle-primary); color: #000; }
 
-.hue-slider { width: 100%; height: 8px; border-radius: 5px; background: linear-gradient(to right,
-    hsl(0,100%,50%), hsl(30,100%,50%), hsl(60,100%,50%), hsl(90,100%,50%), hsl(120,100%,50%),
-    hsl(150,100%,50%), hsl(180,100%,50%), hsl(210,100%,50%), hsl(240,100%,50%), hsl(270,100%,50%),
-    hsl(300,100%,50%), hsl(330,100%,50%), hsl(360,100%,50%));
-    cursor: pointer; margin: 8px 0; appearance: none; -webkit-appearance: none; outline: none; }
-.hue-slider::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: white; border: 3px solid var(--waddle-primary); cursor: pointer; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
-.hue-slider::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: white; border: 3px solid var(--waddle-primary); cursor: pointer; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+#waddle-toast { position: fixed; bottom: 60px; right: 50px; background: rgba(0, 0, 0, 0.95); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); padding: 16px 24px; border-radius: 12px; font-family: Segoe UI, sans-serif; font-weight: 700; z-index: 10000001; box-shadow: 0 0 20px rgba(0, 255, 255, 0.5); pointer-events: none; max-width: 280px; text-align: center; }
+#waddle-toast.hide { opacity: 0; }
 
-.hue-display { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
-.hue-color-preview { width: 40px; height: 40px; border-radius: 8px; border: 2px solid var(--waddle-primary); box-shadow: 0 0 10px rgba(0,255,255,0.5); }
-.hue-value-text { color: var(--waddle-primary); font-weight: 700; font-family: 'Courier New', monospace; font-size: 0.9rem; }
-
-#waddle-toast { position: fixed; bottom: 60px; right: 50px; background: rgba(0, 0, 0, 0.95); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); padding: 16px 24px; border-radius: 12px; font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1rem; z-index: 10000001; box-shadow: 0 0 20px rgba(0, 255, 255, 0.5), inset 0 0 10px rgba(0, 255, 255, 0.2); animation: toastSlideIn 0.3s ease; pointer-events: none; max-width: 280px; text-align: center; }
-#waddle-toast.hide { animation: toastSlideOut 0.3s ease forwards; }
-
-/* Crosshair styling */
 #waddle-crosshair { display: block !important; z-index: 5000 !important; }
 `;
         document.head.appendChild(style);
     }
 
-    // ==================== CROSSHAIR SYSTEM ====================
     function createPermanentCrosshair() {
         const crosshairContainer = document.createElement('div');
         crosshairContainer.id = 'waddle-crosshair';
@@ -291,136 +176,46 @@
             display: 'block'
         });
 
-        const targetColor = hueToColor(state.ui.customHue);
+        const cyanColor = '#00ffff';
 
-        // Create SVG crosshair
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('width', '50');
         svg.setAttribute('height', '50');
         svg.setAttribute('viewBox', '0 0 50 50');
         svg.setAttribute('style', 'display: block;');
 
-        // Center dot
-        const centerDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        centerDot.setAttribute('cx', '25');
-        centerDot.setAttribute('cy', '25');
-        centerDot.setAttribute('r', '2.5');
-        centerDot.setAttribute('fill', targetColor);
-        svg.appendChild(centerDot);
-
-        // Top line
-        const topLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        topLine.setAttribute('x1', '25');
-        topLine.setAttribute('y1', '8');
-        topLine.setAttribute('x2', '25');
-        topLine.setAttribute('y2', '16');
-        topLine.setAttribute('stroke', targetColor);
-        topLine.setAttribute('stroke-width', '2');
-        topLine.setAttribute('stroke-linecap', 'round');
-        svg.appendChild(topLine);
-
-        // Bottom line
-        const bottomLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        bottomLine.setAttribute('x1', '25');
-        bottomLine.setAttribute('y1', '34');
-        bottomLine.setAttribute('x2', '25');
-        bottomLine.setAttribute('y2', '42');
-        bottomLine.setAttribute('stroke', targetColor);
-        bottomLine.setAttribute('stroke-width', '2');
-        bottomLine.setAttribute('stroke-linecap', 'round');
-        svg.appendChild(bottomLine);
-
-        // Left line
-        const leftLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        leftLine.setAttribute('x1', '8');
-        leftLine.setAttribute('y1', '25');
-        leftLine.setAttribute('x2', '16');
-        leftLine.setAttribute('y2', '25');
-        leftLine.setAttribute('stroke', targetColor);
-        leftLine.setAttribute('stroke-width', '2');
-        leftLine.setAttribute('stroke-linecap', 'round');
-        svg.appendChild(leftLine);
-
-        // Right line
-        const rightLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        rightLine.setAttribute('x1', '34');
-        rightLine.setAttribute('y1', '25');
-        rightLine.setAttribute('x2', '42');
-        rightLine.setAttribute('y2', '25');
-        rightLine.setAttribute('stroke', targetColor);
-        rightLine.setAttribute('stroke-width', '2');
-        rightLine.setAttribute('stroke-linecap', 'round');
-        svg.appendChild(rightLine);
+        svg.innerHTML = `
+            <circle cx="25" cy="25" r="2.5" fill="${cyanColor}"/>
+            <line x1="25" y1="8" x2="25" y2="16" stroke="${cyanColor}" stroke-width="2" stroke-linecap="round"/>
+            <line x1="25" y1="34" x2="25" y2="42" stroke="${cyanColor}" stroke-width="2" stroke-linecap="round"/>
+            <line x1="8" y1="25" x2="16" y2="25" stroke="${cyanColor}" stroke-width="2" stroke-linecap="round"/>
+            <line x1="34" y1="25" x2="42" y2="25" stroke="${cyanColor}" stroke-width="2" stroke-linecap="round"/>
+        `;
 
         crosshairContainer.appendChild(svg);
         document.body.appendChild(crosshairContainer);
-        state.counters.crosshair = crosshairContainer;
+        state.crosshair = crosshairContainer;
 
-        console.log('[Waddle] Crosshair created successfully');
         return crosshairContainer;
     }
 
-    // ==================== COUNTER CREATION ====================
-    function createCounterElement(config) {
-        const { id, counterType, initialText, position = { left: '50px', top: '50px' }, isDraggable = true } = config;
+    function createCounterElement(id, text, position, isDraggable = true) {
         const counter = document.createElement('div');
         counter.id = id;
         counter.className = 'counter';
         counter.style.left = position.left;
         counter.style.top = position.top;
         const textSpan = document.createElement('span');
-        textSpan.className = 'counter-time-text';
-        textSpan.textContent = initialText;
+        textSpan.textContent = text;
         counter.appendChild(textSpan);
         counter._textSpan = textSpan;
         document.body.appendChild(counter);
 
-        if (isDraggable && counterType) setupDragging(counter, counterType);
+        if (isDraggable) setupDragging(counter);
         return counter;
     }
 
-    function createCounter(type) {
-        const config = COUNTER_CONFIGS[type];
-        if (!config) return null;
-
-        let counter;
-        if (type === 'realTime') {
-            counter = createCounterElement({
-                id: config.id,
-                counterType: null,
-                initialText: config.text,
-                position: { left: '0px', top: '0px' },
-                isDraggable: false
-            });
-            counter.style.left = 'auto';
-            counter.style.top = 'auto';
-            counter.style.right = '30px';
-            counter.style.bottom = '30px';
-            counter.style.background = 'transparent';
-            counter.style.boxShadow = 'none';
-            counter.style.border = 'none';
-            counter.style.textShadow = '0 0 8px var(--waddle-primary), 0 0 15px var(--waddle-primary)';
-            counter.style.fontSize = '1.5rem';
-            counter.style.padding = '0';
-        } else {
-            counter = createCounterElement({
-                id: config.id,
-                counterType: type,
-                initialText: config.text,
-                position: config.pos,
-                isDraggable: config.draggable
-            });
-        }
-
-        state.counters[type] = counter;
-        return counter;
-    }
-
-    function updateCounterText(counterType, text) {
-        state.counters[counterType]?._textSpan && (state.counters[counterType]._textSpan.textContent = text);
-    }
-
-    function setupDragging(element, counterType) {
+    function setupDragging(element) {
         let rafId = null;
         const onMouseDown = (e) => {
             element._dragging = true;
@@ -433,7 +228,7 @@
                 element._dragging = false;
                 element.classList.remove('dragging');
                 if (rafId) cancelAnimationFrame(rafId);
-                debouncedSave();
+                saveSettings();
             }
         };
         const onMouseMove = (e) => {
@@ -452,9 +247,9 @@
                 }
             }
         };
-        element.addEventListener('mousedown', onMouseDown, { passive: true });
-        window.addEventListener('mouseup', onMouseUp, { passive: true });
-        window.addEventListener('mousemove', onMouseMove, { passive: true });
+        element.addEventListener('mousedown', onMouseDown);
+        window.addEventListener('mouseup', onMouseUp);
+        window.addEventListener('mousemove', onMouseMove);
         element._dragCleanup = () => {
             element.removeEventListener('mousedown', onMouseDown);
             window.removeEventListener('mouseup', onMouseUp);
@@ -463,52 +258,49 @@
         };
     }
 
-    // ==================== PERFORMANCE LOOP ====================
     function startPerformanceLoop() {
-        if (state.performance.rafId) return;
+        if (state.rafId) return;
         let lastFpsUpdate = performance.now(), frameCount = 0, lastFps = 0;
         const loop = (currentTime) => {
-            if (state.performance.activeRAFFeatures.size === 0) {
-                state.performance.rafId = null;
+            if (!state.fpsActive) {
+                state.rafId = null;
                 return;
             }
             frameCount++;
             const elapsed = currentTime - lastFpsUpdate;
-            if (elapsed >= TIMING.FPS_UPDATE_INTERVAL && state.counters.fps) {
+            if (elapsed >= 500 && state.fpsFpsCounter) {
                 const fps = Math.round((frameCount * 1000) / elapsed);
                 if (fps !== lastFps) {
-                    updateCounterText('fps', `FPS: ${fps}`);
+                    state.fpsFpsCounter._textSpan.textContent = `FPS: ${fps}`;
                     lastFps = fps;
                 }
                 frameCount = 0;
                 lastFpsUpdate = currentTime;
             }
-            state.performance.rafId = requestAnimationFrame(loop);
+            state.rafId = requestAnimationFrame(loop);
         };
-        state.performance.rafId = requestAnimationFrame(loop);
+        state.rafId = requestAnimationFrame(loop);
     }
 
     function stopPerformanceLoop() {
-        state.performance.activeRAFFeatures.delete('fps');
-        if (state.performance.activeRAFFeatures.size === 0 && state.performance.rafId) {
-            cancelAnimationFrame(state.performance.rafId);
-            state.performance.rafId = null;
+        state.fpsActive = false;
+        if (state.rafId) {
+            cancelAnimationFrame(state.rafId);
+            state.rafId = null;
         }
     }
 
-    // ==================== REAL-TIME ====================
     function updateRealTime() {
-        if (!state.counters.realTime) return;
+        if (!state.fpsRealTimeCounter) return;
         const now = new Date();
         let hours = now.getHours();
         const minutes = now.getMinutes().toString().padStart(2, '0');
         const seconds = now.getSeconds().toString().padStart(2, '0');
         const ampm = hours >= 12 ? 'PM' : 'AM';
         hours = hours % 12 || 12;
-        updateCounterText('realTime', `${hours}:${minutes}:${seconds} ${ampm}`);
+        state.fpsRealTimeCounter._textSpan.textContent = `${hours}:${minutes}:${seconds} ${ampm}`;
     }
 
-    // ==================== ANTI-AFK ====================
     function pressSpace() {
         const down = new KeyboardEvent("keydown", { key: " ", code: "Space", keyCode: 32, which: 32, bubbles: true });
         const up = new KeyboardEvent("keyup", { key: " ", code: "Space", keyCode: 32, which: 32, bubbles: true });
@@ -517,16 +309,15 @@
     }
 
     function updateAntiAfkCounter() {
-        updateCounterText('antiAfk', `🐧 Jumping in ${state.session.antiAfkCountdown}s`);
+        state.fpsAntiAfkCounter._textSpan.textContent = `🐧 Jumping in ${state.antiAfkCountdown}s`;
     }
 
-    // ==================== KEY DISPLAY ====================
     function createKeyDisplay() {
         const container = document.createElement('div');
         container.id = 'key-display-container';
         container.className = 'key-display-container';
-        container.style.left = DEFAULT_POSITIONS.keyDisplay.left;
-        container.style.top = DEFAULT_POSITIONS.keyDisplay.top;
+        container.style.left = '50px';
+        container.style.top = '150px';
 
         const grid = document.createElement('div');
         grid.className = 'key-display-grid';
@@ -584,182 +375,151 @@
         document.body.appendChild(container);
 
         container._keyBoxes = keyBoxes;
-        setupDragging(container, 'keyDisplay');
-        state.counters.keyDisplay = container;
+        setupDragging(container);
+        state.fpsKeyDisplay = container;
         return container;
     }
 
     function updateKeyDisplay(key, isPressed) {
-        state.counters.keyDisplay?._keyBoxes?.[key]?.classList.toggle('active', isPressed);
+        state.fpsKeyDisplay?._keyBoxes?.[key]?.classList.toggle('active', isPressed);
     }
 
     function setupKeyDisplayListeners() {
         const keyDownListener = (e) => {
-            if (state.ui.menuOverlay?.classList.contains('show')) return;
+            if (state.menuOverlay?.classList.contains('show')) return;
             const key = e.key.toLowerCase();
-            if (key in state.input.keys) {
-                state.input.keys[key] = true;
+            if (key in state.keys) {
+                state.keys[key] = true;
                 updateKeyDisplay(key, true);
             }
         };
 
         const keyUpListener = (e) => {
             const key = e.key.toLowerCase();
-            if (key in state.input.keys) {
-                state.input.keys[key] = false;
+            if (key in state.keys) {
+                state.keys[key] = false;
                 updateKeyDisplay(key, false);
             }
         };
 
         const mouseDownListener = (e) => {
             if (e.button === 0) {
-                state.input.keys.lmb = true;
+                state.keys.lmb = true;
                 updateKeyDisplay('lmb', true);
             } else if (e.button === 2) {
-                state.input.keys.rmb = true;
+                state.keys.rmb = true;
                 updateKeyDisplay('rmb', true);
             }
         };
 
         const mouseUpListener = (e) => {
             if (e.button === 0) {
-                state.input.keys.lmb = false;
+                state.keys.lmb = false;
                 updateKeyDisplay('lmb', false);
             } else if (e.button === 2) {
-                state.input.keys.rmb = false;
+                state.keys.rmb = false;
                 updateKeyDisplay('rmb', false);
             }
         };
 
-        window.addEventListener('keydown', keyDownListener, { passive: true });
-        window.addEventListener('keyup', keyUpListener, { passive: true });
-        window.addEventListener('mousedown', mouseDownListener, { passive: true });
-        window.addEventListener('mouseup', mouseUpListener, { passive: true });
+        window.addEventListener('keydown', keyDownListener);
+        window.addEventListener('keyup', keyUpListener);
+        window.addEventListener('mousedown', mouseDownListener);
+        window.addEventListener('mouseup', mouseUpListener);
 
-        state.input.listeners = { keyDownListener, keyUpListener, mouseDownListener, mouseUpListener };
+        state.listeners = { keyDownListener, keyUpListener, mouseDownListener, mouseUpListener };
     }
 
     function removeKeyDisplayListeners() {
-        const { keyDownListener, keyUpListener, mouseDownListener, mouseUpListener } = state.input.listeners;
+        const { keyDownListener, keyUpListener, mouseDownListener, mouseUpListener } = state.listeners;
         if (keyDownListener) window.removeEventListener('keydown', keyDownListener);
         if (keyUpListener) window.removeEventListener('keyup', keyUpListener);
         if (mouseDownListener) window.removeEventListener('mousedown', mouseDownListener);
         if (mouseUpListener) window.removeEventListener('mouseup', mouseUpListener);
-        state.input.listeners = {};
+        state.listeners = {};
     }
 
-    // ==================== FEATURE MANAGERS ====================
-    const featureManager = {
-        fps: {
-            start: () => {
-                if (!state.counters.fps) createCounter('fps');
-                state.performance.activeRAFFeatures.add('fps');
-                if (!state.performance.rafId) startPerformanceLoop();
-            },
-            stop: () => stopPerformanceLoop(),
-            cleanup: () => {
-                state.counters.fps?._dragCleanup?.();
-                if (state.counters.fps) { state.counters.fps.remove(); state.counters.fps = null; }
-            }
-        },
+    function toggleFeature(featureName) {
+        const newState = !state[featureName];
+        state[featureName] = newState;
 
-        realTime: {
-            start: () => {
-                if (!state.counters.realTime) createCounter('realTime');
+        if (featureName === 'fps') {
+            if (newState) {
+                if (!state.fpsFpsCounter) state.fpsFpsCounter = createCounterElement('fps-counter', 'FPS: 0', { left: '50px', top: '80px' }, true);
+                state.fpsActive = true;
+                startPerformanceLoop();
+            } else {
+                stopPerformanceLoop();
+                state.fpsFpsCounter?._dragCleanup?.();
+                state.fpsFpsCounter?.remove();
+                state.fpsFpsCounter = null;
+            }
+        } else if (featureName === 'realTime') {
+            if (newState) {
+                if (!state.fpsRealTimeCounter) {
+                    state.fpsRealTimeCounter = createCounterElement('real-time-counter', '00:00:00 AM', { left: '0px', top: '0px' }, false);
+                    state.fpsRealTimeCounter.style.left = 'auto';
+                    state.fpsRealTimeCounter.style.top = 'auto';
+                    state.fpsRealTimeCounter.style.right = '30px';
+                    state.fpsRealTimeCounter.style.bottom = '30px';
+                    state.fpsRealTimeCounter.style.background = 'transparent';
+                    state.fpsRealTimeCounter.style.boxShadow = 'none';
+                    state.fpsRealTimeCounter.style.border = 'none';
+                    state.fpsRealTimeCounter.style.textShadow = '0 0 8px var(--waddle-primary), 0 0 15px var(--waddle-primary)';
+                    state.fpsRealTimeCounter.style.fontSize = '1.5rem';
+                    state.fpsRealTimeCounter.style.padding = '0';
+                }
                 updateRealTime();
-                state.performance.intervals.realTime = setInterval(updateRealTime, 1000);
-            },
-            stop: () => {
-                clearInterval(state.performance.intervals.realTime);
-                state.performance.intervals.realTime = null;
-            },
-            cleanup: () => {
-                if (state.counters.realTime) { state.counters.realTime.remove(); state.counters.realTime = null; }
+                state.intervals.realTime = setInterval(updateRealTime, 1000);
+            } else {
+                clearInterval(state.intervals.realTime);
+                state.fpsRealTimeCounter?.remove();
+                state.fpsRealTimeCounter = null;
             }
-        },
-
-        antiAfk: {
-            start: () => {
-                if (!state.counters.antiAfk) createCounter('antiAfk');
-                state.session.antiAfkCountdown = 5;
+        } else if (featureName === 'antiAfk') {
+            if (newState) {
+                if (!state.fpsAntiAfkCounter) state.fpsAntiAfkCounter = createCounterElement('anti-afk-counter', '🐧 Jumping in 5s', { left: '50px', top: '290px' }, true);
+                state.antiAfkCountdown = 5;
                 updateAntiAfkCounter();
-                state.performance.intervals.antiAfk = setInterval(() => {
-                    state.session.antiAfkCountdown--;
+                state.intervals.antiAfk = setInterval(() => {
+                    state.antiAfkCountdown--;
                     updateAntiAfkCounter();
-                    if (state.session.antiAfkCountdown <= 0) {
+                    if (state.antiAfkCountdown <= 0) {
                         pressSpace();
-                        state.session.antiAfkCountdown = 5;
+                        state.antiAfkCountdown = 5;
                     }
                 }, 1000);
-            },
-            stop: () => {
-                clearInterval(state.performance.intervals.antiAfk);
-                state.performance.intervals.antiAfk = null;
-            },
-            cleanup: () => {
-                state.counters.antiAfk?._dragCleanup?.();
-                if (state.counters.antiAfk) { state.counters.antiAfk.remove(); state.counters.antiAfk = null; }
+            } else {
+                clearInterval(state.intervals.antiAfk);
+                state.fpsAntiAfkCounter?._dragCleanup?.();
+                state.fpsAntiAfkCounter?.remove();
+                state.fpsAntiAfkCounter = null;
             }
-        },
-
-        keyDisplay: {
-            start: () => {
-                if (!state.counters.keyDisplay) createKeyDisplay();
+        } else if (featureName === 'keyDisplay') {
+            if (newState) {
+                if (!state.fpsKeyDisplay) createKeyDisplay();
                 setupKeyDisplayListeners();
-            },
-            stop: () => removeKeyDisplayListeners(),
-            cleanup: () => {
-                state.counters.keyDisplay?._dragCleanup?.();
-                if (state.counters.keyDisplay) { state.counters.keyDisplay.remove(); state.counters.keyDisplay = null; }
-                Object.keys(state.input.keys).forEach(key => { state.input.keys[key] = false; });
+            } else {
+                removeKeyDisplayListeners();
+                state.fpsKeyDisplay?._dragCleanup?.();
+                state.fpsKeyDisplay?.remove();
+                state.fpsKeyDisplay = null;
+                Object.keys(state.keys).forEach(key => { state.keys[key] = false; });
             }
-        },
-
-        fullscreen: {
-            start: () => {
-                const elem = document.documentElement;
-                if (!document.fullscreenElement) {
-                    elem.requestFullscreen().catch(err => console.error(`Fullscreen error: ${err.message}`));
-                } else {
-                    document.exitFullscreen();
-                }
-            },
-            stop: () => {},
-            cleanup: () => {}
-        }
-    };
-
-    // ==================== FEATURE CONTROL ====================
-    function toggleFeature(featureName) {
-        if (featureName === 'fullscreen') {
-            featureManager.fullscreen.start();
-            return;
         }
 
-        const newState = !state.features[featureName];
-        state.features[featureName] = newState;
-
-        if (newState) {
-            featureManager[featureName]?.start();
-        } else {
-            featureManager[featureName]?.cleanup?.();
-            featureManager[featureName]?.stop?.();
-        }
-
-        debouncedSave();
+        saveSettings();
         return newState;
     }
 
     function resetCounterPositions() {
-        Object.entries(DEFAULT_POSITIONS).forEach(([type, pos]) => {
-            const counter = state.counters[type];
-            if (counter) Object.assign(counter.style, pos);
-        });
+        if (state.fpsFpsCounter) Object.assign(state.fpsFpsCounter.style, { left: '50px', top: '80px' });
+        if (state.fpsKeyDisplay) Object.assign(state.fpsKeyDisplay.style, { left: '50px', top: '150px' });
+        if (state.fpsAntiAfkCounter) Object.assign(state.fpsAntiAfkCounter.style, { left: '50px', top: '290px' });
         saveSettings();
-        showToast(MESSAGES.POSITIONS_RESET);
+        showToast('Positions Reset! 🐧');
     }
 
-    // ==================== MENU SYSTEM ====================
     function createFeatureCard(title, features) {
         const card = document.createElement('div');
         card.className = 'waddle-card';
@@ -768,19 +528,15 @@
         const grid = document.createElement('div');
         grid.className = 'waddle-card-grid';
 
-        features.forEach(({ label, feature, icon, special }) => {
+        features.forEach(({ label, feature, icon }) => {
             const btn = document.createElement('button');
             btn.className = 'waddle-menu-btn';
             btn.textContent = `${label} ${icon}`;
             btn.onclick = () => {
-                if (special) {
-                    toggleFeature(feature);
-                    return;
-                }
                 const enabled = toggleFeature(feature);
                 btn.textContent = `${label} ${enabled ? '✓' : icon}`;
                 btn.classList.toggle('active', enabled);
-                showToast(MESSAGES[enabled ? 'ENABLED' : 'DISABLED'](label));
+                showToast(`${label} ${enabled ? 'Enabled' : 'Disabled'} ✓`);
             };
             grid.appendChild(btn);
         });
@@ -790,11 +546,11 @@
     }
 
     function switchTab(tabName) {
-        state.ui.activeTab = tabName;
-        Object.values(state.ui.tabElements.buttons).forEach(btn => btn.classList.remove('active'));
-        Object.values(state.ui.tabElements.content).forEach(content => content.classList.remove('active'));
-        state.ui.tabElements.buttons[tabName].classList.add('active');
-        state.ui.tabElements.content[tabName].classList.add('active');
+        state.activeTab = tabName;
+        Object.values(state.tabButtons).forEach(btn => btn.classList.remove('active'));
+        Object.values(state.tabContent).forEach(content => content.classList.remove('active'));
+        state.tabButtons[tabName].classList.add('active');
+        state.tabContent[tabName].classList.add('active');
     }
 
     function createMenu() {
@@ -819,11 +575,10 @@
             const btn = document.createElement('button');
             btn.className = 'waddle-tab-btn';
             if (name === 'features') btn.classList.add('active');
-            btn.setAttribute('data-tab', name);
             btn.textContent = label;
             btn.onclick = () => switchTab(name);
             tabsContainer.appendChild(btn);
-            state.ui.tabElements.buttons[name] = btn;
+            state.tabButtons[name] = btn;
         });
 
         menuOverlay.appendChild(tabsContainer);
@@ -831,59 +586,66 @@
         const menuContent = document.createElement('div');
         menuContent.id = 'waddle-menu-content';
 
-        // ==================== FEATURES TAB ====================
         const featuresContent = document.createElement('div');
         featuresContent.className = 'waddle-tab-content active';
-        featuresContent.setAttribute('data-content', 'features');
 
-        FEATURE_CARDS.forEach(card => {
-            featuresContent.appendChild(createFeatureCard(card.title, card.features));
-        });
+        const displayCard = createFeatureCard('📊 Display Counters', [
+            { label: 'FPS', feature: 'fps', icon: '🐧' },
+            { label: 'Clock', feature: 'realTime', icon: '🐧' },
+            { label: 'Key Display', feature: 'keyDisplay', icon: '🐧' }
+        ]);
+        featuresContent.appendChild(displayCard);
+
+        const utilCard = createFeatureCard('🛠️ Utilities', [
+            { label: 'Anti-AFK', feature: 'antiAfk', icon: '🐧' }
+        ]);
+        featuresContent.appendChild(utilCard);
 
         menuContent.appendChild(featuresContent);
-        state.ui.tabElements.content.features = featuresContent;
+        state.tabContent.features = featuresContent;
 
-        // ==================== SETTINGS TAB ====================
         const settingsContent = document.createElement('div');
         settingsContent.className = 'waddle-tab-content';
-        settingsContent.setAttribute('data-content', 'settings');
 
         const themeCard = document.createElement('div');
         themeCard.className = 'waddle-card';
         themeCard.innerHTML = '<div class="waddle-card-header">🎨 Theme</div>';
 
-        const hueLabel = document.createElement('label');
-        hueLabel.className = 'settings-label';
-        hueLabel.textContent = 'Menu & Crosshair Hue:';
-        themeCard.appendChild(hueLabel);
+        const themeLabel = document.createElement('label');
+        themeLabel.className = 'settings-label';
+        themeLabel.textContent = 'UI Theme:';
+        themeCard.appendChild(themeLabel);
 
-        const hueSlider = document.createElement('input');
-        hueSlider.type = 'range';
-        hueSlider.className = 'hue-slider';
-        hueSlider.min = '0';
-        hueSlider.max = '360';
-        hueSlider.value = state.ui.customHue;
-        hueSlider.addEventListener('input', (e) => {
-            const hue = parseInt(e.target.value);
-            applyTheme(hue);
-            hueColorPreview.style.background = hueToColor(hue);
-            hueValueText.textContent = `${hue}°`;
-            debouncedSave();
-        });
-        themeCard.appendChild(hueSlider);
+        const themeSelector = document.createElement('div');
+        themeSelector.className = 'theme-selector';
 
-        const hueDisplay = document.createElement('div');
-        hueDisplay.className = 'hue-display';
-        const hueColorPreview = document.createElement('div');
-        hueColorPreview.className = 'hue-color-preview';
-        hueColorPreview.style.background = hueToColor(state.ui.customHue);
-        hueDisplay.appendChild(hueColorPreview);
-        const hueValueText = document.createElement('span');
-        hueValueText.className = 'hue-value-text';
-        hueValueText.textContent = `${state.ui.customHue}°`;
-        hueDisplay.appendChild(hueValueText);
-        themeCard.appendChild(hueDisplay);
+        const cyanBtn = document.createElement('button');
+        cyanBtn.className = 'theme-btn';
+        if (state.theme === 'cyan') cyanBtn.classList.add('active');
+        cyanBtn.textContent = '🔵 Cyan';
+        cyanBtn.style.borderColor = '#00ffff';
+        cyanBtn.onclick = () => {
+            applyTheme('cyan');
+            cyanBtn.classList.add('active');
+            neonBtn.classList.remove('active');
+            showToast('Theme: Cyan 🔵');
+        };
+        themeSelector.appendChild(cyanBtn);
 
+        const neonBtn = document.createElement('button');
+        neonBtn.className = 'theme-btn';
+        if (state.theme === 'neon') neonBtn.classList.add('active');
+        neonBtn.textContent = '🟢 Neon';
+        neonBtn.style.borderColor = '#39ff14';
+        neonBtn.onclick = () => {
+            applyTheme('neon');
+            neonBtn.classList.add('active');
+            cyanBtn.classList.remove('active');
+            showToast('Theme: Neon Green 🟢');
+        };
+        themeSelector.appendChild(neonBtn);
+
+        themeCard.appendChild(themeSelector);
         settingsContent.appendChild(themeCard);
 
         const layoutCard = document.createElement('div');
@@ -898,26 +660,17 @@
         settingsContent.appendChild(layoutCard);
 
         menuContent.appendChild(settingsContent);
-        state.ui.tabElements.content.settings = settingsContent;
+        state.tabContent.settings = settingsContent;
 
-        // ==================== ABOUT TAB ====================
         const aboutContent = document.createElement('div');
         aboutContent.className = 'waddle-tab-content';
-        aboutContent.setAttribute('data-content', 'about');
 
         const timerCard = document.createElement('div');
         timerCard.className = 'waddle-card';
         timerCard.style.textAlign = 'center';
         timerCard.innerHTML = `
             <div class="waddle-card-header" style="justify-content: center;">⏱️ Session Timer</div>
-            <div id="waddle-session-timer" style="
-                font-size: 2.5rem;
-                font-weight: 900;
-                color: var(--waddle-primary);
-                font-family: 'Courier New', monospace;
-                text-shadow: 0 0 10px rgba(0,255,255,0.5);
-                margin-top: 8px;
-            ">00:00:00</div>
+            <div id="waddle-session-timer" style="font-size: 2.5rem; font-weight: 900; color: var(--waddle-primary); font-family: 'Courier New', monospace; text-shadow: 0 0 10px rgba(0,255,255,0.5); margin-top: 8px;">00:00:00</div>
         `;
         aboutContent.appendChild(timerCard);
 
@@ -927,24 +680,17 @@
             <div class="waddle-card-header">Credits</div>
             <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <img src="https://avatars.githubusercontent.com/Scripter132132" width="32" height="32" style="border-radius: 50%; box-shadow: 0 0 8px rgba(0,255,255,0.35);">
+                    <img src="https://avatars.githubusercontent.com/Scripter132132" width="32" height="32" style="border-radius: 50%;">
                     <div style="flex: 1;">
                         <div style="color: #00ffff; font-size: 0.75rem; font-weight: 600;">Original Creator</div>
                         <a href="https://github.com/Scripter132132" target="_blank" style="color: #aaa; font-size: 0.85rem; text-decoration: none;">@Scripter132132</a>
                     </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <img src="https://avatars.githubusercontent.com/TheM1ddleM1n" width="32" height="32" style="border-radius: 50%; box-shadow: 0 0 8px rgba(243,156,18,0.35);">
+                    <img src="https://avatars.githubusercontent.com/TheM1ddleM1n" width="32" height="32" style="border-radius: 50%;">
                     <div style="flex: 1;">
                         <div style="color: #f39c12; font-size: 0.75rem; font-weight: 600;">Enhanced By</div>
                         <a href="https://github.com/TheM1ddleM1n" target="_blank" style="color: #aaa; font-size: 0.85rem; text-decoration: none;">@TheM1ddleM1n</a>
-                    </div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #00ffff, #0099ff); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 0 0 8px rgba(0,255,255,0.35);">🤖</div>
-                    <div style="flex: 1;">
-                        <div style="color: #00ffff; font-size: 0.75rem; font-weight: 600;">🤖 Automation</div>
-                        <span style="color: #aaa; font-size: 0.85rem;">🐧Bot</span>
                     </div>
                 </div>
             </div>
@@ -976,38 +722,38 @@
         aboutContent.appendChild(linksCard);
 
         menuContent.appendChild(aboutContent);
-        state.ui.tabElements.content.about = aboutContent;
+        state.tabContent.about = aboutContent;
 
         menuOverlay.appendChild(menuContent);
         document.body.appendChild(menuOverlay);
         menuOverlay.addEventListener('click', (e) => { if (e.target === menuOverlay) closeMenu(); });
-        state.ui.menuOverlay = menuOverlay;
+        state.menuOverlay = menuOverlay;
         return menuOverlay;
     }
 
     function openMenu() {
-        if (state.ui.menuOverlay) state.ui.menuOverlay.classList.add('show');
+        if (state.menuOverlay) state.menuOverlay.classList.add('show');
     }
 
     function closeMenu() {
-        if (state.ui.menuOverlay) state.ui.menuOverlay.classList.remove('show');
+        if (state.menuOverlay) state.menuOverlay.classList.remove('show');
     }
 
     function toggleMenu() {
-        state.ui.menuOverlay?.classList.toggle('show');
+        state.menuOverlay?.classList.toggle('show');
     }
 
     function setupKeyboardHandler() {
-        state.session.keyboardHandler = (e) => {
+        state.keyboardHandler = (e) => {
             if (e.key === MENU_KEY) {
                 e.preventDefault();
                 toggleMenu();
-            } else if (e.key === 'Escape' && state.ui.menuOverlay?.classList.contains('show')) {
+            } else if (e.key === 'Escape' && state.menuOverlay?.classList.contains('show')) {
                 e.preventDefault();
                 closeMenu();
             }
         };
-        window.addEventListener('keydown', state.session.keyboardHandler);
+        window.addEventListener('keydown', state.keyboardHandler);
     }
 
     function restoreSavedState() {
@@ -1015,57 +761,50 @@
             const saved = localStorage.getItem(SETTINGS_KEY);
             if (!saved) return;
             const settings = JSON.parse(saved);
-            if (settings.customHue !== undefined) state.ui.customHue = settings.customHue;
-            if (settings.features) Object.assign(state.features, settings.features);
-        } catch (e) {
-            console.error('[Waddle] Failed to restore settings:', e);
-        }
+            if (settings.theme) state.theme = settings.theme;
+            if (settings.features) {
+                state.fps = settings.features.fps || false;
+                state.realTime = settings.features.realTime || false;
+                state.antiAfk = settings.features.antiAfk || false;
+                state.keyDisplay = settings.features.keyDisplay || false;
+            }
+        } catch (e) {}
     }
 
     function globalCleanup() {
-        console.log(MESSAGES.CLEANUP_START);
+        if (state.fps) toggleFeature('fps');
+        if (state.realTime) toggleFeature('realTime');
+        if (state.antiAfk) toggleFeature('antiAfk');
+        if (state.keyDisplay) toggleFeature('keyDisplay');
 
-        Object.entries(state.features).forEach(([feature, enabled]) => {
-            if (enabled) {
-                featureManager[feature]?.cleanup?.();
-                featureManager[feature]?.stop?.();
-            }
-        });
-
-        if (state.session.keyboardHandler) {
-            window.removeEventListener('keydown', state.session.keyboardHandler);
+        if (state.keyboardHandler) {
+            window.removeEventListener('keydown', state.keyboardHandler);
         }
 
-        Object.values(state.performance.intervals).forEach(clearInterval);
-        state.performance.intervals = {};
-
-        if (state.performance.rafId) cancelAnimationFrame(state.performance.rafId);
-
-        console.log(MESSAGES.CLEANUP_DONE);
+        Object.values(state.intervals).forEach(clearInterval);
     }
 
     window.addEventListener('beforeunload', globalCleanup);
 
     function init() {
-        console.log(MESSAGES.INIT_START);
         injectStyles();
-        loadCustomHue();
+        loadTheme();
         createPermanentCrosshair();
         createMenu();
         setupKeyboardHandler();
-        showToast(MESSAGES.MENU_PROMPT);
+        showToast(`Press ${MENU_KEY} To Open Menu!`);
 
         setTimeout(() => {
             restoreSavedState();
-            Object.entries(state.features).forEach(([feature, enabled]) => {
-                if (enabled) featureManager[feature]?.start();
-            });
+            applyTheme(state.theme);
+            if (state.fps) toggleFeature('fps');
+            if (state.realTime) toggleFeature('realTime');
+            if (state.antiAfk) toggleFeature('antiAfk');
+            if (state.keyDisplay) toggleFeature('keyDisplay');
         }, 100);
 
         updateSessionTimer();
-        state.performance.intervals.sessionTimer = setInterval(updateSessionTimer, TIMING.SESSION_UPDATE);
-
-        console.log(MESSAGES.INIT_DONE);
+        state.intervals.sessionTimer = setInterval(updateSessionTimer, 1000);
     }
 
     if (document.readyState === 'loading') {
