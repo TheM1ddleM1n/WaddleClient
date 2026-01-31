@@ -15,18 +15,13 @@
     const MENU_KEY = '\\';
     const SCRIPT_VERSION = '5.8';
     const SETTINGS_KEY = 'waddle_settings';
-
-    const THEMES = {
-        cyan: '#00ffff',
-        neon: '#39ff14'
-    };
+    const NEON_GREEN = '#39ff14';
 
     const state = {
         fps: false,
         realTime: false,
         antiAfk: false,
         keyDisplay: false,
-        theme: 'cyan',
         activeTab: 'features',
         menuOverlay: null,
         tabButtons: {},
@@ -56,7 +51,6 @@
                     antiAfk: state.antiAfk,
                     keyDisplay: state.keyDisplay
                 },
-                theme: state.theme,
                 positions: {
                     fps: state.fpsFpsCounter ? { left: state.fpsFpsCounter.style.left, top: state.fpsFpsCounter.style.top } : { left: '50px', top: '80px' },
                     keyDisplay: state.fpsKeyDisplay ? { left: state.fpsKeyDisplay.style.left, top: state.fpsKeyDisplay.style.top } : { left: '50px', top: '150px' },
@@ -78,66 +72,32 @@
         }, duration);
     }
 
-    function applyTheme(themeName) {
-        const color = THEMES[themeName];
-        document.documentElement.style.setProperty('--waddle-primary', color);
-        document.documentElement.style.setProperty('--waddle-shadow', color);
-        state.theme = themeName;
-        saveSettings();
-    }
-
-    function loadTheme() {
-        try {
-            const saved = localStorage.getItem(SETTINGS_KEY);
-            if (saved) {
-                const settings = JSON.parse(saved);
-                if (settings.theme) state.theme = settings.theme;
-            }
-            applyTheme(state.theme);
-        } catch (e) {
-            applyTheme('cyan');
-        }
-    }
-
-    function formatSessionTime() {
-        const elapsed = Math.floor((Date.now() - state.startTime) / 1000);
-        const hours = Math.floor(elapsed / 3600);
-        const minutes = Math.floor((elapsed % 3600) / 60);
-        const seconds = elapsed % 60;
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    }
-
-    function updateSessionTimer() {
-        const timerElement = document.getElementById('waddle-session-timer');
-        if (timerElement) timerElement.textContent = formatSessionTime();
-    }
-
     function injectStyles() {
         const style = document.createElement('style');
         style.textContent = `
-:root { --waddle-primary: #00ffff; --waddle-shadow: #00ffff; }
+:root { --waddle-primary: ${NEON_GREEN}; --waddle-shadow: ${NEON_GREEN}; }
 
 .css-xhoozx, [class*="crosshair"], img[src*="crosshair"] { display: none !important; }
 
 #waddle-menu-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); z-index: 10000000; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 40px; opacity: 0; pointer-events: none; transition: opacity 0.3s; user-select: none; }
 #waddle-menu-overlay.show { opacity: 1; pointer-events: auto; }
 #waddle-menu-header { font-family: Segoe UI, sans-serif; font-size: 3rem; font-weight: 900; color: var(--waddle-primary); text-shadow: 0 0 8px var(--waddle-shadow), 0 0 20px var(--waddle-shadow); margin-bottom: 30px; }
-#waddle-tabs { display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 2px solid rgba(0, 255, 255, 0.2); }
+#waddle-tabs { display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 2px solid rgba(57, 255, 20, 0.2); }
 .waddle-tab-btn { background: transparent; border: none; color: #999; font-family: Segoe UI, sans-serif; font-weight: 700; padding: 12px 20px; cursor: pointer; transition: color 0.2s; border-bottom: 3px solid transparent; font-size: 1rem; }
 .waddle-tab-btn.active { color: var(--waddle-primary); border-bottom-color: var(--waddle-primary); }
-#waddle-menu-content { width: 600px; background: rgba(17, 17, 17, 0.9); border-radius: 16px; padding: 24px; color: white; font-size: 1rem; box-shadow: 0 0 20px rgba(0, 255, 255, 0.4); display: flex; flex-direction: column; gap: 20px; max-height: 70vh; overflow-y: auto; border: 1px solid rgba(0, 255, 255, 0.3); }
+#waddle-menu-content { width: 600px; background: rgba(17, 17, 17, 0.9); border-radius: 16px; padding: 24px; color: white; font-size: 1rem; box-shadow: 0 0 20px rgba(57, 255, 20, 0.4); display: flex; flex-direction: column; gap: 20px; max-height: 70vh; overflow-y: auto; border: 1px solid rgba(57, 255, 20, 0.3); }
 .waddle-tab-content { display: none; }
 .waddle-tab-content.active { display: flex; flex-direction: column; gap: 16px; }
 
-.waddle-card { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.2); border-radius: 12px; padding: 16px; }
+.waddle-card { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(57, 255, 20, 0.2); border-radius: 12px; padding: 16px; }
 .waddle-card-header { font-size: 1.1rem; font-weight: 700; color: var(--waddle-primary); margin-bottom: 12px; }
 .waddle-card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
 .waddle-menu-btn { background: rgba(0, 0, 0, 0.8); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); font-family: Segoe UI, sans-serif; font-weight: 700; padding: 12px 16px; border-radius: 10px; cursor: pointer; transition: all 0.2s; font-size: 0.95rem; }
 .waddle-menu-btn:hover { background: var(--waddle-primary); color: #000; }
-.waddle-menu-btn.active { background: rgba(0, 255, 255, 0.2); }
+.waddle-menu-btn.active { background: rgba(57, 255, 20, 0.2); }
 
-.counter { position: fixed; background: rgba(0, 255, 255, 0.9); color: #000; font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1.25rem; padding: 8px 14px; border-radius: 12px; box-shadow: 0 0 15px rgba(0, 255, 255, 0.7); user-select: none; cursor: grab; z-index: 999999999; width: max-content; border: 1px solid rgba(0,255,255,0.5); }
+.counter { position: fixed; background: rgba(57, 255, 20, 0.9); color: #000; font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1.25rem; padding: 8px 14px; border-radius: 12px; box-shadow: 0 0 15px rgba(57, 255, 20, 0.7); user-select: none; cursor: grab; z-index: 999999999; width: max-content; border: 1px solid rgba(57, 255, 20, 0.5); }
 .counter.dragging { cursor: grabbing; transform: scale(1.08); }
 
 .key-display-container { position: fixed; cursor: grab; z-index: 999999999; user-select: none; }
@@ -150,12 +110,7 @@
 .mouse-box { width: 70px; }
 .space-box { grid-column: 1 / -1; width: 100%; height: 40px; font-size: 0.9rem; }
 
-.theme-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.theme-btn { background: rgba(0, 0, 0, 0.8); border: 2px solid #666; color: white; font-family: Segoe UI, sans-serif; font-weight: 700; padding: 12px 16px; border-radius: 10px; cursor: pointer; transition: all 0.2s; font-size: 0.95rem; }
-.theme-btn:hover { border-color: var(--waddle-primary); }
-.theme-btn.active { background: var(--waddle-primary); border-color: var(--waddle-primary); color: #000; }
-
-#waddle-toast { position: fixed; bottom: 60px; right: 50px; background: rgba(0, 0, 0, 0.95); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); padding: 16px 24px; border-radius: 12px; font-family: Segoe UI, sans-serif; font-weight: 700; z-index: 10000001; box-shadow: 0 0 20px rgba(0, 255, 255, 0.5); pointer-events: none; max-width: 280px; text-align: center; }
+#waddle-toast { position: fixed; bottom: 60px; right: 50px; background: rgba(0, 0, 0, 0.95); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); padding: 16px 24px; border-radius: 12px; font-family: Segoe UI, sans-serif; font-weight: 700; z-index: 10000001; box-shadow: 0 0 20px rgba(57, 255, 20, 0.5); pointer-events: none; max-width: 280px; text-align: center; }
 #waddle-toast.hide { opacity: 0; }
 
 #waddle-crosshair { display: block !important; z-index: 5000 !important; }
@@ -176,8 +131,6 @@
             display: 'block'
         });
 
-        const cyanColor = '#00ffff';
-
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('width', '50');
         svg.setAttribute('height', '50');
@@ -185,11 +138,11 @@
         svg.setAttribute('style', 'display: block;');
 
         svg.innerHTML = `
-            <circle cx="25" cy="25" r="2.5" fill="${cyanColor}"/>
-            <line x1="25" y1="8" x2="25" y2="16" stroke="${cyanColor}" stroke-width="2" stroke-linecap="round"/>
-            <line x1="25" y1="34" x2="25" y2="42" stroke="${cyanColor}" stroke-width="2" stroke-linecap="round"/>
-            <line x1="8" y1="25" x2="16" y2="25" stroke="${cyanColor}" stroke-width="2" stroke-linecap="round"/>
-            <line x1="34" y1="25" x2="42" y2="25" stroke="${cyanColor}" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="25" cy="25" r="2.5" fill="${NEON_GREEN}"/>
+            <line x1="25" y1="8" x2="25" y2="16" stroke="${NEON_GREEN}" stroke-width="2" stroke-linecap="round"/>
+            <line x1="25" y1="34" x2="25" y2="42" stroke="${NEON_GREEN}" stroke-width="2" stroke-linecap="round"/>
+            <line x1="8" y1="25" x2="16" y2="25" stroke="${NEON_GREEN}" stroke-width="2" stroke-linecap="round"/>
+            <line x1="34" y1="25" x2="42" y2="25" stroke="${NEON_GREEN}" stroke-width="2" stroke-linecap="round"/>
         `;
 
         crosshairContainer.appendChild(svg);
@@ -512,14 +465,6 @@
         return newState;
     }
 
-    function resetCounterPositions() {
-        if (state.fpsFpsCounter) Object.assign(state.fpsFpsCounter.style, { left: '50px', top: '80px' });
-        if (state.fpsKeyDisplay) Object.assign(state.fpsKeyDisplay.style, { left: '50px', top: '150px' });
-        if (state.fpsAntiAfkCounter) Object.assign(state.fpsAntiAfkCounter.style, { left: '50px', top: '290px' });
-        saveSettings();
-        showToast('Positions Reset! 🐧');
-    }
-
     function createFeatureCard(title, features) {
         const card = document.createElement('div');
         card.className = 'waddle-card';
@@ -553,6 +498,17 @@
         state.tabContent[tabName].classList.add('active');
     }
 
+    function updateSessionTimer() {
+        const timerElement = document.getElementById('waddle-session-timer');
+        if (timerElement) {
+            const elapsed = Math.floor((Date.now() - state.startTime) / 1000);
+            const hours = Math.floor(elapsed / 3600);
+            const minutes = Math.floor((elapsed % 3600) / 60);
+            const seconds = elapsed % 60;
+            timerElement.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+    }
+
     function createMenu() {
         const menuOverlay = document.createElement('div');
         menuOverlay.id = 'waddle-menu-overlay';
@@ -567,7 +523,6 @@
 
         const tabConfigs = [
             { name: 'features', label: '⚙️ Features' },
-            { name: 'settings', label: '🎨 Settings' },
             { name: 'about', label: 'ℹ️ About' }
         ];
 
@@ -586,6 +541,7 @@
         const menuContent = document.createElement('div');
         menuContent.id = 'waddle-menu-content';
 
+        // Features Tab
         const featuresContent = document.createElement('div');
         featuresContent.className = 'waddle-tab-content active';
 
@@ -604,64 +560,7 @@
         menuContent.appendChild(featuresContent);
         state.tabContent.features = featuresContent;
 
-        const settingsContent = document.createElement('div');
-        settingsContent.className = 'waddle-tab-content';
-
-        const themeCard = document.createElement('div');
-        themeCard.className = 'waddle-card';
-        themeCard.innerHTML = '<div class="waddle-card-header">🎨 Theme</div>';
-
-        const themeLabel = document.createElement('label');
-        themeLabel.className = 'settings-label';
-        themeLabel.textContent = 'UI Theme:';
-        themeCard.appendChild(themeLabel);
-
-        const themeSelector = document.createElement('div');
-        themeSelector.className = 'theme-selector';
-
-        const cyanBtn = document.createElement('button');
-        cyanBtn.className = 'theme-btn';
-        if (state.theme === 'cyan') cyanBtn.classList.add('active');
-        cyanBtn.textContent = '🔵 Cyan';
-        cyanBtn.style.borderColor = '#00ffff';
-        cyanBtn.onclick = () => {
-            applyTheme('cyan');
-            cyanBtn.classList.add('active');
-            neonBtn.classList.remove('active');
-            showToast('Theme: Cyan 🔵');
-        };
-        themeSelector.appendChild(cyanBtn);
-
-        const neonBtn = document.createElement('button');
-        neonBtn.className = 'theme-btn';
-        if (state.theme === 'neon') neonBtn.classList.add('active');
-        neonBtn.textContent = '🟢 Neon';
-        neonBtn.style.borderColor = '#39ff14';
-        neonBtn.onclick = () => {
-            applyTheme('neon');
-            neonBtn.classList.add('active');
-            cyanBtn.classList.remove('active');
-            showToast('Theme: Neon Green 🟢');
-        };
-        themeSelector.appendChild(neonBtn);
-
-        themeCard.appendChild(themeSelector);
-        settingsContent.appendChild(themeCard);
-
-        const layoutCard = document.createElement('div');
-        layoutCard.className = 'waddle-card';
-        layoutCard.innerHTML = '<div class="waddle-card-header">📐 Layout</div>';
-        const resetBtn = document.createElement('button');
-        resetBtn.className = 'waddle-menu-btn';
-        resetBtn.style.width = '100%';
-        resetBtn.textContent = '🔄 Reset Counter Positions';
-        resetBtn.addEventListener('click', resetCounterPositions);
-        layoutCard.appendChild(resetBtn);
-        settingsContent.appendChild(layoutCard);
-
-        menuContent.appendChild(settingsContent);
-        state.tabContent.settings = settingsContent;
-
+        // About Tab
         const aboutContent = document.createElement('div');
         aboutContent.className = 'waddle-tab-content';
 
@@ -670,7 +569,7 @@
         timerCard.style.textAlign = 'center';
         timerCard.innerHTML = `
             <div class="waddle-card-header" style="justify-content: center;">⏱️ Session Timer</div>
-            <div id="waddle-session-timer" style="font-size: 2.5rem; font-weight: 900; color: var(--waddle-primary); font-family: 'Courier New', monospace; text-shadow: 0 0 10px rgba(0,255,255,0.5); margin-top: 8px;">00:00:00</div>
+            <div id="waddle-session-timer" style="font-size: 2.5rem; font-weight: 900; color: var(--waddle-primary); font-family: 'Courier New', monospace; text-shadow: 0 0 10px rgba(57,255,20,0.5); margin-top: 8px;">00:00:00</div>
         `;
         aboutContent.appendChild(timerCard);
 
@@ -682,7 +581,7 @@
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <img src="https://avatars.githubusercontent.com/Scripter132132" width="32" height="32" style="border-radius: 50%;">
                     <div style="flex: 1;">
-                        <div style="color: #00ffff; font-size: 0.75rem; font-weight: 600;">Original Creator</div>
+                        <div style="color: #39ff14; font-size: 0.75rem; font-weight: 600;">Original Creator</div>
                         <a href="https://github.com/Scripter132132" target="_blank" style="color: #aaa; font-size: 0.85rem; text-decoration: none;">@Scripter132132</a>
                     </div>
                 </div>
@@ -694,28 +593,28 @@
                     </div>
                 </div>
             </div>
-            <div style="font-size: 0.7rem; color: #555; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0, 255, 255, 0.15); text-align: center;">
-                v${SCRIPT_VERSION} • MIT License • Made by TheM1ddleM1n!
+            <div style="font-size: 0.7rem; color: #555; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(57, 255, 20, 0.15); text-align: center;">
+                v${SCRIPT_VERSION} • MIT License • Neon Green Edition
             </div>
         `;
         aboutContent.appendChild(creditsCard);
 
         const linksCard = document.createElement('div');
         linksCard.className = 'waddle-card';
-        linksCard.innerHTML = '<div class="waddle-card-header">🔗 Github Templates</div>';
+        linksCard.innerHTML = '<div class="waddle-card-header">🔗 Github Links</div>';
         const linksGrid = document.createElement('div');
         linksGrid.className = 'waddle-card-grid';
 
         const suggestBtn = document.createElement('button');
         suggestBtn.className = 'waddle-menu-btn';
-        suggestBtn.textContent = 'Suggest a Feature';
-        suggestBtn.onclick = () => window.open(`https://github.com/TheM1ddleM1n/WaddleClient/issues/new?template=feature_request.md`, '_blank');
+        suggestBtn.textContent = 'Suggest Feature';
+        suggestBtn.onclick = () => window.open('https://github.com/TheM1ddleM1n/WaddleClient/issues/new?labels=enhancement', '_blank');
         linksGrid.appendChild(suggestBtn);
 
         const bugBtn = document.createElement('button');
         bugBtn.className = 'waddle-menu-btn';
-        bugBtn.textContent = 'Report a Bug';
-        bugBtn.onclick = () => window.open(`https://github.com/TheM1ddleM1n/WaddleClient/issues/new?template=bug_report.md`, '_blank');
+        bugBtn.textContent = 'Report Bug';
+        bugBtn.onclick = () => window.open('https://github.com/TheM1ddleM1n/WaddleClient/issues/new?labels=bug', '_blank');
         linksGrid.appendChild(bugBtn);
 
         linksCard.appendChild(linksGrid);
@@ -761,7 +660,6 @@
             const saved = localStorage.getItem(SETTINGS_KEY);
             if (!saved) return;
             const settings = JSON.parse(saved);
-            if (settings.theme) state.theme = settings.theme;
             if (settings.features) {
                 state.fps = settings.features.fps || false;
                 state.realTime = settings.features.realTime || false;
@@ -788,7 +686,6 @@
 
     function init() {
         injectStyles();
-        loadTheme();
         createPermanentCrosshair();
         createMenu();
         setupKeyboardHandler();
@@ -796,7 +693,6 @@
 
         setTimeout(() => {
             restoreSavedState();
-            applyTheme(state.theme);
             if (state.fps) toggleFeature('fps');
             if (state.realTime) toggleFeature('realTime');
             if (state.antiAfk) toggleFeature('antiAfk');
