@@ -6,47 +6,47 @@ labels: bug
 assignees: 'TheM1ddleM1n'
 ---
 
-## Description
+## 🐛 Describe the Bug
 A clear and concise description of what the bug is.
 
-## Steps to Reproduce
-1. Go to '...'
-2. Click on '...'
-3. Scroll down to '...'
-4. See error
+## 📍 Steps to Reproduce
+1. 
+2. 
+3. 
 
-## Expected Behavior
+## 🔍 Expected Behavior
 What should happen?
 
-## Actual Behavior
-What actually happens?
+## ⚡ Actual Behavior
+What actually happens instead?
 
-## WaddleClient Information
-- **Version of Client:** (Check menu header: e.g., v5.4)
-- **Browser Version:** (example: Chrome 144, Firefox 133)
+## 📋 Environment Information
+- **WaddleClient Version:** (Check menu header: e.g., v5.9)
+- **Browser & Version:** (e.g., Chrome 133, Firefox 133, Safari 18)
 - **Operating System:** (Windows, macOS, Linux, ChromeOS, etc)
+- **Tampermonkey Version:** (if relevant)
 
-## Affected Features?
+## 🎯 Affected Features
+- [ ] Crosshair
 - [ ] FPS Counter
-- [ ] Ping Counter
 - [ ] Real-Time Clock
 - [ ] Key Display
 - [ ] Anti-AFK
-- [ ] Crosshair
 - [ ] Menu/UI
-- [ ] Settings
+- [ ] Settings/Storage
 - [ ] Other: ___
 
-## Any Error Messages?
+## 🔧 Troubleshooting Attempted
+- [ ] Refreshed the page
+- [ ] Cleared browser cache
+- [ ] Checked browser console for errors
+- [ ] Disabled other userscripts
+- [ ] Checked the README troubleshooting section
+
+## 💻 Console Errors
 ```
 Paste any error messages from the browser console (F12 > Console tab)
 ```
 
-## Additional things you would like to say!
-Any other context about the problem? Screenshots, videos, or logs are helpful!
-
-## Checklist
-- [ ] I've checked the troubleshooting section in the README
-- [ ] I've cleared my browser cache and tried again
-- [ ] I've disabled other userscripts to rule out conflicts
-- [ ] This issue hasn't been reported before
+## 📸 Additional Context
+Any other context about the problem? Screenshots, videos, or detailed logs are helpful!
