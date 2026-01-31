@@ -1,21 +1,21 @@
 # 🐧 WaddleClient
 
-![Version](https://img.shields.io/badge/version-5.7-00ffff?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-5.8-00ffff?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-00ffff?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/platform-Miniblox-00ffff?style=for-the-badge)
 
-> **A lightweight enhancement client for Miniblox featuring a permanent target crosshair, real-time FPS monitoring, and essential quality-of-life features.**
+> **A lightweight enhancement client for Miniblox featuring a permanent cyan crosshair, real-time FPS monitoring, and dual-theme customization.**
 
 ---
 
 ## 🌟 Highlights
 
-- 🎯 **Permanent Target Crosshair** - Always-on target crosshair that matches your theme color
+- 🎯 **Permanent Cyan Crosshair** - Always-on target crosshair at screen center
 - 📊 **Real-Time FPS Monitoring** - Live performance tracking with instant visual feedback
 - ⌨️ **Visual Key Display** - See your WASD, Space, and mouse inputs in real-time
 - 🛠️ **Smart Anti-AFK** - Stay active in lobbies without manual input
-- 🎨 **Customizable Theme** - Dynamic hue slider (0-360°) to personalize your experience
-- ⚡ **Ultra Lightweight** - ~550 lines of code, minimal memory footprint, zero external dependencies
+- 🎨 **Dual Theme System** - Choose between Cyan or Neon Green UI
+- ⚡ **Ultra Lightweight** - ~520 lines of code, minimal memory footprint, zero external dependencies
 - 💾 **Persistent Settings** - All preferences automatically saved to localStorage
 
 ---
@@ -81,22 +81,22 @@ If the auto-install doesn't work, follow these steps:
 
 ### Pro Tips
 
-- **Customize theme:** Settings tab → Drag hue slider to your favorite color
+- **Switch themes:** Settings tab → Choose Cyan or Neon Green
 - **Move counters:** Click and drag any counter to reposition it
 - **Reset layout:** Settings tab → "Reset Counter Positions" button
-- **Crosshair auto-colors:** Your crosshair always matches your selected theme hue
+- **Crosshair:** Always cyan for optimal aim precision
 
 ---
 
 ## ✨ Features
 
-### 🎯 Permanent Target Crosshair
+### 🎯 Permanent Cyan Crosshair
 
-Always-visible crosshair at the center of your screen that automatically changes color to match your theme.
+Always-visible crosshair at the center of your screen in clean cyan.
 
 - **Style:** Target design with center dot and four directional lines
 - **Position:** Fixed at screen center (50%, 50%)
-- **Color:** Synced with theme hue slider (0-360°)
+- **Color:** Always cyan (never changes)
 - **Always On:** Persistent - no toggle needed
 - **Usage:** Improves aim precision and consistency
 
@@ -112,6 +112,7 @@ Real-time frames per second display for performance monitoring.
 - **Update Rate:** Every 500ms
 - **Usage:** Monitor performance and identify lag spikes
 - **Default Position:** Top-left (50px, 80px)
+- **Theme:** Matches your selected UI theme
 
 #### Real-Time Clock
 
@@ -121,6 +122,7 @@ Current time in 12-hour format with AM/PM indicator.
 - **Update Rate:** Every second
 - **Draggable:** ❌ No (fixed to bottom-right)
 - **Usage:** Quick time reference without clutter
+- **Theme:** Matches your selected UI theme
 
 #### KeyStrokes Display
 
@@ -131,6 +133,7 @@ Visual representation of your keyboard and mouse inputs.
 - **Draggable:** ✅ Yes
 - **Default Position:** Top-left (50px, 150px)
 - **Usage:** Perfect for streaming, recording, or input timing awareness
+- **Theme:** Matches your selected UI theme
 
 ---
 
@@ -146,36 +149,33 @@ Automatically prevents AFK timeout by simulating spacebar presses every 5 second
 - **Draggable:** ✅ Yes
 - **Default Position:** Top-left (50px, 290px)
 - **Usage:** Stay active in lobbies without manual input
+- **Theme:** Matches your selected UI theme
 
 ---
 
 ## 🎨 Customization
 
-### Theme Hue Slider
+### Dual Theme System
 
-Personalize your UI with a dynamic hue slider. Choose any color across the full 360° spectrum.
+Choose between two vibrant, gaming-optimized themes:
 
+**🔵 Cyan Theme** (Default)
+- Clean, modern, sleek
+- Perfect for professional gameplay
+- High contrast on dark backgrounds
+- Cyberpunk aesthetic
+
+**🟢 Neon Green Theme**
+- Retro-futuristic, arcade feel
+- Maximum visibility and energy
+- Intense gaming atmosphere
+- Hacker/matrix vibes
+
+**Switching Themes:**
 1. Open menu → **🎨 Settings** tab
-2. Find **"Menu & Crosshair Hue"** section
-3. Drag the slider to your desired hue (0-360°)
-4. See a live color preview next to the slider
-5. Changes apply instantly
-
-**What it affects:**
-- Menu header text
-- Button borders and styling
-- Counter backgrounds
-- Crosshair color
-- Tab active indicators
-
-**Popular hue values:**
-- `0°` = Red
-- `30°` = Orange
-- `60°` = Yellow
-- `120°` = Green
-- `180°` = Cyan (default)
-- `240°` = Blue
-- `300°` = Magenta
+2. Click **Cyan** or **Neon** button
+3. Changes apply instantly to menu, buttons, and counters
+4. **Note:** Crosshair always remains cyan for optimal aim
 
 ### Counter Positioning
 
@@ -205,7 +205,7 @@ WaddleClient is optimized for minimal overhead:
 - **Single RAF Loop:** Efficient FPS calculation
 - **Direct DOM Updates:** Only update when values change
 - **Memory Efficient:** Active cleanup on page unload
-- **Lightweight:** ~550 lines of code
+- **Lightweight:** ~520 lines of code
 - **No Dependencies:** Zero external libraries
 
 **Performance Benchmarks:**
@@ -224,14 +224,14 @@ All settings are stored locally in your browser's localStorage:
 **Storage Structure:**
 ```json
 {
-  "version": "5.7",
+  "version": "5.8",
   "features": {
     "fps": false,
     "realTime": false,
     "antiAfk": false,
     "keyDisplay": false
   },
-  "customHue": 180,
+  "theme": "cyan",
   "positions": {
     "fps": { "left": "50px", "top": "80px" },
     "keyDisplay": { "left": "50px", "top": "150px" },
@@ -296,9 +296,9 @@ All settings are stored locally in your browser's localStorage:
 1. Refresh the page (Ctrl+R)
 2. Check if the crosshair is behind other UI elements
 3. Verify Miniblox game has loaded fully
-4. Try changing the hue slider to see if it updates
+4. The crosshair is always enabled - no toggle needed
 
-**Note:** Crosshair is always enabled and permanent - no toggle needed!
+**Note:** Crosshair is permanently cyan for consistent aim reference!
 
 ### Settings Not Saving
 
@@ -315,20 +315,20 @@ All settings are stored locally in your browser's localStorage:
 3. Find localhost in Storage
 4. Clear localStorage
 
-### Hue Slider Not Working
+### Theme Not Changing
 
 **Try these solutions:**
 
-1. Drag the slider all the way left (0°) then right (360°)
+1. Click the theme button again
 2. Refresh the page
 3. Check console for JavaScript errors
 4. Ensure you're using a modern browser (ES6+ support)
 
 **Expected behavior:**
-- Slider updates color preview in real-time
 - Menu header changes color immediately
-- Crosshair color syncs with slider position
-- All changes save automatically
+- All buttons update to new color
+- Counters update to new color
+- Theme preference saves automatically
 
 ### Performance Issues
 
@@ -364,6 +364,30 @@ All settings are stored locally in your browser's localStorage:
 
 ## 📝 Changelog
 
+### [5.8] - 31/01/26
+
+#### Removed
+- ✂️ Hue slider - Removed continuous color customization
+- ✂️ Custom HUE storage - Simplified to preset themes only
+
+#### Added
+- 🔵 Dual Theme System (Cyan & Neon Green)
+- 🎨 Two-button theme selector in Settings
+- 🎯 Permanent cyan crosshair (never changes)
+
+#### Changed
+- ⚡ Reduced to ~520 lines of code
+- ⚡ Faster theme switching (no slider)
+- ⚡ Cleaner, more focused customization
+
+#### Result
+- More modern aesthetic with preset themes
+- Cyan crosshair always provides aim consistency
+- Neon Green UI option for arcade vibes
+- Simpler, faster customization
+
+---
+
 ### [5.7] - 31/01/26
 
 #### Removed
@@ -371,56 +395,18 @@ All settings are stored locally in your browser's localStorage:
 
 #### Changed
 - ⚡ Reduced to ~550 lines of code
-- ⚡ Removed unnecessary button handling
-- ⚡ Cleaner utilities section
-
-#### Result
-- Even more lightweight
-- Focus on essential features only
 
 ---
 
 ### [5.6] - 31/01/26
 
 #### Removed
-- ✂️ All section header comments
-- ✂️ Object.freeze() usage (replaced with const)
-- ✂️ All console.log() statements
-- ✂️ Error handling in fullscreen
-- ✂️ Debounce function (direct saves)
-- ✂️ Helper functions (inlined code)
-- ✂️ Counter config constants
-- ✂️ Passive event listener options
-- ✂️ TIMING, MESSAGES, FEATURE_CARDS constants
+- ✂️ All comments and Object.freeze()
+- ✂️ Console logs and error handling
+- ✂️ Debounce function and helper functions
 
 #### Changed
-- ⚡ Flattened state object (reduced nesting)
-- ⚡ Removed all CSS animations and transitions
-- ⚡ Removed hover effects and backdrop filters
-- ⚡ Simplified styling to essential only
 - ⚡ **50% code reduction** (~1200 → ~600 lines)
-- ⚡ Faster initialization and execution
-
----
-
-### [5.5] - 31/01/26
-
-#### Removed
-- ✂️ Ping Counter - Removed HEAD request-based ping monitoring
-- ✂️ Custom Keybind - Locked menu key to backslash `\`
-- ✂️ Keybind UI - Removed keybind input from Settings tab
-
----
-
-### [5.4] - 29/01/26
-- made a new .github/workflows structure with bump.yml
-- and bug/enhancement format
-
-### [5.0] - 29/01/26
-
-#### Added
-- 🎯 Permanent Target crosshair at screen center
-- 🌈 Dynamic hue slider (0-360°) for theme customization
 
 ---
 
@@ -468,9 +454,17 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 A: Yes! The script is open source and runs only locally in your browser. No external data is sent anywhere.
 
-**Q: Does this work on mobile?**
+**Q: Why is the crosshair always cyan?**
 
-A: This script is designed for desktop browsers with userscript manager support.
+A: Cyan provides optimal aim precision as your reference point. Your UI theme changes, but the crosshair stays consistent for gaming!
+
+**Q: Can I customize the crosshair color?**
+
+A: No, the cyan crosshair is permanent for consistency. But you can change the entire UI theme to Cyan or Neon Green!
+
+**Q: Which theme is best?**
+
+A: Both are great! Cyan = modern/professional, Neon Green = retro/arcade. Pick what feels right!
 
 **Q: Can I modify the script?**
 
@@ -496,14 +490,6 @@ A: WaddleClient has minimal performance impact (less than 0.35% CPU).
 
 A: WaddleClient is specifically designed for Miniblox only.
 
-**Q: Can I move the crosshair?**
-
-A: No, the crosshair is fixed to the center for precision aiming. But you can customize its color!
-
-**Q: Why is the code so lean?**
-
-A: v5.7 removes all unnecessary bloat. No animations, no helper functions, no constants overhead - just pure functionality.
-
 ---
 
 ## 🔗 Useful Links
@@ -517,4 +503,8 @@ A: v5.7 removes all unnecessary bloat. No animations, no helper functions, no co
 
 <p align="center">
   <b>Made by the Waddle Team</b> ⭐
+</p>
+
+<p align="center">
+  <sub>Cyan 🔵 & Neon Green 🟢 - Pick Your Vibe</sub>
 </p>
