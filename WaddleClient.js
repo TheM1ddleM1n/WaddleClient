@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WaddleClient
 // @namespace    https://github.com/TheM1ddleM1n/WaddleClient
-// @version      5.4
+// @version      5.5
 // @description  M1ddleM1n and Scripter on top
 // @author       Scripter, TheM1ddleM1n
 // @icon         https://raw.githubusercontent.com/TheM1ddleM1n/WaddleClient/refs/heads/main/Penguin.png
@@ -16,7 +16,6 @@
     const TIMING = Object.freeze({
         HINT_TEXT_DURATION: 4000,
         FPS_UPDATE_INTERVAL: 500,
-        PING_UPDATE_INTERVAL: 2000,
         SAVE_DEBOUNCE: 500,
         TOAST_DURATION: 3000,
         KEY_HIGHLIGHT_DURATION: 150,
@@ -24,16 +23,16 @@
     });
 
     const SETTINGS_KEY = 'waddle_settings';
-    const DEFAULT_MENU_KEY = '\\';
+    const MENU_KEY = '\\'; // Hardcoded
     const CUSTOM_HUE_KEY = 'waddle_custom_hue';
-    const SCRIPT_VERSION = '5.4';
+    const SCRIPT_VERSION = '5.5';
     const DEFAULT_HUE = 180; // Cyan
 
     const MESSAGES = Object.freeze({
         ENABLED: (feature) => `${feature} Enabled ✓`,
         DISABLED: (feature) => `${feature} Disabled ✓`,
         POSITIONS_RESET: 'Positions Reset! 🐧',
-        MENU_PROMPT: (key) => `Press ${key} To Open Menu!`,
+        MENU_PROMPT: `Press ${MENU_KEY} To Open Menu!`,
         CLEANUP_START: '[Waddle] Cleaning up resources..',
         CLEANUP_DONE: '[Waddle] Cleanup complete!',
         INIT_START: `[Waddle] Initializing v${SCRIPT_VERSION}...`,
@@ -44,13 +43,11 @@
     const DEFAULT_POSITIONS = Object.freeze({
         fps: { left: '50px', top: '80px' },
         keyDisplay: { left: '50px', top: '150px' },
-        ping: { left: '50px', top: '220px' },
-        antiAfk: { left: '50px', top: '290px' }
+        antiAfk: { left: '50px', top: '220px' }
     });
 
     const COUNTER_CONFIGS = Object.freeze({
         fps: { id: 'fps-counter', text: 'FPS: 0', pos: DEFAULT_POSITIONS.fps, icon: '🐧', draggable: true },
-        ping: { id: 'ping-counter', text: 'PING: 0ms', pos: DEFAULT_POSITIONS.ping, icon: '🐧', draggable: true },
         realTime: { id: 'real-time-counter', text: '00:00:00 AM', pos: null, icon: '🐧', draggable: false },
         antiAfk: { id: 'anti-afk-counter', text: '🐧 Jumping in 5s', pos: DEFAULT_POSITIONS.antiAfk, icon: '🐧', draggable: true }
     });
@@ -60,7 +57,6 @@
             title: '📊 Display Counters',
             features: [
                 { label: 'FPS', feature: 'fps', icon: '🐧' },
-                { label: 'Ping', feature: 'ping', icon: '🐧' },
                 { label: 'Clock', feature: 'realTime', icon: '🐧' },
                 { label: 'Key Display', feature: 'keyDisplay', icon: '🐧' }
             ]
@@ -78,13 +74,11 @@
     const state = {
         features: {
             fps: false,
-            ping: false,
             realTime: false,
             antiAfk: false,
             keyDisplay: false
         },
         ui: {
-            menuKey: DEFAULT_MENU_KEY,
             customHue: DEFAULT_HUE,
             activeTab: 'features',
             menuOverlay: null,
@@ -98,7 +92,6 @@
         counters: {
             fps: null,
             realTime: null,
-            ping: null,
             antiAfk: null,
             keyDisplay: null,
             crosshair: null
@@ -110,8 +103,7 @@
         session: {
             keyboardHandler: null,
             startTime: Date.now(),
-            antiAfkCountdown: 5,
-            pingStats: { currentPing: 0 }
+            antiAfkCountdown: 5
         }
     };
 
@@ -141,28 +133,28 @@
     }
 
     function applyTheme(hue) {
-    const color = hueToColor(hue);
-    document.documentElement.style.setProperty('--waddle-primary', color);
-    document.documentElement.style.setProperty('--waddle-shadow', color);
-    state.ui.customHue = hue;
+        const color = hueToColor(hue);
+        document.documentElement.style.setProperty('--waddle-primary', color);
+        document.documentElement.style.setProperty('--waddle-shadow', color);
+        state.ui.customHue = hue;
 
-    // Update crosshair SVG elements
-    if (state.counters.crosshair) {
-        const svg = state.counters.crosshair.querySelector('svg');
-        if (svg) {
-            const elements = svg.querySelectorAll('circle, line');
-            elements.forEach(el => {
-                if (el.tagName === 'circle') {
-                    el.setAttribute('fill', color);
-                } else if (el.tagName === 'line') {
-                    el.setAttribute('stroke', color);
-                }
-            });
+        // Update crosshair SVG elements
+        if (state.counters.crosshair) {
+            const svg = state.counters.crosshair.querySelector('svg');
+            if (svg) {
+                const elements = svg.querySelectorAll('circle, line');
+                elements.forEach(el => {
+                    if (el.tagName === 'circle') {
+                        el.setAttribute('fill', color);
+                    } else if (el.tagName === 'line') {
+                        el.setAttribute('stroke', color);
+                    }
+                });
+            }
         }
-    }
 
-    try { localStorage.setItem(CUSTOM_HUE_KEY, hue.toString()); } catch (e) {}
-}
+        try { localStorage.setItem(CUSTOM_HUE_KEY, hue.toString()); } catch (e) {}
+    }
 
     function loadCustomHue() {
         try {
@@ -193,7 +185,6 @@
             const settings = {
                 version: SCRIPT_VERSION,
                 features: state.features,
-                menuKey: state.ui.menuKey,
                 customHue: state.ui.customHue,
                 positions: Object.fromEntries(
                     Object.entries(state.counters)
@@ -277,9 +268,6 @@
 .hue-color-preview { width: 40px; height: 40px; border-radius: 8px; border: 2px solid var(--waddle-primary); box-shadow: 0 0 10px rgba(0,255,255,0.5); }
 .hue-value-text { color: var(--waddle-primary); font-weight: 700; font-family: 'Courier New', monospace; font-size: 0.9rem; }
 
-.keybind-input { width: 100%; background: rgba(0, 0, 0, 0.8); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1rem; padding: 8px 12px; border-radius: 8px; text-align: center; transition: box-shadow 0.2s ease; }
-.keybind-input:focus { outline: none; box-shadow: 0 0 15px rgba(0, 255, 255, 0.6); background: rgba(0, 255, 255, 0.15); }
-
 #waddle-toast { position: fixed; bottom: 60px; right: 50px; background: rgba(0, 0, 0, 0.95); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); padding: 16px 24px; border-radius: 12px; font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1rem; z-index: 10000001; box-shadow: 0 0 20px rgba(0, 255, 255, 0.5), inset 0 0 10px rgba(0, 255, 255, 0.2); animation: toastSlideIn 0.3s ease; pointer-events: none; max-width: 280px; text-align: center; }
 #waddle-toast.hide { animation: toastSlideOut 0.3s ease forwards; }
 
@@ -289,88 +277,88 @@
         document.head.appendChild(style);
     }
 
-  // ==================== CROSSHAIR SYSTEM ====================
-function createPermanentCrosshair() {
-    const crosshairContainer = document.createElement('div');
-    crosshairContainer.id = 'waddle-crosshair';
-    Object.assign(crosshairContainer.style, {
-        position: 'fixed',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        zIndex: '5000',
-        pointerEvents: 'none',
-        display: 'block'
-    });
+    // ==================== CROSSHAIR SYSTEM ====================
+    function createPermanentCrosshair() {
+        const crosshairContainer = document.createElement('div');
+        crosshairContainer.id = 'waddle-crosshair';
+        Object.assign(crosshairContainer.style, {
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: '5000',
+            pointerEvents: 'none',
+            display: 'block'
+        });
 
-    const targetColor = hueToColor(state.ui.customHue);
+        const targetColor = hueToColor(state.ui.customHue);
 
-    // Create SVG crosshair
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('width', '50');
-    svg.setAttribute('height', '50');
-    svg.setAttribute('viewBox', '0 0 50 50');
-    svg.setAttribute('style', 'display: block;');
+        // Create SVG crosshair
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('width', '50');
+        svg.setAttribute('height', '50');
+        svg.setAttribute('viewBox', '0 0 50 50');
+        svg.setAttribute('style', 'display: block;');
 
-    // Center dot
-    const centerDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    centerDot.setAttribute('cx', '25');
-    centerDot.setAttribute('cy', '25');
-    centerDot.setAttribute('r', '2.5');
-    centerDot.setAttribute('fill', targetColor);
-    svg.appendChild(centerDot);
+        // Center dot
+        const centerDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        centerDot.setAttribute('cx', '25');
+        centerDot.setAttribute('cy', '25');
+        centerDot.setAttribute('r', '2.5');
+        centerDot.setAttribute('fill', targetColor);
+        svg.appendChild(centerDot);
 
-    // Top line
-    const topLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    topLine.setAttribute('x1', '25');
-    topLine.setAttribute('y1', '8');
-    topLine.setAttribute('x2', '25');
-    topLine.setAttribute('y2', '16');
-    topLine.setAttribute('stroke', targetColor);
-    topLine.setAttribute('stroke-width', '2');
-    topLine.setAttribute('stroke-linecap', 'round');
-    svg.appendChild(topLine);
+        // Top line
+        const topLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        topLine.setAttribute('x1', '25');
+        topLine.setAttribute('y1', '8');
+        topLine.setAttribute('x2', '25');
+        topLine.setAttribute('y2', '16');
+        topLine.setAttribute('stroke', targetColor);
+        topLine.setAttribute('stroke-width', '2');
+        topLine.setAttribute('stroke-linecap', 'round');
+        svg.appendChild(topLine);
 
-    // Bottom line
-    const bottomLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    bottomLine.setAttribute('x1', '25');
-    bottomLine.setAttribute('y1', '34');
-    bottomLine.setAttribute('x2', '25');
-    bottomLine.setAttribute('y2', '42');
-    bottomLine.setAttribute('stroke', targetColor);
-    bottomLine.setAttribute('stroke-width', '2');
-    bottomLine.setAttribute('stroke-linecap', 'round');
-    svg.appendChild(bottomLine);
+        // Bottom line
+        const bottomLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        bottomLine.setAttribute('x1', '25');
+        bottomLine.setAttribute('y1', '34');
+        bottomLine.setAttribute('x2', '25');
+        bottomLine.setAttribute('y2', '42');
+        bottomLine.setAttribute('stroke', targetColor);
+        bottomLine.setAttribute('stroke-width', '2');
+        bottomLine.setAttribute('stroke-linecap', 'round');
+        svg.appendChild(bottomLine);
 
-    // Left line
-    const leftLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    leftLine.setAttribute('x1', '8');
-    leftLine.setAttribute('y1', '25');
-    leftLine.setAttribute('x2', '16');
-    leftLine.setAttribute('y2', '25');
-    leftLine.setAttribute('stroke', targetColor);
-    leftLine.setAttribute('stroke-width', '2');
-    leftLine.setAttribute('stroke-linecap', 'round');
-    svg.appendChild(leftLine);
+        // Left line
+        const leftLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        leftLine.setAttribute('x1', '8');
+        leftLine.setAttribute('y1', '25');
+        leftLine.setAttribute('x2', '16');
+        leftLine.setAttribute('y2', '25');
+        leftLine.setAttribute('stroke', targetColor);
+        leftLine.setAttribute('stroke-width', '2');
+        leftLine.setAttribute('stroke-linecap', 'round');
+        svg.appendChild(leftLine);
 
-    // Right line
-    const rightLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    rightLine.setAttribute('x1', '34');
-    rightLine.setAttribute('y1', '25');
-    rightLine.setAttribute('x2', '42');
-    rightLine.setAttribute('y2', '25');
-    rightLine.setAttribute('stroke', targetColor);
-    rightLine.setAttribute('stroke-width', '2');
-    rightLine.setAttribute('stroke-linecap', 'round');
-    svg.appendChild(rightLine);
+        // Right line
+        const rightLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        rightLine.setAttribute('x1', '34');
+        rightLine.setAttribute('y1', '25');
+        rightLine.setAttribute('x2', '42');
+        rightLine.setAttribute('y2', '25');
+        rightLine.setAttribute('stroke', targetColor);
+        rightLine.setAttribute('stroke-width', '2');
+        rightLine.setAttribute('stroke-linecap', 'round');
+        svg.appendChild(rightLine);
 
-    crosshairContainer.appendChild(svg);
-    document.body.appendChild(crosshairContainer);
-    state.counters.crosshair = crosshairContainer;
+        crosshairContainer.appendChild(svg);
+        document.body.appendChild(crosshairContainer);
+        state.counters.crosshair = crosshairContainer;
 
-    console.log('[Waddle] Crosshair created successfully');
-    return crosshairContainer;
-}
+        console.log('[Waddle] Crosshair created successfully');
+        return crosshairContainer;
+    }
 
     // ==================== COUNTER CREATION ====================
     function createCounterElement(config) {
@@ -508,7 +496,7 @@ function createPermanentCrosshair() {
         }
     }
 
-    // ==================== REAL-TIME & PING ====================
+    // ==================== REAL-TIME ====================
     function updateRealTime() {
         if (!state.counters.realTime) return;
         const now = new Date();
@@ -518,28 +506,6 @@ function createPermanentCrosshair() {
         const ampm = hours >= 12 ? 'PM' : 'AM';
         hours = hours % 12 || 12;
         updateCounterText('realTime', `${hours}:${minutes}:${seconds} ${ampm}`);
-    }
-
-    function measurePing() {
-        return new Promise((resolve) => {
-            const startTime = performance.now();
-            fetch(window.location.origin + '/', {
-                method: 'HEAD',
-                cache: 'no-cache',
-                mode: 'no-cors'
-            }).then(() => {
-                resolve(Math.round(performance.now() - startTime));
-            }).catch(() => {
-                resolve(0);
-            });
-        });
-    }
-
-    function updatePingCounter() {
-        measurePing().then(ping => {
-            state.session.pingStats.currentPing = ping;
-            updateCounterText('ping', `PING: ${ping}ms`);
-        });
     }
 
     // ==================== ANTI-AFK ====================
@@ -694,22 +660,6 @@ function createPermanentCrosshair() {
             cleanup: () => {
                 state.counters.fps?._dragCleanup?.();
                 if (state.counters.fps) { state.counters.fps.remove(); state.counters.fps = null; }
-            }
-        },
-
-        ping: {
-            start: () => {
-                if (!state.counters.ping) createCounter('ping');
-                updatePingCounter();
-                state.performance.intervals.ping = setInterval(updatePingCounter, TIMING.PING_UPDATE_INTERVAL);
-            },
-            stop: () => {
-                clearInterval(state.performance.intervals.ping);
-                state.performance.intervals.ping = null;
-            },
-            cleanup: () => {
-                state.counters.ping?._dragCleanup?.();
-                if (state.counters.ping) { state.counters.ping.remove(); state.counters.ping = null; }
             }
         },
 
@@ -936,30 +886,6 @@ function createPermanentCrosshair() {
 
         settingsContent.appendChild(themeCard);
 
-        const controlsCard = document.createElement('div');
-        controlsCard.className = 'waddle-card';
-        controlsCard.innerHTML = '<div class="waddle-card-header">⌨️ Controls</div>';
-        const keybindLabel = document.createElement('label');
-        keybindLabel.className = 'settings-label';
-        keybindLabel.textContent = 'Menu Keybind:';
-        controlsCard.appendChild(keybindLabel);
-        const keybindInput = document.createElement('input');
-        keybindInput.type = 'text';
-        keybindInput.className = 'keybind-input';
-        keybindInput.value = state.ui.menuKey;
-        keybindInput.readOnly = true;
-        keybindInput.placeholder = 'Press a key...';
-        keybindInput.addEventListener('keydown', (e) => {
-            e.preventDefault();
-            if (e.key === 'Escape') { keybindInput.value = state.ui.menuKey; keybindInput.blur(); return; }
-            state.ui.menuKey = e.key;
-            keybindInput.value = e.key;
-            keybindInput.blur();
-            saveSettings();
-        });
-        controlsCard.appendChild(keybindInput);
-        settingsContent.appendChild(controlsCard);
-
         const layoutCard = document.createElement('div');
         layoutCard.className = 'waddle-card';
         layoutCard.innerHTML = '<div class="waddle-card-header">📐 Layout</div>';
@@ -1073,7 +999,7 @@ function createPermanentCrosshair() {
 
     function setupKeyboardHandler() {
         state.session.keyboardHandler = (e) => {
-            if (e.key === state.ui.menuKey) {
+            if (e.key === MENU_KEY) {
                 e.preventDefault();
                 toggleMenu();
             } else if (e.key === 'Escape' && state.ui.menuOverlay?.classList.contains('show')) {
@@ -1089,7 +1015,6 @@ function createPermanentCrosshair() {
             const saved = localStorage.getItem(SETTINGS_KEY);
             if (!saved) return;
             const settings = JSON.parse(saved);
-            if (settings.menuKey) state.ui.menuKey = settings.menuKey;
             if (settings.customHue !== undefined) state.ui.customHue = settings.customHue;
             if (settings.features) Object.assign(state.features, settings.features);
         } catch (e) {
@@ -1128,7 +1053,7 @@ function createPermanentCrosshair() {
         createPermanentCrosshair();
         createMenu();
         setupKeyboardHandler();
-        showToast(MESSAGES.MENU_PROMPT(state.ui.menuKey));
+        showToast(MESSAGES.MENU_PROMPT);
 
         setTimeout(() => {
             restoreSavedState();
