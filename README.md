@@ -1,30 +1,29 @@
 # 🐧 WaddleClient
 
-![Version](https://img.shields.io/badge/version-5.5-00ffff?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-5.6-00ffff?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-00ffff?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/platform-Miniblox-00ffff?style=for-the-badge)
 
-> **A premium enhancement client for Miniblox featuring a modern card-based UI, real-time performance monitoring, permanent target crosshair, and powerful quality-of-life features.**
+> **A lightweight enhancement client for Miniblox featuring a permanent target crosshair, real-time FPS monitoring, and essential quality-of-life features.**
 
 ---
 
 ## 🌟 Highlights
 
 - 🎯 **Permanent Target Crosshair** - Always-on target crosshair that matches your theme color
-- 🎨 **Beautiful Modern UI** - Sleek card-based design with smooth animations and intuitive tabbed interface
 - 📊 **Real-Time FPS Monitoring** - Live performance tracking with instant visual feedback
-- ⌨️ **Visual Key Display** - See your WASD, Space, and mouse inputs in real-time with instant visual feedback
-- 🛠️ **Smart Utilities** - Anti-AFK protection and fullscreen toggle for uninterrupted gameplay
-- 🎨 **Fully Customizable** - Dynamic hue slider, drag counters anywhere, and persist all settings
-- ⚡ **Optimized Performance** - Efficient RAF loops with minimal memory footprint and zero external dependencies
-- 💾 **Persistent Settings** - All your preferences automatically saved to localStorage
+- ⌨️ **Visual Key Display** - See your WASD, Space, and mouse inputs in real-time
+- 🛠️ **Smart Utilities** - Anti-AFK protection and fullscreen toggle
+- 🎨 **Customizable Theme** - Dynamic hue slider (0-360°) to personalize your experience
+- ⚡ **Ultra Lightweight** - ~600 lines of code, minimal memory footprint, zero external dependencies
+- 💾 **Persistent Settings** - All preferences automatically saved to localStorage
 
 ---
 
 ## 📖 Quick Navigation
 
 - [Installation](#-installation) - How to get started
-- [Usage Guide](#-usage-guide) - Learn the basics
+- [Usage](#-usage) - Learn the basics
 - [Features](#-features) - Detailed feature breakdown
 - [Customization](#-customization) - Personalize your experience
 - [Troubleshooting](#-troubleshooting) - Solutions to common issues
@@ -64,7 +63,7 @@ If the auto-install doesn't work, follow these steps:
 
 ---
 
-## 🚀 Usage Guide
+## 🚀 Usage
 
 ### Opening the Menu
 
@@ -73,13 +72,12 @@ If the auto-install doesn't work, follow these steps:
 | Toggle Menu | `\` (backslash) |
 | Close Menu | `ESC` or click outside |
 
-### Enabling Your First Feature
+### Enabling Features
 
 1. Press `\` to open Waddle
-2. Stay on the **⚙️ Features** tab (default)
-3. Click any feature button to enable it
-4. Active features show a **✓** checkmark
-5. Counters appear on screen automatically
+2. Click any feature button to enable it
+3. Active features show a **✓** checkmark
+4. Counters appear on screen automatically
 
 ### Pro Tips
 
@@ -94,13 +92,12 @@ If the auto-install doesn't work, follow these steps:
 
 ### 🎯 Permanent Target Crosshair
 
-Always-visible crosshair at the center of your screen. Automatically changes color to match your selected theme hue.
+Always-visible crosshair at the center of your screen that automatically changes color to match your theme.
 
 - **Style:** Target design with center dot and four directional lines
 - **Position:** Fixed at screen center (50%, 50%)
 - **Color:** Synced with theme hue slider (0-360°)
-- **Always On:** Persistent - no toggle needed, always active
-- **Replaces:** Hides default Miniblox crosshair
+- **Always On:** Persistent - no toggle needed
 - **Usage:** Improves aim precision and consistency
 
 ---
@@ -109,38 +106,30 @@ Always-visible crosshair at the center of your screen. Automatically changes col
 
 #### FPS Counter
 
-Shows your current frames per second for performance monitoring. Updates every 500ms and helps identify performance drops during gameplay.
+Real-time frames per second display for performance monitoring.
 
 - **Draggable:** ✅ Yes
-- **Color:** Cyan/Custom theme color
 - **Update Rate:** Every 500ms
-- **Technology:** RequestAnimationFrame loop
 - **Usage:** Monitor performance and identify lag spikes
+- **Default Position:** Top-left (50px, 80px)
 
 #### Real-Time Clock
 
-Displays the current time in 12-hour format with AM/PM indicator. Fixed in the bottom-right corner for reference without taking up gameplay space.
+Current time in 12-hour format with AM/PM indicator.
 
 - **Format:** HH:MM:SS AM/PM
 - **Update Rate:** Every second
-- **Draggable:** ❌ No (fixed position)
-- **Styling:** Transparent background with glowing text shadow
+- **Draggable:** ❌ No (fixed to bottom-right)
 - **Usage:** Quick time reference without clutter
 
 #### KeyStrokes Display
 
-Visual representation of your keyboard and mouse inputs. Perfect for streaming, recording, or improving your awareness of input timing.
+Visual representation of your keyboard and mouse inputs.
 
 - **Keys shown:** W, A, S, D, Space, LMB (Left Mouse Button), RMB (Right Mouse Button)
-- **Animation:** Real-time highlight on press with smooth transitions
-- **Layout:** Ergonomic WASD grid with separate mouse buttons
+- **Real-time highlight:** Instant visual feedback on key press
 - **Draggable:** ✅ Yes
-- **Features:**
-  - ⌨️ WASD keys in traditional gaming layout
-  - 🖱️ Separate mouse button displays (LMB/RMB)
-  - ⎵ Full-width spacebar indicator
-  - ⚡ Instant visual feedback with smooth animations
-  - 🎨 Active state uses your custom theme color
+- **Default Position:** Top-left (50px, 150px)
 - **Usage:** Perfect for streaming, recording, or input timing awareness
 
 ---
@@ -149,22 +138,21 @@ Visual representation of your keyboard and mouse inputs. Perfect for streaming, 
 
 #### Anti-AFK System
 
-Automatically prevents AFK timeout by simulating spacebar presses every 5 seconds. Perfect for staying active in lobbies or during idle periods without manual input.
+Automatically prevents AFK timeout by simulating spacebar presses every 5 seconds.
 
 - **Action:** Simulates spacebar press
 - **Interval:** Every 5 seconds
 - **Display:** Live countdown timer
 - **Draggable:** ✅ Yes
+- **Default Position:** Top-left (50px, 290px)
 - **Usage:** Stay active in lobbies without manual input
-- **How it works:** Simulates a spacebar keydown and keyup event to keep your character active
 
 #### Fullscreen Toggle
 
-One-click fullscreen activation using the browser's native fullscreen API. Quick access from the Features menu for immersive gameplay.
+One-click fullscreen activation using the browser's native fullscreen API.
 
-- **Method:** Browser-native fullscreen API
 - **Access:** Features tab → Fullscreen button
-- **Usage:** Toggle between windowed and fullscreen modes instantly
+- **Usage:** Toggle between windowed and fullscreen modes
 
 ---
 
@@ -172,18 +160,18 @@ One-click fullscreen activation using the browser's native fullscreen API. Quick
 
 ### Theme Hue Slider
 
-Personalize your entire UI with a dynamic hue slider. Choose any color across the full 360° spectrum.
+Personalize your UI with a dynamic hue slider. Choose any color across the full 360° spectrum.
 
 1. Open menu → **🎨 Settings** tab
 2. Find **"Menu & Crosshair Hue"** section
 3. Drag the slider to your desired hue (0-360°)
 4. See a live color preview next to the slider
-5. Changes apply instantly to menu, crosshair, and all UI elements
+5. Changes apply instantly
 
 **What it affects:**
-- Menu header text and shadows
-- All button borders and hover states
-- Counter backgrounds and glows
+- Menu header text
+- Button borders and styling
+- Counter backgrounds
 - Crosshair color
 - Tab active indicators
 
@@ -196,18 +184,16 @@ Personalize your entire UI with a dynamic hue slider. Choose any color across th
 - `240°` = Blue
 - `300°` = Magenta
 
-**Tip:** Hue slider provides smooth, real-time color transitions across the entire spectrum!
-
 ### Counter Positioning
 
-All counters (except the clock) are fully draggable and will remember their positions.
+All draggable counters remember their positions automatically.
 
 - Click and drag any counter to reposition it
 - Release to set the new position
 - Positions save automatically
-- Counters stay within the viewport boundaries
+- Counters stay within viewport boundaries
 
-**Reset Positions:** If counters get stuck, go to Settings → **Reset Counter Positions** to restore defaults.
+**Reset Positions:** Go to Settings → **Reset Counter Positions** to restore defaults.
 
 **Default Positions:**
 - FPS Counter: Top-left (50px, 80px)
@@ -219,29 +205,33 @@ All counters (except the clock) are fully draggable and will remember their posi
 
 ## 🔧 Technical Details
 
-### Performance Optimizations
+### Performance
 
-- **Single RAF Loop** - One requestAnimationFrame handles all FPS calculations efficiently
-- **Debounced Saves** - Settings saved with 500ms debounce to reduce disk writes
-- **Smart DOM Updates** - Only update the DOM when values actually change
-- **Memory Efficient** - Active cleanup on page unload prevents memory leaks
-- **Passive Event Listeners** - Better scroll and interaction performance
+WaddleClient is optimized for minimal overhead:
 
-### Data & Storage
+- **Single RAF Loop:** Efficient FPS calculation
+- **Direct DOM Updates:** Only update when values change
+- **Memory Efficient:** Active cleanup on page unload
+- **Lightweight:** ~600 lines of code
+- **No Dependencies:** Zero external libraries
+
+**Performance Benchmarks:**
+- FPS Counter: ~0.1% CPU usage
+- Key Display: ~0.2% CPU usage
+- Anti-AFK: ~0.01% CPU usage
+- Crosshair: ~0.02% CPU usage
+- **Total:** ~0.35% CPU usage (negligible)
+
+### Data Storage
 
 All settings are stored locally in your browser's localStorage:
 
-- Counter positions (for all draggable counters)
-- Enabled/disabled states for each feature
-- Custom theme hue (0-360)
-- Settings version tracking
-
-**Storage Key:** `waddle_settings` (JSON format with version tracking)
+**Storage Key:** `waddle_settings` (JSON format)
 
 **Storage Structure:**
 ```json
 {
-  "version": "5.5",
+  "version": "5.6",
   "features": {
     "fps": false,
     "realTime": false,
@@ -289,7 +279,7 @@ All settings are stored locally in your browser's localStorage:
 **Debug steps:**
 - Open Developer Tools (F12)
 - Check the Console tab for any error messages
-- Look for `[Waddle]` logs to see if the script is running
+- Check if the script is running
 
 ### Counters Not Showing
 
@@ -323,14 +313,14 @@ All settings are stored locally in your browser's localStorage:
 
 1. **localStorage quota exceeded** → Clear some browser data
 2. **Private/Incognito mode** → Disable and try again
-3. **Browser blocking cookies** → Allow cookies for miniblox.io
+3. **Browser blocking storage** → Allow storage for miniblox.io
 4. **Check browser permissions** → Verify localStorage is enabled
 
 **How to clear localStorage:**
 1. Open Developer Tools (F12)
 2. Go to Application/Storage tab
 3. Find localhost in Storage
-4. Clear localStorage (except for important data)
+4. Clear localStorage
 
 ### Hue Slider Not Working
 
@@ -354,22 +344,13 @@ All settings are stored locally in your browser's localStorage:
 1. Disable unused counters (only enable what you need)
 2. Check for conflicting userscripts
 3. Close other browser tabs
-4. Try reducing the number of active features
-5. Clear your browser cache
+4. Clear your browser cache
 
 **Performance tips:**
+- Only enable features you actively use
 - FPS counter has minimal impact
 - Key Display monitors events efficiently
 - Anti-AFK has negligible impact
-- Crosshair is extremely lightweight
-- Only enable features you actively use
-
-**Performance benchmarks:**
-- FPS Counter: ~0.1% CPU usage
-- Key Display: ~0.2% CPU usage
-- Anti-AFK: ~0.01% CPU usage
-- Crosshair: ~0.02% CPU usage (negligible)
-- Total with all features: ~0.35% CPU usage (negligible)
 
 ### KeyStrokes Not Detecting
 
@@ -399,20 +380,46 @@ All settings are stored locally in your browser's localStorage:
 
 ## 📝 Changelog
 
+### [5.6] - 31/01/26
+
+#### Removed
+- ✂️ All section header comments
+- ✂️ Object.freeze() usage (replaced with const)
+- ✂️ All console.log() statements
+- ✂️ Error handling in fullscreen
+- ✂️ Debounce function (direct saves)
+- ✂️ Helper functions (inlined code)
+- ✂️ Counter config constants
+- ✂️ Passive event listener options
+- ✂️ TIMING, MESSAGES, FEATURE_CARDS constants
+
+#### Changed
+- ⚡ Flattened state object (reduced nesting)
+- ⚡ Removed all CSS animations and transitions
+- ⚡ Removed hover effects and backdrop filters
+- ⚡ Simplified styling to essential only
+- ⚡ **50% code reduction** (~1200 → ~600 lines)
+- ⚡ Faster initialization and execution
+
+#### Result
+- Ultra-lightweight codebase
+- Same functionality, less overhead
+- Minimal memory footprint
+- Instant performance
+
+---
+
 ### [5.5] - 31/01/26
 
 #### Removed
-- ✂️ **Ping Counter** - Removed HEAD request-based ping monitoring (wasteful, Miniblox doesn't expose native ping)
-- ✂️ **Custom Keybind** - Locked menu key to backslash `\` (constant, not customizable)
-- ✂️ **Keybind UI** - Removed keybind input from Settings tab
+- ✂️ Ping Counter - Removed HEAD request-based ping monitoring
+- ✂️ Custom Keybind - Locked menu key to backslash `\`
+- ✂️ Keybind UI - Removed keybind input from Settings tab
 
 #### Changed
 - ⚡ Reduced codebase by ~150 lines (~8% reduction)
-- ⚡ Simplified localStorage structure (removed menuKey tracking)
+- ⚡ Simplified localStorage structure
 - ⚡ Faster initialization with fewer state checks
-
-#### Fixed
-- Fixed potential localStorage quota issues from saved keybind
 
 ---
 
@@ -425,27 +432,20 @@ All settings are stored locally in your browser's localStorage:
 #### Added
 - 🎯 Permanent Target crosshair at screen center
 - 🌈 Dynamic hue slider (0-360°) for theme customization
-- ✨ Real-time crosshair color syncing with theme
+- ✨ Real-time crosshair color syncing
 - 👀 Bolder crosshair design
 
 #### Changed
 - 🎨 Replaced color picker with spectrum hue slider
-- ⚡ Optimized crosshair rendering performance
-- 🔧 Consolidated hue management system
-
-#### Fixed
-- Fixed crosshair visibility on various resolutions
+- ⚡ Optimized crosshair rendering
 
 ---
 
 ### [4.9] - January 2026
 
 #### Changed
-- 🔧 Consolidated state management for cleaner code
-- ⚡ Performance optimizations and reduced overhead
-
-#### Fixed
-- 🐛 Various bug fixes and stability improvements
+- 🔧 Consolidated state management
+- ⚡ Performance optimizations
 
 ---
 
@@ -456,7 +456,7 @@ All settings are stored locally in your browser's localStorage:
 - 🎨 Improved animations for key press feedback
 
 #### Changed
-- ⚡ Optimized performance - removed bottlenecks
+- ⚡ Optimized performance
 
 ---
 
@@ -469,14 +469,13 @@ All settings are stored locally in your browser's localStorage:
 #### Changed
 - ✨ Complete card-based layout overhaul
 - 🎯 Better feature organization with tabs
-- 📊 2-column grid layouts for cleaner interface
 
 ---
 
 ### [4.3] - November 2025
 
 #### Added
-- 🎨 Custom theme colors with color picker
+- 🎨 Custom theme colors
 - ⌨️ Custom keybind support
 - 💾 Settings persistence with localStorage
 
@@ -629,11 +628,15 @@ A: We update regularly based on community feedback and bug reports. Major update
 
 **Q: How do I change the crosshair style?**
 
-A: v5.5 features a permanent Target-style crosshair. The design cannot be changed, but you can customize the color using the hue slider in Settings.
+A: v5.6 features a permanent Target-style crosshair. The design cannot be changed, but you can customize the color using the hue slider in Settings.
 
 **Q: Does the crosshair hide when I open the menu?**
 
 A: No, the crosshair is permanent and stays visible at all times, even when the menu is open.
+
+**Q: Why is the code so lean?**
+
+A: v5.6 removes all unnecessary bloat - no animations, no helper functions, no constants overhead. This keeps WaddleClient ultra-lightweight and fast while maintaining full functionality.
 
 ---
 
