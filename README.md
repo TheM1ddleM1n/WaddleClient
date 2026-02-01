@@ -24,7 +24,6 @@
 -  [ ] Cords (via miniblox will need Scripter's assistance for this cause he knows the API better than me ie. access to game.chat)
 -  [ ] AutoSprint/AutoCrouch
 -  [ ] BHop
--  [ ] FPSBooster
 
 ## 📖 Quick Navigation
 
