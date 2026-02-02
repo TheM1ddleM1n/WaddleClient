@@ -29,6 +29,7 @@
     const CUSTOM_HUE_KEY = 'waddle_custom_hue';
     const SCRIPT_VERSION = '5.9';
     const DEFAULT_HUE = 180; // Cyan
+    const ACCENT_COLOR = "#00FFFF";
 
     const MESSAGES = Object.freeze({
         ENABLED: (feature) => `${feature} Enabled ✓`,
@@ -103,7 +104,7 @@
             if (game && game.chat && typeof game.chat.addChat === "function") {
                 clearInterval(waitForGame);
                 game.chat.addChat({
-                    text: "\\#00FFFF\\[WaddleClient]\\reset\\ Hello Thank You For Using The Waddle Client."
+                    text: `\\${ACCENT_COLOR}\\[WaddleClient]\\reset\\ Hello, thank you for using Waddle Client!`
                 });
             }
         }, 500);
@@ -112,25 +113,6 @@
     // fast click waddle detector -jouda
     (function () {
     'use strict';
-
-    const gameRef = {
-        _game: null,
-        get game() {
-            if (this._game) return this._game;
-
-            const reactRoot = document.querySelector("#react");
-            if (!reactRoot) return null;
-
-            try {
-                const fiber = Object.values(reactRoot)[0];
-                const game = fiber?.updateQueue?.baseState?.element?.props?.game;
-                if (game) this._game = game;
-                return game;
-            } catch {
-                return null;
-            }
-        }
-    };
 
     let clicks = 0;
     const CPS_MIN = 11;
@@ -162,11 +144,11 @@
             lastWarningTime = now;
 
             game.chat.addChat({
-                text: "\\#FF0000\\[Waddle Detector]\\reset\\ Fast Clicks Detected."
+                text: "\\#FF0000\\[Waddle Detector]\\reset\\ Fast clicks detected."
             });
 
             console.log(
-                "%c[Waddle Detector]%c Fast Clicks Detected (CPS: " + cps + ")",
+                `%c[Waddle Detector]%c Fast Clicks Detected (CPS: ${cps})`,
                 "color:#FF0000;font-weight:bold;",
                 "color:white;"
             );
@@ -310,7 +292,7 @@
     function injectStyles() {
         const style = document.createElement('style');
         style.textContent = `
-:root { --waddle-primary: #00ffff; --waddle-shadow: #00ffff; --waddle-bg-dark: #000000; }
+:root { --waddle-primary: ${ACCENT_COLOR}; --waddle-shadow: ${ACCENT_COLOR}; --waddle-bg-dark: #000000; }
 @keyframes counterSlideIn { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
 @keyframes slideInDown { 0% { opacity: 0; transform: translateY(-40px); } 100% { opacity: 1; transform: translateY(0); } }
 @keyframes slideInUp { 0% { opacity: 0; transform: translateY(40px); } 100% { opacity: 1; transform: translateY(0); } }
@@ -574,22 +556,22 @@
     // ==================== PERFORMANCE LOOP ====================
     function startPerformanceLoop() {
         if (state.performance.rafId) return;
-        let lastFpsUpdate = performance.now(), frameCount = 0, lastFps = 0;
+        let lastFpsUpdate = performance.now(), lastFps = "0";
+        /** @type {FrameRequestCallback} **/
         const loop = (currentTime) => {
-            if (state.performance.activeRAFFeatures.size === 0) {
-                state.performance.rafId = null;
-                return;
-            }
-            frameCount++;
             const elapsed = currentTime - lastFpsUpdate;
             if (elapsed >= TIMING.FPS_UPDATE_INTERVAL && state.counters.fps) {
-                const fps = Math.round((frameCount * 1000) / elapsed);
-                if (fps !== lastFps) {
-                    updateCounterText('fps', `FPS: ${fps}`);
-                    lastFps = fps;
+                const game = gameRef.game;
+                /** @type {number} **/
+                const fps = game.resourceMonitor.filteredFPS;
+                /** @type {boolean} **/
+                const inGame = game.inGame;
+                const thing = inGame ? Math.round(fps).toString() : "Only works in-game";
+                if (lastFps !== thing) {
+                    // the FPS doesn't get updated while in game
+                    updateCounterText('fps', `FPS: ${thing}`);
+                    lastFps = thing;
                 }
-                frameCount = 0;
-                lastFpsUpdate = currentTime;
             }
             state.performance.rafId = requestAnimationFrame(loop);
         };
@@ -611,31 +593,20 @@
         let hours = now.getHours();
         const minutes = now.getMinutes().toString().padStart(2, '0');
         const seconds = now.getSeconds().toString().padStart(2, '0');
-        const ampm = hours >= 12 ? 'PM' : 'AM';
+        // 12 PM when the sun is shining down on me... doesn't sound right.
+        const ampm = hours > 12 ? 'PM' : 'AM';
         hours = hours % 12 || 12;
         updateCounterText('realTime', `${hours}:${minutes}:${seconds} ${ampm}`);
     }
 
-    function measurePing() {
-        return new Promise((resolve) => {
-            const startTime = performance.now();
-            fetch(window.location.origin + '/', {
-                method: 'HEAD',
-                cache: 'no-cache',
-                mode: 'no-cors'
-            }).then(() => {
-                resolve(Math.round(performance.now() - startTime));
-            }).catch(() => {
-                resolve(0);
-            });
-        });
-    }
-
     function updatePingCounter() {
-        measurePing().then(ping => {
-            state.session.pingStats.currentPing = ping;
-            updateCounterText('ping', `PING: ${ping}ms`);
-        });
+        // do NOT use instantPing, it is never updated. use filteredPing instead.
+        const game = gameRef.game;
+        const inGame = game.inGame;
+        const ping = Math.round(game.resourceMonitor.filteredPing);
+
+        state.session.pingStats.currentPing = ping;
+        updateCounterText('ping', `PING: ${ping}ms`);
     }
 
     // ==================== COORDINATES ====================
@@ -644,6 +615,7 @@
         if (!game || !game.player) return;
 
         const pos = game.player.pos;
+
         if (pos) {
             const coordText = `📍 X: ${pos.x.toFixed(1)} Y: ${pos.y.toFixed(1)} Z: ${pos.z.toFixed(1)}`;
             updateCounterText('coords', coordText);
