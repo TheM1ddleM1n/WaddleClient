@@ -16,6 +16,7 @@
 - 📡 **Ping Monitor** - Network latency monitoring
 - ⌨️ **Visual Key Display** - See your WASD, Space, and mouse inputs in real-time
 - 🛠️ **Smart Anti-AFK** - Stay active in lobbies without manual input
+- 🚫 **Block Party Requests** - Disable incoming party invites and requests
 - ⏱️ **Session Timer** - Track your gameplay time
 - ⚡ **Ultra Lightweight** - ~600 lines of code, minimal memory footprint, zero external dependencies
 - 💾 **Persistent Settings** - All preferences automatically saved to localStorage
@@ -186,6 +187,15 @@ Automatically prevents AFK timeout by simulating spacebar presses every 5 second
 - **Usage:** Stay active in lobbies without manual input
 - **Color:** Customizable theme
 
+#### Block Party Requests
+
+Blocks incoming party invites and join requests.
+
+- **Action:** Silently rejects party requests
+- **Display:** Toggle on/off in Features menu
+- **Usage:** Avoid unwanted party invitations
+- **Status:** Shows in Features tab when enabled
+
 ---
 
 ### ⏱️ Session Timer
@@ -264,7 +274,8 @@ All settings are stored locally in your browser's localStorage:
     "coords": false,
     "realTime": false,
     "antiAfk": false,
-    "keyDisplay": false
+    "keyDisplay": false,
+    "disablePartyRequests": false
   },
   "positions": {
     "fps": { "left": "50px", "top": "80px" },
@@ -417,6 +428,7 @@ WaddleClient safely accesses the Miniblox game API via React fiber:
 - ✨ **Live Coordinates Display** - Real-time X, Y, Z position tracking
 - 📡 **Ping Monitor** - Network latency monitoring
 - 🎨 **Customizable Theme System** - Full hue slider (0-360°)
+- 🚫 **Block Party Requests** - Disable incoming party invites
 
 #### Changed
 - ⚡ Optimized coordinate update cycle (100ms refresh rate)
@@ -427,6 +439,7 @@ WaddleClient safely accesses the Miniblox game API via React fiber:
 - More comprehensive gameplay information
 - Better navigation and waypoint tracking
 - Customizable color scheme for all UI elements
+- Control over unwanted party requests
 
 ---
 
@@ -476,7 +489,7 @@ WaddleClient safely accesses the Miniblox game API via React fiber:
 [@Scripter132132](https://github.com/Scripter132132) - Initial development and core architecture
 
 **Enhanced & Maintained By**  
-[@TheM1ddleM1n](https://github.com/TheM1ddleM1n) - UI redesign, performance optimization, crosshair system, coordinates system, and ongoing development
+[@TheM1ddleM1n](https://github.com/TheM1ddleM1n) - UI redesign, performance optimization, crosshair system, coordinates system, party blocking, and ongoing development
 
 **Special Thanks**
 - Miniblox community for feedback and testing
@@ -528,7 +541,7 @@ A: Yes! Use the hue slider in Settings to customize all UI colors from 0-360°. 
 
 **Q: Which features are most useful?**
 
-A: All features complement each other! FPS counter for performance, Coordinates for navigation, Ping for connection quality, Key Display for awareness, Anti-AFK for lobbies, and the Session Timer for tracking playtime.
+A: All features complement each other! FPS counter for performance, Coordinates for navigation, Ping for connection quality, Key Display for awareness, Anti-AFK for lobbies, Block Party RQ to avoid invites, and Session Timer for tracking playtime.
 
 **Q: Can I modify the script?**
 
@@ -557,6 +570,10 @@ A: WaddleClient is specifically designed for Miniblox only.
 **Q: Do coordinates work in all game modes?**
 
 A: Yes! Coordinates update in any game mode where you're actively playing.
+
+**Q: What does Block Party RQ do?**
+
+A: It silently rejects incoming party invites and join requests so you won't be bothered.
 
 ---
 
