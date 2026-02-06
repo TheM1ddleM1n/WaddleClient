@@ -1,11 +1,13 @@
 // ==UserScript==
 // @name         WaddleClient
 // @namespace    https://github.com/TheM1ddleM1n/WaddleClient
-// @version      5.9
-// @description  M1ddleM1n and Scripter on top
-// @author       Scripter, TheM1ddleM1n
+// @version      5.10
+// @description  The ultimate Miniblox enhancement suite. Take control with advanced API hooking and a sleek user interface.
+// @author       The Dream Team (Scripter & TheM1ddleM1n)
 // @icon         https://raw.githubusercontent.com/TheM1ddleM1n/WaddleClient/refs/heads/main/Penguin.png
 // @match        https://miniblox.io/
+// @run-at       document-start
+// @grant        none
 // ==/UserScript==
 
 (function() {
@@ -27,7 +29,7 @@
     const SETTINGS_KEY = 'waddle_settings';
     const DEFAULT_MENU_KEY = '\\';
     const CUSTOM_HUE_KEY = 'waddle_custom_hue';
-    const SCRIPT_VERSION = '5.9';
+    const SCRIPT_VERSION = '5.10';
     const DEFAULT_HUE = 180; // Cyan
     const ACCENT_COLOR = "#00FFFF";
 
@@ -61,7 +63,7 @@
 
     const FEATURE_CARDS = Object.freeze([
         {
-            title: '📊 Display Counters',
+            title: '📊 Display',
             features: [
                 { label: 'FPS', feature: 'fps', icon: '🐧' },
                 { label: 'Ping', feature: 'ping', icon: '🐧' },
@@ -80,7 +82,7 @@
         }
     ]);
 
-    // ==================== GAME OBJECT ACCESS ====================
+    // GAME OBJECT ACCESS VIA API
     const gameRef = {
         _game: null,
         get game() {
@@ -98,7 +100,7 @@
         }
     };
 
-    // Welcome message
+    // Welcome message - jouda
     (function() {
         const waitForGame = setInterval(() => {
             const game = gameRef.game;
@@ -111,7 +113,7 @@
         }, 500);
     })();
 
-    // fast click waddle detector -jouda
+    // fast click waddle detector - jouda
     (function () {
     'use strict';
 
@@ -158,7 +160,6 @@
 
 })();
 
-    // ==================== CONSOLIDATED STATE OBJECT ====================
     const state = {
         features: {
             fps: false,
@@ -202,7 +203,6 @@
         }
     };
 
-    // ==================== UTILITY FUNCTIONS ====================
     function debounce(func, delay) {
         let timeoutId;
         return function(...args) {
@@ -290,7 +290,8 @@
 
     const debouncedSave = debounce(saveSettings, TIMING.SAVE_DEBOUNCE);
 
-    // ==================== DOM & STYLING ====================
+    // DOM & Styling
+    // TODO: make the crosshair not show on the menu and for it to only show in a server.
     function injectStyles() {
         const style = document.createElement('style');
         style.textContent = `
@@ -367,7 +368,7 @@
         document.head.appendChild(style);
     }
 
-    // ==================== CROSSHAIR SYSTEM ====================
+    // Crosshair
     function createPermanentCrosshair() {
         const crosshairContainer = document.createElement('div');
         crosshairContainer.id = 'waddle-crosshair';
@@ -381,7 +382,7 @@
             display: 'block'
         });
         const targetColor = hueToColor(state.ui.customHue);
-        // Center dot
+
         const centerDot = document.createElement('div');
         Object.assign(centerDot.style, {
             position: 'absolute',
@@ -395,7 +396,7 @@
             zIndex: '1'
         });
         crosshairContainer.appendChild(centerDot);
-        // Top line
+
         const topLine = document.createElement('div');
         Object.assign(topLine.style, {
             position: 'absolute',
@@ -408,7 +409,7 @@
             zIndex: '1'
         });
         crosshairContainer.appendChild(topLine);
-        // Bottom line
+
         const bottomLine = document.createElement('div');
         Object.assign(bottomLine.style, {
             position: 'absolute',
@@ -421,7 +422,7 @@
             zIndex: '1'
         });
         crosshairContainer.appendChild(bottomLine);
-        // Left line
+
         const leftLine = document.createElement('div');
         Object.assign(leftLine.style, {
             position: 'absolute',
@@ -434,7 +435,7 @@
             zIndex: '1'
         });
         crosshairContainer.appendChild(leftLine);
-        // Right line
+
         const rightLine = document.createElement('div');
         Object.assign(rightLine.style, {
             position: 'absolute',
@@ -452,7 +453,7 @@
         return crosshairContainer;
     }
 
-    // ==================== COUNTER CREATION ====================
+    // Counters
     function createCounterElement(config) {
         const { id, counterType, initialText, position = { left: '50px', top: '50px' }, isDraggable = true } = config;
         const counter = document.createElement('div');
@@ -555,7 +556,6 @@
         };
     }
 
-    // ==================== PERFORMANCE LOOP ====================
     function startPerformanceLoop() {
         if (state.performance.rafId) return;
         let lastFpsUpdate = performance.now(), lastFps = "0";
@@ -584,7 +584,7 @@
         }
     }
 
-    // ==================== REAL-TIME & PING ====================
+    // Real-Time & Ping
     function updateRealTime() {
         if (!state.counters.realTime) return;
         const now = new Date();
@@ -604,7 +604,7 @@
         updateCounterText('ping', `PING: ${ping}ms`);
     }
 
-    // ==================== COORDINATES ====================
+    // Coords
     function updateCoordinates() {
         const game = gameRef.game;
         if (!game || !game.player) return;
@@ -615,7 +615,7 @@
         }
     }
 
-    // ==================== ANTI-AFK ====================
+    // Anti-AFK
     function pressSpace() {
         const down = new KeyboardEvent("keydown", { key: " ", code: "Space", keyCode: 32, which: 32, bubbles: true });
         const up = new KeyboardEvent("keyup", { key: " ", code: "Space", keyCode: 32, which: 32, bubbles: true });
@@ -627,7 +627,7 @@
         updateCounterText('antiAfk', `🐧 Jumping in ${state.session.antiAfkCountdown}s`);
     }
 
-    // ==================== KEY DISPLAY ====================
+    // KeyDisplay
     function createKeyDisplay() {
         const container = document.createElement('div');
         container.id = 'key-display-container';
@@ -755,7 +755,8 @@
         state.input.listeners = {};
     }
 
-    // ==================== DISABLE PARTY REQUESTS ====================
+    // Disable Party Requests
+    // This is if you get spammed with party requests it hides the party popup and only shows the console logs.
     function disablePartyRequestsSystem() {
         try {
             const game = gameRef.game;
@@ -800,7 +801,7 @@
         }
     }
 
-    // ==================== FEATURE MANAGERS ====================
+    // Feature Manager
     const featureManager = {
         fps: {
             start: () => {
@@ -925,7 +926,7 @@
         }
     };
 
-    // ==================== FEATURE CONTROL ====================
+    // Feature Controls
     function toggleFeature(featureName) {
         if (featureName === 'fullscreen') {
             featureManager.fullscreen.start();
@@ -955,7 +956,7 @@
         showToast(MESSAGES.POSITIONS_RESET);
     }
 
-    // ==================== MENU SYSTEM ====================
+    // UI system (Menu)
     function createFeatureCard(title, features) {
         const card = document.createElement('div');
         card.className = 'waddle-card';
@@ -1008,7 +1009,7 @@
         const tabConfigs = [
             { name: 'features', label: '⚙️ Features' },
             { name: 'settings', label: '🎨 Settings' },
-            { name: 'about', label: 'ℹ️ About' }
+            { name: 'about', label: 'ℹ️ About Waddle' }
         ];
 
         tabConfigs.forEach(({ name, label }) => {
@@ -1027,7 +1028,6 @@
         const menuContent = document.createElement('div');
         menuContent.id = 'waddle-menu-content';
 
-        // ==================== FEATURES TAB ====================
         const featuresContent = document.createElement('div');
         featuresContent.className = 'waddle-tab-content active';
         featuresContent.setAttribute('data-content', 'features');
@@ -1039,18 +1039,17 @@
         menuContent.appendChild(featuresContent);
         state.ui.tabElements.content.features = featuresContent;
 
-        // ==================== SETTINGS TAB ====================
         const settingsContent = document.createElement('div');
         settingsContent.className = 'waddle-tab-content';
         settingsContent.setAttribute('data-content', 'settings');
 
         const themeCard = document.createElement('div');
         themeCard.className = 'waddle-card';
-        themeCard.innerHTML = '<div class="waddle-card-header">🎨 Theme</div>';
+        themeCard.innerHTML = '<div class="waddle-card-header">🎨 Client Theme</div>';
 
         const hueLabel = document.createElement('label');
         hueLabel.className = 'settings-label';
-        hueLabel.textContent = 'Menu & Crosshair Hue:';
+        hueLabel.textContent = 'Menu/Crosshair Hue:';
         themeCard.appendChild(hueLabel);
 
         const hueSlider = document.createElement('input');
@@ -1112,7 +1111,7 @@
         const resetBtn = document.createElement('button');
         resetBtn.className = 'waddle-menu-btn';
         resetBtn.style.width = '100%';
-        resetBtn.textContent = '🔄 Reset Counter Positions';
+        resetBtn.textContent = '🔄 Reset Counter Positions?';
         resetBtn.addEventListener('click', resetCounterPositions);
         layoutCard.appendChild(resetBtn);
         settingsContent.appendChild(layoutCard);
@@ -1120,7 +1119,6 @@
         menuContent.appendChild(settingsContent);
         state.ui.tabElements.content.settings = settingsContent;
 
-        // ==================== ABOUT TAB ====================
         const aboutContent = document.createElement('div');
         aboutContent.className = 'waddle-tab-content';
         aboutContent.setAttribute('data-content', 'about');
@@ -1162,26 +1160,26 @@
                 </div>
             </div>
             <div style="font-size: 0.7rem; color: #555; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0, 255, 255, 0.15); text-align: center;">
-                v${SCRIPT_VERSION} • MIT License • Made by TheM1ddleM1n!
+                v${SCRIPT_VERSION} • MIT License • This was made by TheM1ddleM1n!
             </div>
         `;
         aboutContent.appendChild(creditsCard);
 
         const linksCard = document.createElement('div');
         linksCard.className = 'waddle-card';
-        linksCard.innerHTML = '<div class="waddle-card-header">🔗 Github Templates</div>';
+        linksCard.innerHTML = '<div class="waddle-card-header">🔗 Github Template</div>';
         const linksGrid = document.createElement('div');
         linksGrid.className = 'waddle-card-grid';
 
         const suggestBtn = document.createElement('button');
         suggestBtn.className = 'waddle-menu-btn';
-        suggestBtn.textContent = 'Suggest a Feature';
+        suggestBtn.textContent = 'Suggest a Feature?';
         suggestBtn.onclick = () => window.open(`https://github.com/TheM1ddleM1n/WaddleClient/issues/new?template=feature_request.md`, '_blank');
         linksGrid.appendChild(suggestBtn);
 
         const bugBtn = document.createElement('button');
         bugBtn.className = 'waddle-menu-btn';
-        bugBtn.textContent = 'Report a Bug';
+        bugBtn.textContent = 'Report a Bug?';
         bugBtn.onclick = () => window.open(`https://github.com/TheM1ddleM1n/WaddleClient/issues/new?template=bug_report.md`, '_blank');
         linksGrid.appendChild(bugBtn);
 
