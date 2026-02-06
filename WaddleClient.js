@@ -7,7 +7,6 @@
 // @icon         https://raw.githubusercontent.com/TheM1ddleM1n/WaddleClient/refs/heads/main/Penguin.png
 // @match        https://miniblox.io/
 // @run-at       document-start
-// @grant        none
 // ==/UserScript==
 
 (function() {
