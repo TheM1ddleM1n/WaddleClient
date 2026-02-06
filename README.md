@@ -1,6 +1,6 @@
 # 🐧 WaddleClient
 
-![Version](https://img.shields.io/badge/version-5.9-39ff14?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-5.10-39ff14?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-39ff14?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/platform-Miniblox-39ff14?style=for-the-badge)
 
@@ -421,6 +421,11 @@ WaddleClient safely accesses the Miniblox game API via React fiber:
 ---
 
 ## 📝 Changelog
+
+### [5.10] - 06/02/26
+
+- Cleaned up code by roughly ≈39 lines
+- Rewrote the userscript header
 
 ### [5.9] - 02/02/26
 
