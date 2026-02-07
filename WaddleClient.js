@@ -32,18 +32,6 @@
     const DEFAULT_HUE = 180; // Cyan
     const ACCENT_COLOR = "#00FFFF";
 
-    const MESSAGES = Object.freeze({
-        ENABLED: (feature) => `${feature} Enabled ✓`,
-        DISABLED: (feature) => `${feature} Disabled ✓`,
-        POSITIONS_RESET: 'Positions Reset! 🐧',
-        MENU_PROMPT: (key) => `Press ${key} To Open Menu!`,
-        CLEANUP_START: '[Waddle] Cleaning up resources..',
-        CLEANUP_DONE: '[Waddle] Cleanup complete!',
-        INIT_START: `[Waddle] Initializing v${SCRIPT_VERSION}...`,
-        INIT_DONE: '[Waddle] Initialization completed!',
-        STORAGE_ERROR: '[Waddle] Storage quota exceeded'
-    });
-
     const DEFAULT_POSITIONS = Object.freeze({
         fps: { left: '50px', top: '80px' },
         keyDisplay: { left: '50px', top: '150px' },
@@ -59,27 +47,6 @@
         realTime: { id: 'real-time-counter', text: '00:00:00 AM', pos: null, icon: '🐧', draggable: false },
         antiAfk: { id: 'anti-afk-counter', text: '🐧 Jumping in 5s', pos: DEFAULT_POSITIONS.antiAfk, icon: '🐧', draggable: true }
     });
-
-    const FEATURE_CARDS = Object.freeze([
-        {
-            title: '📊 Display',
-            features: [
-                { label: 'FPS', feature: 'fps', icon: '🐧' },
-                { label: 'Ping', feature: 'ping', icon: '🐧' },
-                { label: 'Coords', feature: 'coords', icon: '🐧' },
-                { label: 'Clock', feature: 'realTime', icon: '🐧' },
-                { label: 'Key Display', feature: 'keyDisplay', icon: '🐧' }
-            ]
-        },
-        {
-            title: '🛠️ Utilities',
-            features: [
-                { label: 'Anti-AFK', feature: 'antiAfk', icon: '🐧' },
-                { label: 'Block Party RQ', feature: 'disablePartyRequests', icon: '🐧' },
-                { label: 'Fullscreen', feature: 'fullscreen', icon: '🐧', special: true }
-            ]
-        }
-    ]);
 
     // GAME OBJECT ACCESS VIA API
     const gameRef = {
@@ -202,14 +169,6 @@
         }
     };
 
-    function debounce(func, delay) {
-        let timeoutId;
-        return function(...args) {
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => func.apply(this, args), delay);
-        };
-    }
-
     function showToast(message, duration = TIMING.TOAST_DURATION) {
         document.getElementById('waddle-toast')?.remove();
         const toast = document.createElement('div');
@@ -283,11 +242,9 @@
             };
             localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
         } catch (e) {
-            if (e.name === 'QuotaExceededError') console.error(MESSAGES.STORAGE_ERROR);
+            if (e.name === 'QuotaExceededError') console.error('[Waddle] Storage quota exceeded');
         }
     }
-
-    const debouncedSave = debounce(saveSettings, TIMING.SAVE_DEBOUNCE);
 
     // DOM & Styling
     // TODO: make the crosshair not show on the menu and for it to only show in a server.
@@ -525,7 +482,7 @@
                 element._dragging = false;
                 element.classList.remove('dragging');
                 if (rafId) cancelAnimationFrame(rafId);
-                debouncedSave();
+                saveSettings();
             }
         };
         const onMouseMove = (e) => {
@@ -942,7 +899,7 @@
             featureManager[featureName]?.stop?.();
         }
 
-        debouncedSave();
+        saveSettings();
         return newState;
     }
 
@@ -952,7 +909,7 @@
             if (counter) Object.assign(counter.style, pos);
         });
         saveSettings();
-        showToast(MESSAGES.POSITIONS_RESET);
+        showToast('Positions Reset! 🐧');
     }
 
     // UI system (Menu)
@@ -976,7 +933,7 @@
                 const enabled = toggleFeature(feature);
                 btn.textContent = `${label} ${enabled ? '✓' : icon}`;
                 btn.classList.toggle('active', enabled);
-                showToast(MESSAGES[enabled ? 'ENABLED' : 'DISABLED'](label));
+                showToast(`${label} ${enabled ? 'Enabled' : 'Disabled'} ✓`);
             };
             grid.appendChild(btn);
         });
@@ -1031,9 +988,20 @@
         featuresContent.className = 'waddle-tab-content active';
         featuresContent.setAttribute('data-content', 'features');
 
-        FEATURE_CARDS.forEach(card => {
-            featuresContent.appendChild(createFeatureCard(card.title, card.features));
-        });
+        // Build feature cards directly (removed FEATURE_CARDS constant)
+        featuresContent.appendChild(createFeatureCard('📊 Display', [
+            { label: 'FPS', feature: 'fps', icon: '🐧' },
+            { label: 'Ping', feature: 'ping', icon: '🐧' },
+            { label: 'Coords', feature: 'coords', icon: '🐧' },
+            { label: 'Clock', feature: 'realTime', icon: '🐧' },
+            { label: 'Key Display', feature: 'keyDisplay', icon: '🐧' }
+        ]));
+
+        featuresContent.appendChild(createFeatureCard('🛠️ Utilities', [
+            { label: 'Anti-AFK', feature: 'antiAfk', icon: '🐧' },
+            { label: 'Block Party RQ', feature: 'disablePartyRequests', icon: '🐧' },
+            { label: 'Fullscreen', feature: 'fullscreen', icon: '🐧', special: true }
+        ]));
 
         menuContent.appendChild(featuresContent);
         state.ui.tabElements.content.features = featuresContent;
@@ -1062,7 +1030,7 @@
             applyTheme(hue);
             hueColorPreview.style.background = hueToColor(hue);
             hueValueText.textContent = `${hue}°`;
-            debouncedSave();
+            saveSettings();
         });
         themeCard.appendChild(hueSlider);
 
@@ -1234,7 +1202,7 @@
     }
 
     function globalCleanup() {
-        console.log(MESSAGES.CLEANUP_START);
+        console.log('[Waddle] Cleaning up resources..');
 
         Object.entries(state.features).forEach(([feature, enabled]) => {
             if (enabled) {
@@ -1252,19 +1220,19 @@
 
         if (state.performance.rafId) cancelAnimationFrame(state.performance.rafId);
 
-        console.log(MESSAGES.CLEANUP_DONE);
+        console.log('[Waddle] Cleanup complete!');
     }
 
     window.addEventListener('beforeunload', globalCleanup);
 
     function init() {
-        console.log(MESSAGES.INIT_START);
+        console.log(`[Waddle] Initializing v${SCRIPT_VERSION}...`);
         injectStyles();
         loadCustomHue();
         createPermanentCrosshair();
         createMenu();
         setupKeyboardHandler();
-        showToast(MESSAGES.MENU_PROMPT(state.ui.menuKey));
+        showToast(`Press ${state.ui.menuKey} To Open Menu!`);
 
         setTimeout(() => {
             restoreSavedState();
@@ -1276,7 +1244,7 @@
         updateSessionTimer();
         state.performance.intervals.sessionTimer = setInterval(updateSessionTimer, TIMING.SESSION_UPDATE);
 
-        console.log(MESSAGES.INIT_DONE);
+        console.log('[Waddle] Initialization completed!');
     }
 
     if (document.readyState === 'loading') {
