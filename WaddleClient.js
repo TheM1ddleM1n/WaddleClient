@@ -13,7 +13,7 @@
     'use strict';
     document.title = 'Waddle Client For Miniblox!';
 
-    // ==================== CONSTANTS ====================
+    // Constants
     const TIMING = Object.freeze({
         HINT_TEXT_DURATION: 4000,
         FPS_UPDATE_INTERVAL: 500,
@@ -79,7 +79,7 @@
         }, 500);
     })();
 
-    // fast click waddle detector - jouda
+    // fast click waddle detector - jouda xD
     (function () {
     'use strict';
 
@@ -248,6 +248,7 @@
 
     // DOM & Styling
     // TODO: make the crosshair not show on the menu and for it to only show in a server.
+    // TODO v2: Scripter we could port the novacore crosshair over to Waddle if u want to cause that works. (but just make it 1 crosshair like miniblox's orginal crosshair)
     function injectStyles() {
         const style = document.createElement('style');
         style.textContent = `
@@ -580,7 +581,7 @@
     }
 
     function updateAntiAfkCounter() {
-        updateCounterText('antiAfk', `🐧 Jumping in ${state.session.antiAfkCountdown}s`);
+        updateCounterText('antiAfk', `Jumping in ${state.session.antiAfkCountdown}s`);
     }
 
     // KeyDisplay
@@ -909,7 +910,7 @@
             if (counter) Object.assign(counter.style, pos);
         });
         saveSettings();
-        showToast('Positions Reset! 🐧');
+        showToast('Positions Reset!');
     }
 
     // UI system (Menu)
