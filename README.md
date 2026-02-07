@@ -10,7 +10,7 @@
 
 ## 🌟 Highlights
 
-- 🎯 **Permanent Neon Green Crosshair** - Always-on target crosshair at screen center
+- 🎯 **Permanent Neon Green Crosshair** - Always-on target crosshair at screen center (we will make it so it only shows ingame and not in the menu)
 - 📊 **Real-Time FPS Monitoring** - Live performance tracking with instant visual feedback
 - 📍 **Live Coordinate Display** - Real-time X, Y, Z position tracking
 - 📡 **Ping Monitor** - Network latency monitoring
