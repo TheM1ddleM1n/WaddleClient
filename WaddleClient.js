@@ -871,29 +871,11 @@
             start: () => disablePartyRequestsSystem(),
             stop: () => restorePartyRequests(),
             cleanup: () => restorePartyRequests()
-        },
-
-        fullscreen: {
-            start: () => {
-                const elem = document.documentElement;
-                if (!document.fullscreenElement) {
-                    elem.requestFullscreen().catch(err => console.error(`Fullscreen error: ${err.message}`));
-                } else {
-                    document.exitFullscreen();
-                }
-            },
-            stop: () => {},
-            cleanup: () => {}
         }
     };
 
     // ==================== FEATURE CONTROLS ====================
     function toggleFeature(featureName) {
-        if (featureName === 'fullscreen') {
-            featureManager.fullscreen.start();
-            return;
-        }
-
         const newState = !state.features[featureName];
         state.features[featureName] = newState;
 
@@ -933,15 +915,11 @@
         const grid = document.createElement('div');
         grid.className = 'waddle-card-grid';
 
-        features.forEach(({ label, feature, icon, special }) => {
+        features.forEach(({ label, feature, icon }) => {
             const btn = document.createElement('button');
             btn.className = 'waddle-menu-btn';
             btn.textContent = `${label} ${icon}`;
             btn.onclick = () => {
-                if (special) {
-                    toggleFeature(feature);
-                    return;
-                }
                 const enabled = toggleFeature(feature);
                 btn.textContent = `${label} ${enabled ? '✓' : icon}`;
                 btn.classList.toggle('active', enabled);
@@ -1011,8 +989,7 @@
 
         featuresContent.appendChild(createFeatureCard('🛠️ Utilities', [
             { label: 'Anti-AFK', feature: 'antiAfk', icon: '🐧' },
-            { label: 'Block Party RQ', feature: 'disablePartyRequests', icon: '🐧' },
-            { label: 'Fullscreen', feature: 'fullscreen', icon: '🐧', special: true }
+            { label: 'Block Party RQ', feature: 'disablePartyRequests', icon: '🐧' }
         ]));
 
         menuContent.appendChild(featuresContent);
