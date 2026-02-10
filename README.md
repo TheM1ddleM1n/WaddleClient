@@ -18,7 +18,7 @@
 
 ## ✨ Why WaddleClient?
 
-Transform your Miniblox experience with professional-grade monitoring and utility features. Built by the community, optimized for performance, and designed with competitive gaming in mind.
+Transform your Miniblox experience with professional-grade monitoring and utility features. Built by the Dream Team, optimized for performance, and designed with competitive gaming in mind.
 
 | Feature | Benefit |
 |---------|---------|
