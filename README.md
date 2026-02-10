@@ -22,9 +22,9 @@ Transform your Miniblox experience with professional-grade monitoring and utilit
 
 | Feature | Benefit |
 |---------|---------|
-| 🎯 **Always-On Crosshair** | Consistent, lag-free aiming with full visibility control |
+| 🎯 **Crosshair** | Lag-free aiming with full visibility control |
 | 📊 **Live Performance Metrics** | Monitor FPS, ping, and coordinates in real-time |
-| ⚡ **Minimal Overhead** | ~0.4% CPU usage — play without limits |
+| ⚡ **Minimal Overhead** | ~0.4% CPU usage — play without limits! |
 | 💾 **Auto-Saving Settings** | Your preferences are always remembered |
 | 🔧 **Zero Dependencies** | Lightweight script that works everywhere |
 
@@ -60,7 +60,7 @@ Choose your browser:
 - **Live performance tracking** with 500ms updates
 - **Instant lag detection** for competitive play
 - Draggable to any screen position
-- 🟢 Works in menus and lobbies
+- 🟢 Works in miniblox servers
 
 </td>
 <td width="50%">
@@ -79,7 +79,7 @@ Choose your browser:
 #### 📍 Live Coordinates
 - **X, Y, Z position tracking** (10 updates/sec)
 - **Navigation aid** for waypoint hunting
-- Precise location data from game API
+- Precise location data from the game API
 - Ultra-responsive updates
 
 </td>
@@ -109,7 +109,7 @@ Never get kicked for inactivity:
 - Simulates spacebar presses every 5 seconds
 - Live countdown timer display
 - Stay in lobbies without manual input
-- Completely automated and silent
+- Completely automated and silent (no kick for suspicious movements!)
 
 ### 🎯 Crosshair System
 
