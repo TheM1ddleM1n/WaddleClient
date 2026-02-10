@@ -128,11 +128,6 @@ Never get kicked for inactivity:
 - Toggle on/off anytime
 - Never interrupt your gameplay flow
 
-#### 🖥️ One-Click Fullscreen
-- Enter/exit fullscreen instantly
-- Dedicated button in Features menu
-- Also works with F11 (system fullscreen)
-
 ---
 
 ## ⌨️ Control Center
