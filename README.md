@@ -1,27 +1,27 @@
 <div align="center">
 
-# 🐧 WaddleClient
+# 🐧 Waddle
 
 ### The Ultimate Miniblox Enhancement Suite
 
-![Version](https://img.shields.io/badge/version-5.12-39ff14?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-5.15-39ff14?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-39ff14?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/platform-Miniblox-39ff14?style=for-the-badge)
 
 **Real-time monitoring • Crosshair customization • Game utilities • Zero performance impact**
 
-[Installation](#-quick-start) • [Features](#-core-features) • [Support](https://github.com/TheM1ddleM1n/WaddleClient/issues)
+[Installation](#-quick-start) • [Features](#-core-features) • [Support](https://github.com/TheM1ddleM1n/Waddle/issues)
 
 </div>
 
 ---
 
-## ✨ Why WaddleClient?
+## ✨ Why Waddle?
 
-Transform your Miniblox experience with professional-grade monitoring and utility features. Built by the Dream Team, optimized for performance, and designed with competitive gaming in mind.
+Transform your Miniblox experience with professional-grade monitoring and utility features. Built by the Dream Team, optimized for performance, and professionally designed
 
 | Feature | Benefit |
-|---------|---------|
+|---------|----------|
 | 🎯 **Crosshair** | Lag-free aiming with full visibility control |
 | 📊 **Live Performance Metrics** | Monitor FPS, ping, and coordinates in real-time |
 | ⚡ **Minimal Overhead** | ~0.4% CPU usage — play without limits! |
@@ -38,8 +38,8 @@ Choose your browser:
 - **Firefox**: [Tampermonkey](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/) or [Violentmonkey](https://addons.mozilla.org/en-US/firefox/addon/violentmonkey/)
 - **Safari**: [Tampermonkey](https://apps.apple.com/us/app/tampermonkey/id1482490089)
 
-### 2️⃣ Install WaddleClient
-[🔗 Auto-Install Script](https://github.com/TheM1ddleM1n/WaddleClient/raw/main/WaddleClient.js) or copy from GitHub and paste into your userscript manager
+### 2️⃣ Install Waddle!
+[🔗 Auto-Install Script](https://github.com/TheM1ddleM1n/Waddle/raw/main/Waddle.js) or copy from GitHub and paste into your userscript manager
 
 ### 3️⃣ You're Ready!
 ```
@@ -339,7 +339,7 @@ Try these in order:
 - ✅ Clear browser cache
 - ✅ Check for conflicting scripts
 
-WaddleClient uses only ~0.4% CPU — if lagging, it's likely something else!
+Waddle uses only ~0.4% CPU — if lagging, it's likely something else!
 
 </details>
 
@@ -348,10 +348,10 @@ WaddleClient uses only ~0.4% CPU — if lagging, it's likely something else!
 ## ❓ FAQ
 
 <details>
-<summary><b>Q: Is WaddleClient safe to use?</b></summary>
+<summary><b>Q: Is Waddle safe to use?</b></summary>
 
 ✅ **Absolutely!** The script is:
-- Open-source (inspect it anytime)
+- Open-source
 - Read-only access to game state
 - Runs only in your browser
 - No data sent anywhere
@@ -415,7 +415,7 @@ Cyan (#00FFFF) is chosen because:
 <details>
 <summary><b>Q: Do I need a Miniblox account?</b></summary>
 
-❌ **No!** WaddleClient works 100% client-side. No account, login, or tracking needed.
+❌ **No!** Waddle works 100% client-side. No account, login, or tracking needed.
 
 </details>
 
@@ -424,10 +424,10 @@ Cyan (#00FFFF) is chosen because:
 ## 🤝 Contributing & Support
 
 ### Found an Issue? 🐛
-[→ Report Bug](https://github.com/TheM1ddleM1n/WaddleClient/issues/new?labels=bug)
+[→ Report Bug](https://github.com/TheM1ddleM1n/Waddle/issues/new?labels=bug)
 
 ### Have a Feature Idea? 💡
-[→ Suggest Feature](https://github.com/TheM1ddleM1n/WaddleClient/issues/new?labels=enhancement)
+[→ Suggest Feature](https://github.com/TheM1ddleM1n/Waddle/issues/new?labels=enhancement)
 
 ### Want to Contribute? 🚀
 1. Fork the repository
@@ -439,7 +439,12 @@ Cyan (#00FFFF) is chosen because:
 
 ## 📝 Current Version
 
-### [5.12]
+### [5.15]
+- ✨ Moved hover effects from CSS to JavaScript (lighter CSS footprint)
+- 🎯 Optimized stylesheet with ~15% size reduction
+- 🔧 Dynamic hover listeners for better performance
+
+### [5.14]
 - ✨ NovaCore-style cyan crosshair with 3 visibility states
 - 🎯 F1/F5 crosshair controls (toggle + cycling)
 - 🔧 Consolidated RAF loop for peak performance
@@ -488,8 +493,6 @@ WaddleClient is licensed under the **MIT License** — fully open-source and fre
 
 ### 🐧 Made by the Waddle Team with ❤️
 
-**Start Wadding Today! Press `\` to begin.**
-
-*Built for the community. Made with love. Zero compromise on performance.*
+**Start Wadding Today!**
 
 </div>
