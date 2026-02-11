@@ -112,7 +112,7 @@ const SCRIPT_VERSION = '5.14';
             if (cps >= CPS_MIN && cps <= CPS_MAX && game && game.chat && typeof game.chat.addChat === "function" && now - lastWarningTime > COOLDOWN) {
                 lastWarningTime = now;
                 game.chat.addChat({
-                    text: "\\#FF0000\\[Waddle Detector]\\reset\\ Fast clicks detected."
+                    text: "\\#FF0000\\[Waddle Detector]\\reset\ Fast clicks detected."
                 });
                 console.log(`%c[Waddle Detector]%c Fast Clicks Detected (CPS: ${cps})`, "color:#FF0000;font-weight:bold;", "color:white;");
             }
@@ -144,6 +144,7 @@ const SCRIPT_VERSION = '5.14';
     };
 
     function showToast(message, type = 'info', duration = TIMING.TOAST_DURATION) {
+        if (!document.body) return;
         document.getElementById('waddle-toast')?.remove();
         const toast = document.createElement('div');
         toast.id = 'waddle-toast';
@@ -200,6 +201,11 @@ const SCRIPT_VERSION = '5.14';
     }
 
     function injectStyles() {
+        if (!document.head) {
+            console.warn('[Waddle] document.head not ready, retrying...');
+            return false;
+        }
+
         const style = document.createElement('style');
         style.textContent = `
 :root { --waddle-primary: ${THEME_COLOR}; --waddle-shadow: ${THEME_COLOR}; --waddle-bg-dark: #000000; }
@@ -258,6 +264,7 @@ const SCRIPT_VERSION = '5.14';
 #waddle-crosshair-container { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 5000; pointer-events: none; }
 `;
         document.head.appendChild(style);
+        return true;
     }
 
     function makeLine(styles) {
@@ -304,14 +311,23 @@ const SCRIPT_VERSION = '5.14';
     }
 
     function initializeCrosshairModule() {
+        if (!document.body) {
+            console.error('[Waddle] Cannot initialize crosshair - document.body not ready');
+            return false;
+        }
         state.crosshairContainer = document.createElement('div');
         state.crosshairContainer.id = 'waddle-crosshair-container';
         document.body.appendChild(state.crosshairContainer);
         updateCrosshair();
         new MutationObserver(() => { requestAnimationFrame(checkCrosshair); }).observe(document.body, { childList: true, subtree: true });
+        return true;
     }
 
     function createCounterElement(config) {
+        if (!document.body) {
+            console.error('[Waddle] Cannot create counter - document.body not ready');
+            return null;
+        }
         const { id, counterType, initialText, position = { left: '50px', top: '50px' }, isDraggable = true } = config;
         const counter = document.createElement('div');
         counter.id = id;
@@ -341,6 +357,7 @@ const SCRIPT_VERSION = '5.14';
                 position: { left: '0px', top: '0px' },
                 isDraggable: false
             });
+            if (!counter) return null;
             counter.style.left = 'auto';
             counter.style.top = 'auto';
             counter.style.right = '30px';
@@ -359,6 +376,7 @@ const SCRIPT_VERSION = '5.14';
                 position: config.pos,
                 isDraggable: config.draggable
             });
+            if (!counter) return null;
         }
         state.counters[type] = counter;
         return counter;
@@ -484,6 +502,10 @@ const SCRIPT_VERSION = '5.14';
     }
 
     function createKeyDisplay() {
+        if (!document.body) {
+            console.error('[Waddle] Cannot create key display - document.body not ready');
+            return null;
+        }
         const container = document.createElement('div');
         container.id = 'key-display-container';
         container.className = 'key-display-container';
@@ -753,6 +775,10 @@ const SCRIPT_VERSION = '5.14';
     }
 
     function createMenu() {
+        if (!document.body) {
+            console.error('[Waddle] Cannot create menu - document.body not ready');
+            return null;
+        }
         const menuOverlay = document.createElement('div');
         menuOverlay.id = 'waddle-menu-overlay';
         const menuHeader = document.createElement('div');
@@ -973,27 +999,64 @@ const SCRIPT_VERSION = '5.14';
 
     window.addEventListener('beforeunload', globalCleanup);
 
-    function init() {
-        console.log(`[Waddle] Initializing v${SCRIPT_VERSION}...`);
-        injectStyles();
-        createMenu();
-        setupKeyboardHandler();
-        initializeCrosshairModule();
-        showToast(`Press ${state.menuKey} to open menu! (F1/F5 for crosshair)`, 'info');
-        setTimeout(() => {
-            restoreSavedState();
-            Object.entries(state.features).forEach(([feature, enabled]) => {
-                if (enabled) featureManager[feature]?.start();
-            });
-        }, 100);
-        updateSessionTimer();
-        state.intervals.sessionTimer = setInterval(updateSessionTimer, TIMING.SESSION_UPDATE);
-        console.log('[Waddle] Initialization completed!');
+    // Improved initialization with proper DOM waiting
+    function ensureDOMReady() {
+        return new Promise((resolve) => {
+            if (document.body && document.head) {
+                resolve();
+            } else if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', resolve, { once: true });
+            } else {
+                // Fallback: poll for body
+                const checkBody = setInterval(() => {
+                    if (document.body && document.head) {
+                        clearInterval(checkBody);
+                        resolve();
+                    }
+                }, 50);
+            }
+        });
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
+    async function safeInit() {
+        try {
+            console.log(`[Waddle] Waiting for DOM...`);
+            await ensureDOMReady();
+
+            console.log(`[Waddle] Initializing v${SCRIPT_VERSION}...`);
+            injectStyles();
+            const menuCreated = createMenu();
+            if (!menuCreated) throw new Error('Failed to create menu');
+
+            setupKeyboardHandler();
+            const crosshairOk = initializeCrosshairModule();
+            if (!crosshairOk) console.warn('[Waddle] Crosshair module failed to initialize');
+
+            showToast(`Press ${state.menuKey} to open menu! (F1/F5 for crosshair)`, 'info');
+
+            // Restore state after a brief delay to ensure all DOM elements are ready
+            setTimeout(() => {
+                restoreSavedState();
+                Object.entries(state.features).forEach(([feature, enabled]) => {
+                    if (enabled && featureManager[feature]?.start) {
+                        try {
+                            featureManager[feature].start();
+                        } catch (error) {
+                            console.error(`[Waddle] Failed to start feature '${feature}':`, error);
+                        }
+                    }
+                });
+            }, 100);
+
+            updateSessionTimer();
+            state.intervals.sessionTimer = setInterval(updateSessionTimer, TIMING.SESSION_UPDATE);
+            console.log('[Waddle] Initialization completed!');
+        } catch (error) {
+            console.error('[Waddle] Initialization failed:', error);
+            showToast('Waddle failed to initialize! Check console.', 'error');
+        }
     }
+
+    // Start initialization
+    safeInit();
 })();
