@@ -21,7 +21,7 @@ What should happen?
 What actually happens instead?
 
 ## 📋 Environment Information
-- **WaddleClient Version:** (Check menu header: e.g., v5.9)
+- **Waddle Version:** (Check menu header: e.g., v5.9)
 - **Browser & Version:** (e.g., Chrome 133, Firefox 133, Safari 18)
 - **Operating System:** (Windows, macOS, Linux, ChromeOS, etc)
 - **Tampermonkey Version:** (if relevant)
@@ -49,4 +49,4 @@ Paste any error messages from the browser console (F12 > Console tab)
 ```
 
 ## 📸 Additional Context
-Any other context about the problem? Screenshots, videos, or detailed logs are helpful!
+Any other context about the problem? Screenshots, videos, or detailed logs will be helpful!
