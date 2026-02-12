@@ -83,7 +83,7 @@ const SCRIPT_VERSION = '5.15';
             if (game && game.chat && typeof game.chat.addChat === "function") {
                 clearInterval(waitForGame);
                 game.chat.addChat({
-                    text: `\\${THEME_COLOR}\\[WaddleClient]\\reset\\ Hello! Thank you for using Waddle v${SCRIPT_VERSION}!`
+                    text: `\\${THEME_COLOR}\\[WaddleClient]\\reset\\ Hello and welcome to Waddle! Thank you for using Waddle v${SCRIPT_VERSION}!`
                 });
             }
         }, 500);
@@ -93,7 +93,7 @@ const SCRIPT_VERSION = '5.15';
         'use strict';
         let clicks = 0;
         const CPS_MIN = 11;
-        const CPS_MAX = 13;
+        const CPS_MAX = 15;
         const CHECK_INTERVAL = 1000;
         const COOLDOWN = 2000;
         let lastWarningTime = 0;
@@ -111,7 +111,7 @@ const SCRIPT_VERSION = '5.15';
             if (cps >= CPS_MIN && cps <= CPS_MAX && game && game.chat && typeof game.chat.addChat === "function" && now - lastWarningTime > COOLDOWN) {
                 lastWarningTime = now;
                 game.chat.addChat({
-                    text: "\\#FF0000\\[Waddle Detector]\\reset\ Fast clicks detected."
+                    text: "\\#FF0000\\[Waddle Detector]\\reset\ Fast clicks were detected."
                 });
                 console.log(`%c[Waddle Detector]%c Fast Clicks Detected (CPS: ${cps})`, "color:#FF0000;font-weight:bold;", "color:white;");
             }
