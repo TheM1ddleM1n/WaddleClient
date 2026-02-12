@@ -176,12 +176,6 @@ Enable exactly what you need:
 - [ ] Anti-AFK
 - [ ] Block Party Requests
 
-### Theme
-Every element uses **cyan (#00FFFF)** for:
-- 💎 **Consistent visual identity** across all features
-- 👁️ **Excellent visibility** on any background
-- 🎮 **Professional gaming aesthetic**
-
 ---
 
 ## 📈 Performance & Optimization
