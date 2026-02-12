@@ -230,7 +230,7 @@ const SCRIPT_VERSION = '5.15';
 
 #waddle-tabs { display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 2px solid rgba(0, 255, 255, 0.2); animation: slideInDown 0.4s ease 0.1s backwards; }
 
-.waddle-tab-btn { background: transparent; border: none; color: #999; font-family: Segoe UI, sans-serif; font-weight: 700; padding: 12px 20px; cursor: pointer; transition: color 0.2s ease; border-bottom: 3px solid transparent; font-size: 1rem; }
+.waddle-tab-btn { background: transparent; border: none; color: #999; font-family: Segoe UI, sans-serif; font-weight: 700; padding: 12px 20px; cursor: pointer; border-bottom: 3px solid transparent; font-size: 1rem; }
 .waddle-tab-btn.active { color: var(--waddle-primary); border-bottom-color: var(--waddle-primary); box-shadow: 0 2px 10px rgba(0,255,255,0.3); }
 
 #waddle-menu-content { width: 600px; background: rgba(17, 17, 17, 0.9); border-radius: 16px; padding: 24px; color: white; font-size: 1rem; box-shadow: 0 0 20px rgba(0, 255, 255, 0.4), inset 0 0 20px rgba(0, 255, 255, 0.1); display: flex; flex-direction: column; gap: 20px; max-height: 70vh; overflow-y: auto; border: 1px solid rgba(0, 255, 255, 0.3); animation: slideInUp 0.4s ease; }
@@ -238,15 +238,15 @@ const SCRIPT_VERSION = '5.15';
 .waddle-tab-content { display: none; }
 .waddle-tab-content.active { display: flex; flex-direction: column; gap: 16px; animation: slideInUp 0.3s ease; }
 
-.waddle-card { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.2); border-radius: 12px; padding: 16px; transition: border-color 0.3s ease; }
+.waddle-card { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.2); border-radius: 12px; padding: 16px; }
 
 .waddle-card-header { font-size: 1.1rem; font-weight: 700; color: var(--waddle-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
 .waddle-card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-.waddle-menu-btn { background: rgba(0, 0, 0, 0.8); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); font-family: Segoe UI, sans-serif; font-weight: 700; padding: 12px 16px; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; user-select: none; overflow: hidden; font-size: 0.95rem; }
+.waddle-menu-btn { background: rgba(0, 0, 0, 0.8); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); font-family: Segoe UI, sans-serif; font-weight: 700; padding: 12px 16px; border-radius: 10px; cursor: pointer; user-select: none; overflow: hidden; font-size: 0.95rem; }
 .waddle-menu-btn.active { background: rgba(0, 255, 255, 0.2); }
 
-.counter { position: fixed; background: rgba(0, 255, 255, 0.9); color: #000; font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1.25rem; padding: 8px 14px; border-radius: 12px; box-shadow: var(--waddle-glow), var(--waddle-inner); user-select: none; cursor: grab; z-index: 999999999; width: max-content; transition: box-shadow 0.15s ease; animation: counterSlideIn 0.4s ease-out; border: 1px solid rgba(0,255,255,0.5); }
+.counter { position: fixed; background: rgba(0, 255, 255, 0.9); color: #000; font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1.25rem; padding: 8px 14px; border-radius: 12px; box-shadow: var(--waddle-glow), var(--waddle-inner); user-select: none; cursor: grab; z-index: 999999999; width: max-content; animation: counterSlideIn 0.4s ease-out; border: 1px solid rgba(0,255,255,0.5); }
 .counter.dragging { cursor: grabbing; transform: scale(1.08); box-shadow: var(--waddle-glow-lg), inset 0 0 20px rgba(0,255,255,0.3); }
 
 .key-display-container { position: fixed; cursor: grab; z-index: 999999999; animation: counterSlideIn 0.4s ease-out; user-select: none; }
@@ -261,7 +261,7 @@ const SCRIPT_VERSION = '5.15';
 
 .settings-label { font-size: 0.9rem; color: var(--waddle-primary); margin-bottom: 10px; display: block; font-weight: 600; }
 
-.keybind-input { width: 100%; background: rgba(0, 0, 0, 0.8); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1rem; padding: 8px 12px; border-radius: 8px; text-align: center; transition: box-shadow 0.2s ease; }
+.keybind-input { width: 100%; background: rgba(0, 0, 0, 0.8); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1rem; padding: 8px 12px; border-radius: 8px; text-align: center; }
 .keybind-input:focus { outline: none; box-shadow: 0 0 15px rgba(0, 255, 255, 0.6); background: rgba(0, 255, 255, 0.15); }
 
 #waddle-toast { position: fixed; bottom: 60px; right: 50px; background: rgba(0, 0, 0, 0.95); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); padding: 16px 24px; border-radius: 12px; font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1rem; z-index: 10000001; box-shadow: 0 0 20px rgba(0, 255, 255, 0.5), inset 0 0 10px rgba(0, 255, 255, 0.2); animation: toastSlideIn 0.3s ease; pointer-events: none; max-width: 280px; text-align: center; }
@@ -428,60 +428,6 @@ const SCRIPT_VERSION = '5.15';
         window.addEventListener('mousemove', onMouseMove, { passive: true });
     }
 
-    function setupHoverEffects() {
-        document.querySelectorAll('.waddle-tab-btn').forEach(btn => {
-            btn.addEventListener('mouseenter', () => {
-                if (!btn.classList.contains('active')) {
-                    btn.style.color = THEME_COLOR;
-                }
-            });
-            btn.addEventListener('mouseleave', () => {
-                if (!btn.classList.contains('active')) {
-                    btn.style.color = '#999';
-                }
-            });
-        });
-
-        document.querySelectorAll('.waddle-card').forEach(card => {
-            card.addEventListener('mouseenter', () => {
-                card.style.borderColor = 'rgba(0, 255, 255, 0.4)';
-            });
-            card.addEventListener('mouseleave', () => {
-                card.style.borderColor = 'rgba(0, 255, 255, 0.2)';
-            });
-        });
-
-        document.querySelectorAll('.waddle-menu-btn').forEach(btn => {
-            btn.addEventListener('mouseenter', () => {
-                btn.style.background = THEME_COLOR;
-                btn.style.color = '#000';
-                btn.style.transform = 'translateY(-2px)';
-                btn.style.boxShadow = '0 5px 20px rgba(0,255,255,0.4)';
-            });
-            btn.addEventListener('mouseleave', () => {
-                if (!btn.classList.contains('active')) {
-                    btn.style.background = 'rgba(0, 0, 0, 0.8)';
-                    btn.style.color = THEME_COLOR;
-                    btn.style.transform = 'translateY(0)';
-                    btn.style.boxShadow = 'none';
-                }
-            });
-        });
-
-        document.querySelectorAll('.counter').forEach(counter => {
-            counter.addEventListener('mouseenter', () => {
-                if (!counter.classList.contains('dragging')) {
-                    counter.style.transform = 'scale(1.05)';
-                }
-            });
-            counter.addEventListener('mouseleave', () => {
-                if (!counter.classList.contains('dragging')) {
-                    counter.style.transform = 'scale(1)';
-                }
-            });
-        });
-    }
-
     function startPerformanceLoop() {
         if (state.rafId) return;
         const loop = (currentTime) => {
@@ -538,14 +484,20 @@ const SCRIPT_VERSION = '5.15';
         if (!game) return;
         const ping = Math.round(game.resourceMonitor?.filteredPing || 0);
         state.currentPing = ping;
+
+        // Determine ping bracket
         let pingColor = '#00FF00';
         if (ping > 100) pingColor = '#FFFF00';
         if (ping > 200) pingColor = '#FF0000';
+
+        // Only update styles when bracket changes
         if (state.counters.ping && state.lastPingColor !== pingColor) {
             state.counters.ping.style.borderColor = pingColor;
             state.counters.ping.style.boxShadow = `0 0 15px ${pingColor}, inset 0 0 10px ${pingColor}`;
             state.lastPingColor = pingColor;
         }
+
+        // Always update text
         updateCounterText('ping', `PING: ${ping}ms`);
     }
 
@@ -804,26 +756,31 @@ const SCRIPT_VERSION = '5.15';
     }
 
     function createFeatureCard(title, features) {
-        const card = document.createElement('div');
-        card.className = 'waddle-card';
-        card.innerHTML = `<div class="waddle-card-header">${title}</div>`;
-        const grid = document.createElement('div');
-        grid.className = 'waddle-card-grid';
-        features.forEach(({ label, feature, icon }) => {
-            const btn = document.createElement('button');
-            btn.className = 'waddle-menu-btn';
-            btn.textContent = `${label} ${icon}`;
-            btn.onclick = () => {
-                const enabled = toggleFeature(feature);
-                btn.textContent = `${label} ${enabled ? '✓' : icon}`;
-                btn.classList.toggle('active', enabled);
-                showToast(`${label} ${enabled ? 'Enabled' : 'Disabled'} ✓`, 'success');
-            };
-            grid.appendChild(btn);
-        });
-        card.appendChild(grid);
-        return card;
-    }
+    const card = document.createElement('div');
+    card.className = 'waddle-card';
+    card.innerHTML = `<div class="waddle-card-header">${title}</div>`;
+    const grid = document.createElement('div');
+    grid.className = 'waddle-card-grid';
+    features.forEach(({ label, feature, icon }) => {
+        const btn = document.createElement('button');
+        btn.className = 'waddle-menu-btn';
+
+        // CHECK IF FEATURE IS ALREADY ENABLED
+        const isEnabled = state.features[feature];
+        btn.textContent = `${label} ${isEnabled ? '✓' : icon}`;
+        if (isEnabled) btn.classList.add('active');
+
+        btn.onclick = () => {
+            const enabled = toggleFeature(feature);
+            btn.textContent = `${label} ${enabled ? '✓' : icon}`;
+            btn.classList.toggle('active', enabled);
+            showToast(`${label} ${enabled ? 'Enabled' : 'Disabled'} ✓`, 'success');
+        };
+        grid.appendChild(btn);
+    });
+    card.appendChild(grid);
+    return card;
+}
 
     function switchTab(tabName) {
         state.activeTab = tabName;
@@ -985,7 +942,6 @@ const SCRIPT_VERSION = '5.15';
         document.body.appendChild(menuOverlay);
         menuOverlay.addEventListener('click', (e) => { if (e.target === menuOverlay) state.menuOverlay.classList.remove('show'); });
         state.menuOverlay = menuOverlay;
-        setupHoverEffects();
         return menuOverlay;
     }
 
@@ -1077,42 +1033,45 @@ const SCRIPT_VERSION = '5.15';
     }
 
     async function safeInit() {
-        try {
-            console.log(`[Waddle] Waiting for DOM...`);
-            await ensureDOMReady();
+    try {
+        console.log(`[Waddle] Waiting for DOM...`);
+        await ensureDOMReady();
 
-            console.log(`[Waddle] Initializing v${SCRIPT_VERSION}...`);
-            injectStyles();
-            const menuCreated = createMenu();
-            if (!menuCreated) throw new Error('Failed to create menu');
+        console.log(`[Waddle] Initializing v${SCRIPT_VERSION}...`);
+        injectStyles();
 
-            setupKeyboardHandler();
-            const crosshairOk = initializeCrosshairModule();
-            if (!crosshairOk) console.warn('[Waddle] Crosshair module failed to initialize');
+        // RESTORE SETTINGS FIRST (before creating menu)
+        restoreSavedState();
 
-            showToast(`Press ${state.menuKey} to open menu! (F1/F5 for crosshair)`, 'info');
+        const menuCreated = createMenu();
+        if (!menuCreated) throw new Error('Failed to create menu');
 
-            setTimeout(() => {
-                restoreSavedState();
-                Object.entries(state.features).forEach(([feature, enabled]) => {
-                    if (enabled && featureManager[feature]?.start) {
-                        try {
-                            featureManager[feature].start();
-                        } catch (error) {
-                            console.error(`[Waddle] Failed to start feature '${feature}':`, error);
-                        }
+        setupKeyboardHandler();
+        const crosshairOk = initializeCrosshairModule();
+        if (!crosshairOk) console.warn('[Waddle] Crosshair module failed to initialize');
+
+        showToast(`Press ${state.menuKey} to open menu! (F1/F5 for crosshair)`, 'info');
+
+        setTimeout(() => {
+            Object.entries(state.features).forEach(([feature, enabled]) => {
+                if (enabled && featureManager[feature]?.start) {
+                    try {
+                        featureManager[feature].start();
+                    } catch (error) {
+                        console.error(`[Waddle] Failed to start feature '${feature}':`, error);
                     }
-                });
-            }, 100);
+                }
+            });
+        }, 100);
 
-            updateSessionTimer();
-            state.intervals.sessionTimer = setInterval(updateSessionTimer, TIMING.SESSION_UPDATE);
-            console.log('[Waddle] Initialization completed!');
-        } catch (error) {
-            console.error('[Waddle] Initialization failed:', error);
-            showToast('Waddle failed to initialize! Check console.', 'error');
-        }
+        updateSessionTimer();
+        state.intervals.sessionTimer = setInterval(updateSessionTimer, TIMING.SESSION_UPDATE);
+        console.log('[Waddle] Initialization completed!');
+    } catch (error) {
+        console.error('[Waddle] Initialization failed:', error);
+        showToast('Waddle failed to initialize! Check console.', 'error');
     }
+}
 
     safeInit();
 })();
