@@ -83,7 +83,7 @@ const SCRIPT_VERSION = '5.15';
             if (game && game.chat && typeof game.chat.addChat === "function") {
                 clearInterval(waitForGame);
                 game.chat.addChat({
-                    text: `\\${THEME_COLOR}\\[WaddleClient]\\reset\\ Hello and welcome to Waddle! Thank you for using Waddle v${SCRIPT_VERSION}!`
+                    text: `\\${THEME_COLOR}\\[Server]\\reset\\ Hello and Thank you for using Waddle v${SCRIPT_VERSION}! Have Fun!`
                 });
             }
         }, 500);
