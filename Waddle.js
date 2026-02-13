@@ -40,11 +40,11 @@ const SCRIPT_VERSION = '5.15';
     };
 
     const COUNTER_CONFIGS = {
-        fps: { id: 'fps-counter', text: 'FPS: 0', pos: DEFAULT_POSITIONS.fps, icon: '🐧', draggable: true },
-        ping: { id: 'ping-counter', text: 'PING: 0ms', pos: DEFAULT_POSITIONS.ping, icon: '🐧', draggable: true },
-        coords: { id: 'coords-counter', text: '📍 X: 0 Y: 0 Z: 0', pos: DEFAULT_POSITIONS.coords, icon: '🐧', draggable: true },
-        realTime: { id: 'real-time-counter', text: '00:00:00 AM', pos: null, icon: '🐧', draggable: false },
-        antiAfk: { id: 'anti-afk-counter', text: '🐧 Jumping in 5s', pos: DEFAULT_POSITIONS.antiAfk, icon: '🐧', draggable: true }
+        fps: { id: 'fps-counter', text: 'FPS: 0', pos: DEFAULT_POSITIONS.fps, draggable: true },
+        ping: { id: 'ping-counter', text: 'PING: 0ms', pos: DEFAULT_POSITIONS.ping, draggable: true },
+        coords: { id: 'coords-counter', text: '📍 X: 0 Y: 0 Z: 0', pos: DEFAULT_POSITIONS.coords, draggable: true },
+        realTime: { id: 'real-time-counter', text: '00:00:00 AM', pos: null, draggable: false },
+        antiAfk: { id: 'anti-afk-counter', text: '🐧 Jumping in 5s', pos: DEFAULT_POSITIONS.antiAfk, draggable: true }
     };
 
     const gameRef = {
@@ -120,7 +120,6 @@ const SCRIPT_VERSION = '5.15';
 
     let state = {
         features: { fps: false, ping: false, coords: false, realTime: false, antiAfk: false, keyDisplay: false, disablePartyRequests: false },
-        counterVisibility: { fps: true, ping: true, coords: true, keyDisplay: true, antiAfk: true },
         menuKey: DEFAULT_MENU_KEY,
         activeTab: 'features',
         counters: { fps: null, realTime: null, ping: null, coords: null, antiAfk: null, keyDisplay: null },
@@ -185,7 +184,6 @@ const SCRIPT_VERSION = '5.15';
         const settings = {
             version: SCRIPT_VERSION,
             features: state.features,
-            counterVisibility: state.counterVisibility,
             menuKey: state.menuKey,
             positions: Object.fromEntries(
                 Object.entries(state.counters)
@@ -484,19 +482,16 @@ const SCRIPT_VERSION = '5.15';
         const ping = Math.round(game.resourceMonitor?.filteredPing || 0);
         state.currentPing = ping;
 
-        // Determine ping bracket
         let pingColor = '#00FF00';
         if (ping > 100) pingColor = '#FFFF00';
         if (ping > 200) pingColor = '#FF0000';
 
-        // Only update styles when bracket changes
         if (state.counters.ping && state.lastPingColor !== pingColor) {
             state.counters.ping.style.borderColor = pingColor;
             state.counters.ping.style.boxShadow = `0 0 15px ${pingColor}, inset 0 0 10px ${pingColor}`;
             state.lastPingColor = pingColor;
         }
 
-        // Always update text
         updateCounterText('ping', `PING: ${ping}ms`);
     }
 
@@ -755,31 +750,28 @@ const SCRIPT_VERSION = '5.15';
     }
 
     function createFeatureCard(title, features) {
-    const card = document.createElement('div');
-    card.className = 'waddle-card';
-    card.innerHTML = `<div class="waddle-card-header">${title}</div>`;
-    const grid = document.createElement('div');
-    grid.className = 'waddle-card-grid';
-    features.forEach(({ label, feature, icon }) => {
-        const btn = document.createElement('button');
-        btn.className = 'waddle-menu-btn';
-
-        // CHECK IF FEATURE IS ALREADY ENABLED
-        const isEnabled = state.features[feature];
-        btn.textContent = `${label} ${isEnabled ? '✓' : icon}`;
-        if (isEnabled) btn.classList.add('active');
-
-        btn.onclick = () => {
-            const enabled = toggleFeature(feature);
-            btn.textContent = `${label} ${enabled ? '✓' : icon}`;
-            btn.classList.toggle('active', enabled);
-            showToast(`${label} ${enabled ? 'Enabled' : 'Disabled'} ✓`, 'success');
-        };
-        grid.appendChild(btn);
-    });
-    card.appendChild(grid);
-    return card;
-}
+        const card = document.createElement('div');
+        card.className = 'waddle-card';
+        card.innerHTML = `<div class="waddle-card-header">${title}</div>`;
+        const grid = document.createElement('div');
+        grid.className = 'waddle-card-grid';
+        features.forEach(({ label, feature, icon }) => {
+            const btn = document.createElement('button');
+            btn.className = 'waddle-menu-btn';
+            const isEnabled = state.features[feature];
+            btn.textContent = `${label} ${isEnabled ? '✓' : icon}`;
+            if (isEnabled) btn.classList.add('active');
+            btn.onclick = () => {
+                const enabled = toggleFeature(feature);
+                btn.textContent = `${label} ${enabled ? '✓' : icon}`;
+                btn.classList.toggle('active', enabled);
+                showToast(`${label} ${enabled ? 'Enabled' : 'Disabled'} ✓`, 'success');
+            };
+            grid.appendChild(btn);
+        });
+        card.appendChild(grid);
+        return card;
+    }
 
     function switchTab(tabName) {
         state.activeTab = tabName;
@@ -985,13 +977,6 @@ const SCRIPT_VERSION = '5.15';
                 }
             });
         }
-        if (typeof settings.counterVisibility === 'object' && settings.counterVisibility !== null) {
-            Object.keys(state.counterVisibility).forEach(key => {
-                if (typeof settings.counterVisibility[key] === 'boolean') {
-                    state.counterVisibility[key] = settings.counterVisibility[key];
-                }
-            });
-        }
     }
 
     function globalCleanup() {
@@ -1032,45 +1017,44 @@ const SCRIPT_VERSION = '5.15';
     }
 
     async function safeInit() {
-    try {
-        console.log(`[Waddle] Waiting for DOM...`);
-        await ensureDOMReady();
+        try {
+            console.log(`[Waddle] Waiting for DOM...`);
+            await ensureDOMReady();
 
-        console.log(`[Waddle] Initializing v${SCRIPT_VERSION}...`);
-        injectStyles();
+            console.log(`[Waddle] Initializing v${SCRIPT_VERSION}...`);
+            injectStyles();
 
-        // RESTORE SETTINGS FIRST (before creating menu)
-        restoreSavedState();
+            restoreSavedState();
 
-        const menuCreated = createMenu();
-        if (!menuCreated) throw new Error('Failed to create menu');
+            const menuCreated = createMenu();
+            if (!menuCreated) throw new Error('Failed to create menu');
 
-        setupKeyboardHandler();
-        const crosshairOk = initializeCrosshairModule();
-        if (!crosshairOk) console.warn('[Waddle] Crosshair module failed to initialize');
+            setupKeyboardHandler();
+            const crosshairOk = initializeCrosshairModule();
+            if (!crosshairOk) console.warn('[Waddle] Crosshair module failed to initialize');
 
-        showToast(`Press ${state.menuKey} to open menu! (F1/F5 for crosshair)`, 'info');
+            showToast(`Press ${state.menuKey} to open menu! (F1/F5 for crosshair)`, 'info');
 
-        setTimeout(() => {
-            Object.entries(state.features).forEach(([feature, enabled]) => {
-                if (enabled && featureManager[feature]?.start) {
-                    try {
-                        featureManager[feature].start();
-                    } catch (error) {
-                        console.error(`[Waddle] Failed to start feature '${feature}':`, error);
+            setTimeout(() => {
+                Object.entries(state.features).forEach(([feature, enabled]) => {
+                    if (enabled && featureManager[feature]?.start) {
+                        try {
+                            featureManager[feature].start();
+                        } catch (error) {
+                            console.error(`[Waddle] Failed to start feature '${feature}':`, error);
+                        }
                     }
-                }
-            });
-        }, 100);
+                });
+            }, 100);
 
-        updateSessionTimer();
-        state.intervals.sessionTimer = setInterval(updateSessionTimer, TIMING.SESSION_UPDATE);
-        console.log('[Waddle] Initialization completed!');
-    } catch (error) {
-        console.error('[Waddle] Initialization failed:', error);
-        showToast('Waddle failed to initialize! Check console.', 'error');
+            updateSessionTimer();
+            state.intervals.sessionTimer = setInterval(updateSessionTimer, TIMING.SESSION_UPDATE);
+            console.log('[Waddle] Initialization completed!');
+        } catch (error) {
+            console.error('[Waddle] Initialization failed:', error);
+            showToast('Waddle failed to initialize! Check console.', 'error');
+        }
     }
-}
 
     safeInit();
 })();
