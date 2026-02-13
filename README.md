@@ -21,12 +21,12 @@
 Transform your Miniblox experience with professional-grade monitoring and utility features. Built by the Dream Team, optimized for performance, and professionally designed
 
 | Feature | Benefit |
-|---------|----------|
+|---------|---------|
 | 🎯 **Crosshair** | Lag-free aiming with full visibility control |
 | 📊 **Live Performance Metrics** | Monitor FPS, ping, and coordinates in real-time |
 | ⚡ **Minimal Overhead** | ~0.4% CPU usage — play without limits! |
 | 💾 **Auto-Saving Settings** | Your preferences are always remembered |
-| 🔧 **Zero Dependencies** | Lightweight script that works everywhere |
+| 🔧 **Zero Dependencies** | Lightweight script (~1052 lines, zero bloat) |
 
 ---
 
@@ -196,7 +196,7 @@ Total Impact:   ~0.4% CPU ⚡
 - ✅ Direct DOM updates (only when values change)
 - ✅ Zero external dependencies
 - ✅ Aggressive memory cleanup
-- ✅ ~1500 lines of optimized code
+- ✅ **~1052 lines of lean, optimized code** (zero dead code!)
 
 ### Browser Compatibility
 
@@ -224,8 +224,7 @@ Total Impact:   ~0.4% CPU ⚡
 {
   "enabled_features": "Your feature preferences",
   "menu_keybind": "Your chosen menu key",
-  "counter_positions": "Where you placed each counter",
-  "visibility_states": "Which counters are shown/hidden"
+  "counter_positions": "Where you placed each counter"
 }
 ```
 
@@ -433,10 +432,12 @@ Cyan (#00FFFF) is chosen because:
 
 ## 📝 Current Version
 
-### [5.15]
-- ✨ Moved hover effects from CSS to JavaScript (lighter CSS footprint)
-- 🎯 Optimized stylesheet with ~15% size reduction
-- 🔧 Dynamic hover listeners for better performance
+### [5.15] - Code Optimization
+- ✨ Removed all dead code (unused properties & parameters)
+- 🎯 Reduced to ~1052 lines of pure functionality
+- ⚡ ~27% code reduction with zero performance impact
+- 🔧 Cleaned up state object and TIMING constants
+- 💾 Optimized function signatures
 
 ### [5.14]
 - ✨ NovaCore-style cyan crosshair with 3 visibility states
@@ -459,14 +460,6 @@ Cyan (#00FFFF) is chosen because:
 | **Inspired By** | NovaCore Team | Crosshair System |
 
 **Special Thanks:** Miniblox community for feedback, testing, and bug reports! 🙏
-
----
-
-## 📄 License
-
-WaddleClient is licensed under the **MIT License** — fully open-source and free to use, modify, and distribute.
-
-[📖 View License](https://github.com/TheM1ddleM1n/WaddleClient/blob/main/LICENSE)
 
 ---
 
