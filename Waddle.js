@@ -194,77 +194,48 @@ const SCRIPT_VERSION = '5.15';
     }
 
     function injectStyles() {
-        if (!document.head) {
-            console.warn('[Waddle] document.head not ready, retrying...');
-            return false;
-        }
-
-        const style = document.createElement('style');
-        style.textContent = `
+    if (!document.head) return false;
+    const style = document.createElement('style');
+    style.textContent = `
 :root {
-  --waddle-primary: ${THEME_COLOR};
-  --waddle-glow: 0 0 15px rgba(0, 255, 255, 0.7);
-  --waddle-glow-lg: 0 0 25px rgba(0, 255, 255, 0.9);
-  --waddle-inner: inset 0 0 10px rgba(0,255,255,0.2);
+  --p: ${THEME_COLOR};
+  --g: 0 0 15px rgba(0,255,255,.7);
+  --dark: rgba(0,0,0,.8);
+  --border: rgba(0,255,255,.2);
+  --shadow: 0 0 20px var(--p);
+  --fw: 700;
 }
-
-@keyframes counterSlideIn { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
-@keyframes slideInDown { 0% { opacity: 0; transform: translateY(-40px); } 100% { opacity: 1; transform: translateY(0); } }
-@keyframes slideInUp { 0% { opacity: 0; transform: translateY(40px); } 100% { opacity: 1; transform: translateY(0); } }
-@keyframes toastSlideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes toastSlideOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
-
 .css-xhoozx, [class*="crosshair"], img[src*="crosshair"] { display: none !important; }
-
-#waddle-menu-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(15px); z-index: 10000000; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 40px; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; user-select: none; }
+.fixed-base { position: fixed; user-select: none; }
+#waddle-menu-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.9); backdrop-filter: blur(15px); z-index: 9999; display: flex; flex-direction: column; align-items: center; padding-top: 40px; opacity: 0; pointer-events: none; }
 #waddle-menu-overlay.show { opacity: 1; pointer-events: auto; }
-
-#waddle-menu-header { font-family: Segoe UI, sans-serif; font-size: 3rem; font-weight: 900; color: var(--waddle-primary); text-shadow: 0 0 8px var(--waddle-primary), 0 0 20px var(--waddle-primary); margin-bottom: 30px; animation: slideInDown 0.4s ease; }
-
-#waddle-tabs { display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 2px solid rgba(0, 255, 255, 0.2); animation: slideInDown 0.4s ease 0.1s backwards; }
-
-.waddle-tab-btn { background: transparent; border: none; color: #999; font-family: Segoe UI, sans-serif; font-weight: 700; padding: 12px 20px; cursor: pointer; border-bottom: 3px solid transparent; font-size: 1rem; }
-.waddle-tab-btn.active { color: var(--waddle-primary); border-bottom-color: var(--waddle-primary); box-shadow: 0 2px 10px rgba(0,255,255,0.3); }
-
-#waddle-menu-content { width: 600px; background: rgba(17, 17, 17, 0.9); border-radius: 16px; padding: 24px; color: white; font-size: 1rem; box-shadow: 0 0 20px rgba(0, 255, 255, 0.4), inset 0 0 20px rgba(0, 255, 255, 0.1); display: flex; flex-direction: column; gap: 20px; max-height: 70vh; overflow-y: auto; border: 1px solid rgba(0, 255, 255, 0.3); animation: slideInUp 0.4s ease; }
-
+#waddle-menu-header { font-size: 3rem; font-weight: var(--fw); color: var(--p); text-shadow: 0 0 8px var(--p), var(--shadow); margin-bottom: 30px; }
+#waddle-tabs { display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
+.waddle-tab-btn { background: 0; border: none; color: #999; font-weight: var(--fw); padding: 12px 20px; cursor: pointer; border-bottom: 3px solid transparent; }
+.waddle-tab-btn.active { color: var(--p); border-bottom-color: var(--p); }
+#waddle-menu-content { width: 600px; background: rgba(17,17,17,.9); border-radius: 16px; padding: 24px; color: #fff; display: flex; flex-direction: column; gap: 20px; max-height: 70vh; overflow-y: auto; border: 1px solid var(--border); box-shadow: 0 0 20px rgba(0,255,255,.4); }
 .waddle-tab-content { display: none; }
-.waddle-tab-content.active { display: flex; flex-direction: column; gap: 16px; animation: slideInUp 0.3s ease; }
-
-.waddle-card { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(0, 255, 255, 0.2); border-radius: 12px; padding: 16px; }
-
-.waddle-card-header { font-size: 1.1rem; font-weight: 700; color: var(--waddle-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.waddle-tab-content.active { display: flex; flex-direction: column; gap: 16px; }
+.waddle-card { background: rgba(0,0,0,.5); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+.waddle-card-header { font-weight: var(--fw); color: var(--p); margin-bottom: 12px; }
 .waddle-card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-.waddle-menu-btn { background: rgba(0, 0, 0, 0.8); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); font-family: Segoe UI, sans-serif; font-weight: 700; padding: 12px 16px; border-radius: 10px; cursor: pointer; user-select: none; overflow: hidden; font-size: 0.95rem; }
-.waddle-menu-btn.active { background: rgba(0, 255, 255, 0.2); }
-
-.counter { position: fixed; background: rgba(0, 255, 255, 0.9); color: #000; font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1.25rem; padding: 8px 14px; border-radius: 12px; box-shadow: var(--waddle-glow), var(--waddle-inner); user-select: none; cursor: grab; z-index: 999999999; width: max-content; animation: counterSlideIn 0.4s ease-out; border: 1px solid rgba(0,255,255,0.5); }
-.counter.dragging { cursor: grabbing; transform: scale(1.08); box-shadow: var(--waddle-glow-lg), inset 0 0 20px rgba(0,255,255,0.3); }
-
-.key-display-container { position: fixed; cursor: grab; z-index: 999999999; animation: counterSlideIn 0.4s ease-out; user-select: none; }
-.key-display-container.dragging { cursor: grabbing; }
+.waddle-menu-btn, .keybind-input { background: var(--dark); border: 2px solid var(--p); color: var(--p); font-weight: var(--fw); padding: 8px 12px; border-radius: 8px; }
+.waddle-menu-btn.active { background: rgba(0,255,255,.2); }
+.counter, .key-display-container { position: fixed; z-index: 9998; user-select: none; }
+.counter { background: rgba(0,255,255,.9); color: #000; font-weight: var(--fw); padding: 8px 14px; border-radius: 12px; box-shadow: var(--g); cursor: grab; width: max-content; }
+.counter.dragging { cursor: grabbing; transform: scale(1.08); }
+.key-display-container { cursor: grab; }
 .key-display-grid { display: grid; gap: 6px; }
-
-.key-box { background: rgba(80, 80, 80, 0.8); border: 3px solid rgba(150, 150, 150, 0.6); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', sans-serif; font-weight: 900; font-size: 1.1rem; color: #ddd; transition: all 0.1s ease; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.1); width: 50px; height: 50px; }
-.key-box.active { background: var(--waddle-primary); border-color: var(--waddle-primary); color: #000; box-shadow: 0 0 20px var(--waddle-primary); transform: scale(0.95); }
-
-.mouse-box { width: 70px; height: 50px; font-size: 0.85rem; }
-.space-box { grid-column: 1 / -1; width: 100%; height: 40px; font-size: 0.9rem; }
-
-.settings-label { font-size: 0.9rem; color: var(--waddle-primary); margin-bottom: 10px; display: block; font-weight: 600; }
-
-.keybind-input { width: 100%; background: rgba(0, 0, 0, 0.8); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1rem; padding: 8px 12px; border-radius: 8px; text-align: center; }
-.keybind-input:focus { outline: none; box-shadow: 0 0 15px rgba(0, 255, 255, 0.6); background: rgba(0, 255, 255, 0.15); }
-
-#waddle-toast { position: fixed; bottom: 60px; right: 50px; background: rgba(0, 0, 0, 0.95); border: 2px solid var(--waddle-primary); color: var(--waddle-primary); padding: 16px 24px; border-radius: 12px; font-family: Segoe UI, sans-serif; font-weight: 700; font-size: 1rem; z-index: 10000001; box-shadow: 0 0 20px rgba(0, 255, 255, 0.5), inset 0 0 10px rgba(0, 255, 255, 0.2); animation: toastSlideIn 0.3s ease; pointer-events: none; max-width: 280px; text-align: center; }
-#waddle-toast.hide { animation: toastSlideOut 0.3s ease forwards; }
-
+.key-box { background: rgba(80,80,80,.8); border: 3px solid rgba(150,150,150,.6); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; width: 50px; height: 50px; }
+.key-box.active { background: var(--p); color: #000; box-shadow: var(--shadow); }
+.key-box.mouse-box { width: 70px; }
+.key-box.space-box { grid-column: 1 / -1; width: 100%; height: 40px; }
+#waddle-toast { position: fixed; bottom: 60px; right: 50px; background: rgba(0,0,0,.95); border: 2px solid var(--p); color: var(--p); padding: 16px 24px; border-radius: 12px; font-weight: var(--fw); z-index: 10000; }
 #waddle-crosshair-container { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 5000; pointer-events: none; }
-`;
-        document.head.appendChild(style);
-        return true;
-    }
+    `;
+    document.head.appendChild(style);
+    return true;
+}
 
     function makeLine(styles) {
         const div = document.createElement('div');
@@ -273,13 +244,13 @@ const SCRIPT_VERSION = '5.15';
     }
 
     function createCrosshair() {
-        const c = document.createElement('div');
-        c.appendChild(makeLine({ top: '0', left: '50%', width: '2px', height: '6px', transform: 'translateX(-50%)' }));
-        c.appendChild(makeLine({ bottom: '0', left: '50%', width: '2px', height: '6px', transform: 'translateX(-50%)' }));
-        c.appendChild(makeLine({ left: '0', top: '50%', width: '6px', height: '2px', transform: 'translateY(-50%)' }));
-        c.appendChild(makeLine({ right: '0', top: '50%', width: '6px', height: '2px', transform: 'translateY(-50%)' }));
-        return c;
-    }
+    const c = document.createElement('div');
+    c.appendChild(makeLine({ top: '0', left: '50%', width: '2px', height: '8px', transform: 'translateX(-50%)' }));
+    c.appendChild(makeLine({ bottom: '0', left: '50%', width: '2px', height: '8px', transform: 'translateX(-50%)' }));
+    c.appendChild(makeLine({ left: '0', top: '50%', width: '8px', height: '2px', transform: 'translateY(-50%)' }));
+    c.appendChild(makeLine({ right: '0', top: '50%', width: '8px', height: '2px', transform: 'translateY(-50%)' }));
+    return c;
+}
 
     function updateCrosshair() {
         if (state.crosshairContainer) {
