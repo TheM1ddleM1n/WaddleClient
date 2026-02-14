@@ -26,7 +26,7 @@ Transform your Miniblox experience with professional-grade monitoring and utilit
 | 📊 **Live Performance Metrics** | Monitor FPS, ping, and coordinates in real-time |
 | ⚡ **Minimal Overhead** | ~0.4% CPU usage — play without limits! |
 | 💾 **Auto-Saving Settings** | Your preferences are always remembered |
-| 🔧 **Zero Dependencies** | Lightweight script (~1052 lines, zero bloat) |
+| 🔧 **Zero Dependencies** | Lightweight script (~1023 lines, zero bloat) |
 
 ---
 
