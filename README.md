@@ -419,14 +419,14 @@ Cyan (#00FFFF) is chosen because:
 ### Found an Issue? 🐛
 [→ Report Bug](https://github.com/TheM1ddleM1n/Waddle/issues/new?labels=bug)
 
-### Have a Feature Idea? 💡
+### Do you have ideas of what should be added? 💡
 [→ Suggest Feature](https://github.com/TheM1ddleM1n/Waddle/issues/new?labels=enhancement)
 
 ### Want to Contribute? 🚀
 1. Fork the repository
 2. Make your improvements
 3. Submit a pull request
-4. Join the team!
+4. And join the team!
 
 ---
 
