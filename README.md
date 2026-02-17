@@ -18,7 +18,7 @@
 
 ## ✨ Why Waddle?
 
-Transform your Miniblox experience with professional-grade monitoring and utility features. Built by the Dream Team, optimized for performance, and professionally designed
+Transform your Miniblox experience with professional monitoring and utility features. Built by the Dream Team, optimized for performance, and professionally designed
 
 | Feature | Benefit |
 |---------|---------|
