@@ -367,7 +367,7 @@ No. Waddle runs in the browser layer and doesn't touch the game engine.
 |------|-------------|
 | **Original Creator** | [@Scripter132132](https://github.com/Scripter132132) |
 | **Enhancement & Maintenance** | [@TheM1ddleM1n](https://github.com/TheM1ddleM1n) |
-| **Inspired By** | NovaCore Team |
+| **Inspired By** | Scripter's NovaCore client |
 
 **Special Thanks:** Miniblox community for feedback, testing, and bug reports! 🙏
 
