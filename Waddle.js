@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waddle
 // @namespace    https://github.com/TheM1ddleM1n/Waddle
-// @version      5.16
+// @version      5.17
 // @description  The ultimate Miniblox enhancement suite with advanced API features!
 // @author       The Dream Team! (Scripter & TheM1ddleM1n)
 // @icon         https://raw.githubusercontent.com/TheM1ddleM1n/Waddle/refs/heads/main/Penguin.png
@@ -9,7 +9,7 @@
 // @run-at       document-start
 // ==/UserScript==
 
-const SCRIPT_VERSION = '5.16';
+const SCRIPT_VERSION = '5.17';
 
 (function () {
     'use strict';
@@ -25,7 +25,6 @@ const SCRIPT_VERSION = '5.16';
     };
 
     const SETTINGS_KEY = 'waddle_settings';
-    const DEFAULT_MENU_KEY = '\\';
     const THEME_COLOR = "#00FFFF";
 
     const DEFAULT_POSITIONS = {
@@ -106,7 +105,7 @@ const SCRIPT_VERSION = '5.16';
             if (cps >= CPS_MIN && cps <= CPS_MAX && game && game.chat && typeof game.chat.addChat === "function" && now - lastWarningTime > COOLDOWN) {
                 lastWarningTime = now;
                 game.chat.addChat({
-                    text: "\\#FF0000\\[Waddle Detector]\\reset\ Fast clicks were detected."
+                    text: "\\#FF0000\\[Waddle Detector]\\reset\\ Fast clicks were detected."
                 });
                 console.log(`%c[Waddle Detector]%c Fast Clicks Detected (CPS: ${cps})`, "color:#FF0000;font-weight:bold;", "color:white;");
             }
@@ -115,7 +114,6 @@ const SCRIPT_VERSION = '5.16';
 
     let state = {
         features: { performance: false, coords: false, realTime: false, antiAfk: false, keyDisplay: false, disablePartyRequests: false },
-        menuKey: DEFAULT_MENU_KEY,
         counters: { performance: null, realTime: null, coords: null, antiAfk: null, keyDisplay: null },
         menuOverlay: null,
         tabButtons: {},
@@ -129,9 +127,7 @@ const SCRIPT_VERSION = '5.16';
         antiAfkCountdown: 5,
         lastPerformanceColor: '#00FF00',
         keys: { w: false, a: false, s: false, d: false, space: false, lmb: false, rmb: false },
-        crosshairContainer: null,
-        f5PressCount: 0,
-        otherKeysManualHide: false
+        crosshairContainer: null
     };
 
     function showToast(message, type = 'info', duration = TIMING.TOAST_DURATION) {
@@ -177,7 +173,6 @@ const SCRIPT_VERSION = '5.16';
         const settings = {
             version: SCRIPT_VERSION,
             features: state.features,
-            menuKey: state.menuKey,
             positions: Object.fromEntries(
                 Object.entries(state.counters)
                     .filter(([_, counter]) => counter)
@@ -191,9 +186,9 @@ const SCRIPT_VERSION = '5.16';
     }
 
     function injectStyles() {
-    if (!document.head) return false;
-    const style = document.createElement('style');
-    style.textContent = `
+        if (!document.head) return false;
+        const style = document.createElement('style');
+        style.textContent = `
 :root {
   --p: ${THEME_COLOR};
   --g: 0 0 15px rgba(0,255,255,.7);
@@ -216,7 +211,7 @@ const SCRIPT_VERSION = '5.16';
 .waddle-card { background: rgba(0,0,0,.5); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
 .waddle-card-header { font-weight: var(--fw); color: var(--p); margin-bottom: 12px; }
 .waddle-card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.waddle-menu-btn, .keybind-input { background: var(--dark); border: 2px solid var(--p); color: var(--p); font-weight: var(--fw); padding: 8px 12px; border-radius: 8px; }
+.waddle-menu-btn { background: var(--dark); border: 2px solid var(--p); color: var(--p); font-weight: var(--fw); padding: 8px 12px; border-radius: 8px; }
 .waddle-menu-btn.active { background: rgba(0,255,255,.2); }
 .counter, .key-display-container { position: fixed; z-index: 9998; user-select: none; }
 .counter { background: rgba(0,255,255,.9); color: #000; font-weight: var(--fw); padding: 8px 14px; border-radius: 12px; box-shadow: var(--g); cursor: grab; width: max-content; }
@@ -229,10 +224,10 @@ const SCRIPT_VERSION = '5.16';
 .key-box.space-box { grid-column: 1 / -1; width: 100%; height: 40px; }
 #waddle-toast { position: fixed; bottom: 60px; right: 50px; background: rgba(0,0,0,.95); border: 2px solid var(--p); color: var(--p); padding: 16px 24px; border-radius: 12px; font-weight: var(--fw); z-index: 10000; }
 #waddle-crosshair-container { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 5000; pointer-events: none; }
-    `;
-    document.head.appendChild(style);
-    return true;
-}
+        `;
+        document.head.appendChild(style);
+        return true;
+    }
 
     function makeLine(styles) {
         const div = document.createElement('div');
@@ -241,13 +236,13 @@ const SCRIPT_VERSION = '5.16';
     }
 
     function createCrosshair() {
-    const c = document.createElement('div');
-    c.appendChild(makeLine({ top: '0', left: '50%', width: '2px', height: '8px', transform: 'translateX(-50%)' }));
-    c.appendChild(makeLine({ bottom: '0', left: '50%', width: '2px', height: '8px', transform: 'translateX(-50%)' }));
-    c.appendChild(makeLine({ left: '0', top: '50%', width: '8px', height: '2px', transform: 'translateY(-50%)' }));
-    c.appendChild(makeLine({ right: '0', top: '50%', width: '8px', height: '2px', transform: 'translateY(-50%)' }));
-    return c;
-}
+        const c = document.createElement('div');
+        c.appendChild(makeLine({ top: '0', left: '50%', width: '2px', height: '8px', transform: 'translateX(-50%)' }));
+        c.appendChild(makeLine({ bottom: '0', left: '50%', width: '2px', height: '8px', transform: 'translateX(-50%)' }));
+        c.appendChild(makeLine({ left: '0', top: '50%', width: '8px', height: '2px', transform: 'translateY(-50%)' }));
+        c.appendChild(makeLine({ right: '0', top: '50%', width: '8px', height: '2px', transform: 'translateY(-50%)' }));
+        return c;
+    }
 
     function updateCrosshair() {
         if (state.crosshairContainer) {
@@ -260,20 +255,12 @@ const SCRIPT_VERSION = '5.16';
         if (!state.crosshairContainer) return;
         const defaultCrosshair = document.querySelector('.css-xhoozx');
         const pauseMenu = document.querySelector('.chakra-modal__content-container,[role="dialog"]');
-        const isManuallyHidden = (state.f5PressCount === 1 || state.f5PressCount === 2) || state.otherKeysManualHide;
 
         if (defaultCrosshair && !pauseMenu) {
-            if (isManuallyHidden) {
-                state.crosshairContainer.style.display = 'none';
-                defaultCrosshair.style.display = 'none';
-            } else {
-                defaultCrosshair.style.display = 'none';
-                state.crosshairContainer.style.display = 'block';
-            }
+            defaultCrosshair.style.display = 'none';
+            state.crosshairContainer.style.display = 'block';
         } else {
             state.crosshairContainer.style.display = 'none';
-            state.f5PressCount = 0;
-            state.otherKeysManualHide = false;
         }
     }
 
@@ -429,16 +416,13 @@ const SCRIPT_VERSION = '5.16';
         const ping = Math.round(game.resourceMonitor?.filteredPing || 0);
         const inGame = game.inGame;
 
-        // Determine color based on FPS OR Ping
-        let color = '#00FF00'; // Green - good
-        if (fps < 30 || ping > 200) color = '#FF0000'; // Red - bad
-        else if (fps < 60 || ping > 100) color = '#FFFF00'; // Yellow - okay
+        let color = '#00FF00';
+        if (fps < 30 || ping > 200) color = '#FF0000';
+        else if (fps < 60 || ping > 100) color = '#FFFF00';
 
-        // Update display
         const fpsText = inGame ? fps.toString() : '--';
         updateCounterText('performance', `FPS: ${fpsText} | PING: ${ping}ms`);
 
-        // Update styling only if color changed
         if (state.lastPerformanceColor !== color) {
             state.counters.performance.style.borderColor = color;
             state.counters.performance.style.boxShadow = `0 0 15px ${color}, inset 0 0 10px ${color}`;
@@ -554,22 +538,12 @@ const SCRIPT_VERSION = '5.16';
             }
         };
         const mouseDownListener = (e) => {
-            if (e.button === 0) {
-                state.keys.lmb = true;
-                updateKeyDisplay('lmb', true);
-            } else if (e.button === 2) {
-                state.keys.rmb = true;
-                updateKeyDisplay('rmb', true);
-            }
+            if (e.button === 0) { state.keys.lmb = true; updateKeyDisplay('lmb', true); }
+            else if (e.button === 2) { state.keys.rmb = true; updateKeyDisplay('rmb', true); }
         };
         const mouseUpListener = (e) => {
-            if (e.button === 0) {
-                state.keys.lmb = false;
-                updateKeyDisplay('lmb', false);
-            } else if (e.button === 2) {
-                state.keys.rmb = false;
-                updateKeyDisplay('rmb', false);
-            }
+            if (e.button === 0) { state.keys.lmb = false; updateKeyDisplay('lmb', false); }
+            else if (e.button === 2) { state.keys.rmb = false; updateKeyDisplay('rmb', false); }
         };
         window.addEventListener('keydown', keyDownListener, { passive: true });
         window.addEventListener('keyup', keyUpListener, { passive: true });
@@ -607,9 +581,7 @@ const SCRIPT_VERSION = '5.16';
                 startPerformanceLoop();
                 updatePerformanceCounter();
             },
-            stop: () => {
-                stopPerformanceLoop();
-            },
+            stop: () => stopPerformanceLoop(),
             cleanup: () => {
                 if (state.counters.performance) { state.counters.performance.remove(); state.counters.performance = null; }
             }
@@ -630,10 +602,7 @@ const SCRIPT_VERSION = '5.16';
                 updateRealTime();
                 state.intervals.realTime = setInterval(updateRealTime, 1000);
             },
-            stop: () => {
-                clearInterval(state.intervals.realTime);
-                state.intervals.realTime = null;
-            },
+            stop: () => { clearInterval(state.intervals.realTime); state.intervals.realTime = null; },
             cleanup: () => {
                 if (state.counters.realTime) { state.counters.realTime.remove(); state.counters.realTime = null; }
             }
@@ -652,10 +621,7 @@ const SCRIPT_VERSION = '5.16';
                     }
                 }, 1000);
             },
-            stop: () => {
-                clearInterval(state.intervals.antiAfk);
-                state.intervals.antiAfk = null;
-            },
+            stop: () => { clearInterval(state.intervals.antiAfk); state.intervals.antiAfk = null; },
             cleanup: () => {
                 if (state.counters.antiAfk) { state.counters.antiAfk.remove(); state.counters.antiAfk = null; }
             }
@@ -762,6 +728,8 @@ const SCRIPT_VERSION = '5.16';
         menuOverlay.appendChild(tabsContainer);
         const menuContent = document.createElement('div');
         menuContent.id = 'waddle-menu-content';
+
+        // Features tab
         const featuresContent = document.createElement('div');
         featuresContent.className = 'waddle-tab-content active';
         featuresContent.setAttribute('data-content', 'features');
@@ -777,33 +745,11 @@ const SCRIPT_VERSION = '5.16';
         ]));
         menuContent.appendChild(featuresContent);
         state.tabContent.features = featuresContent;
+
+        // Settings tab
         const settingsContent = document.createElement('div');
         settingsContent.className = 'waddle-tab-content';
         settingsContent.setAttribute('data-content', 'settings');
-        const controlsCard = document.createElement('div');
-        controlsCard.className = 'waddle-card';
-        controlsCard.innerHTML = '<div class="waddle-card-header">⌨️ Controls</div>';
-        const keybindLabel = document.createElement('label');
-        keybindLabel.className = 'settings-label';
-        keybindLabel.textContent = 'Menu Keybind:';
-        controlsCard.appendChild(keybindLabel);
-        const keybindInput = document.createElement('input');
-        keybindInput.type = 'text';
-        keybindInput.className = 'keybind-input';
-        keybindInput.value = state.menuKey;
-        keybindInput.readOnly = true;
-        keybindInput.placeholder = 'Press a key...';
-        keybindInput.addEventListener('keydown', (e) => {
-            e.preventDefault();
-            if (e.key === 'Escape') { keybindInput.value = state.menuKey; keybindInput.blur(); return; }
-            state.menuKey = e.key;
-            keybindInput.value = e.key;
-            keybindInput.blur();
-            saveSettings();
-            showToast(`Menu key changed to ${e.key}`, 'success');
-        });
-        controlsCard.appendChild(keybindInput);
-        settingsContent.appendChild(controlsCard);
         const layoutCard = document.createElement('div');
         layoutCard.className = 'waddle-card';
         layoutCard.innerHTML = '<div class="waddle-card-header">📐 Layout</div>';
@@ -816,6 +762,8 @@ const SCRIPT_VERSION = '5.16';
         settingsContent.appendChild(layoutCard);
         menuContent.appendChild(settingsContent);
         state.tabContent.settings = settingsContent;
+
+        // About tab
         const aboutContent = document.createElement('div');
         aboutContent.className = 'waddle-tab-content';
         aboutContent.setAttribute('data-content', 'about');
@@ -878,6 +826,7 @@ const SCRIPT_VERSION = '5.16';
         aboutContent.appendChild(linksCard);
         menuContent.appendChild(aboutContent);
         state.tabContent.about = aboutContent;
+
         menuOverlay.appendChild(menuContent);
         document.body.appendChild(menuOverlay);
         menuOverlay.addEventListener('click', (e) => { if (e.target === menuOverlay) state.menuOverlay.classList.remove('show'); });
@@ -891,22 +840,12 @@ const SCRIPT_VERSION = '5.16';
 
     function setupKeyboardHandler() {
         state.keyboardHandler = (e) => {
-            if (e.key === state.menuKey) {
+            if (e.key === '\\') {
                 e.preventDefault();
                 toggleMenu();
             } else if (e.key === 'Escape' && state.menuOverlay?.classList.contains('show')) {
                 e.preventDefault();
                 state.menuOverlay.classList.remove('show');
-            } else if (e.key === 'F1') {
-                e.preventDefault();
-                state.otherKeysManualHide = !state.otherKeysManualHide;
-                state.f5PressCount = 0;
-                checkCrosshair();
-            } else if (e.key === 'F5') {
-                e.preventDefault();
-                state.f5PressCount = (state.f5PressCount + 1) % 3;
-                state.otherKeysManualHide = false;
-                checkCrosshair();
             }
         };
         window.addEventListener('keydown', state.keyboardHandler);
@@ -916,9 +855,6 @@ const SCRIPT_VERSION = '5.16';
         const saved = localStorage.getItem(SETTINGS_KEY);
         if (!saved) return;
         const settings = JSON.parse(saved);
-        if (typeof settings.menuKey === 'string' && settings.menuKey.length > 0) {
-            state.menuKey = settings.menuKey;
-        }
         if (typeof settings.features === 'object' && settings.features !== null) {
             Object.keys(state.features).forEach(key => {
                 if (typeof settings.features[key] === 'boolean') {
@@ -936,12 +872,8 @@ const SCRIPT_VERSION = '5.16';
                 featureManager[feature]?.stop?.();
             }
         });
-        if (state.keyboardHandler) {
-            window.removeEventListener('keydown', state.keyboardHandler);
-        }
-        Object.entries(state.intervals).forEach(([key, id]) => {
-            if (id) clearInterval(id);
-        });
+        if (state.keyboardHandler) window.removeEventListener('keydown', state.keyboardHandler);
+        Object.entries(state.intervals).forEach(([_, id]) => { if (id) clearInterval(id); });
         if (state.rafId) cancelAnimationFrame(state.rafId);
         console.log('[Waddle] Cleanup complete!');
     }
@@ -969,10 +901,9 @@ const SCRIPT_VERSION = '5.16';
         try {
             console.log(`[Waddle] Waiting for DOM...`);
             await ensureDOMReady();
-
             console.log(`[Waddle] Initializing v${SCRIPT_VERSION}...`);
-            injectStyles();
 
+            injectStyles();
             restoreSavedState();
 
             const menuCreated = createMenu();
@@ -982,7 +913,7 @@ const SCRIPT_VERSION = '5.16';
             const crosshairOk = initializeCrosshairModule();
             if (!crosshairOk) console.warn('[Waddle] Crosshair module failed to initialize');
 
-            showToast(`Press ${state.menuKey} to open menu! (F1/F5 for crosshair)`, 'info');
+            showToast(`Press \\ to open menu!`, 'info');
 
             setTimeout(() => {
                 Object.entries(state.features).forEach(([feature, enabled]) => {
