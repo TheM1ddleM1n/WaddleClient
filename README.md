@@ -4,7 +4,7 @@
 
 ### The Ultimate Miniblox Enhancement Suite
 
-![Version](https://img.shields.io/badge/version-5.22-39ff14?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-6.1-39ff14?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-39ff14?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/platform-Miniblox-39ff14?style=for-the-badge)
 
@@ -117,7 +117,7 @@ Never get kicked for inactivity:
 ### 🛠️ Advanced Utilities
 
 #### 🚫 Block Party Requests
-- Silently rejects incoming party invites
+- Silently blocks incoming party invites and join requests
 - Avoid unwanted notifications
 - Toggle on/off anytime
 - Never interrupt your gameplay flow
@@ -138,7 +138,7 @@ Simply **click and drag** any counter to move it.
 
 ## 🎨 Feature Toggles
 
-Enable exactly what you need via the **⚙️ Features** tab:
+Enable exactly what you need via the **📊 Display** and **🛠️ Utilities** tabs:
 
 **Display**
 - [ ] FPS & Ping (Unified)
@@ -215,8 +215,8 @@ Total Impact:         ~0.4% CPU ⚡
 <details>
 <summary><b>💡 Solution</b></summary>
 
-1. Open Waddle menu → **⚙️ Features**
-2. Verify the feature has a **✓ checkmark**
+1. Open Waddle menu → **📊 Display**
+2. Verify the feature has an active indicator
 3. If off-screen, refresh the page to reset positions to default
 4. Clear browser cache and refresh if still stuck
 
@@ -227,7 +227,7 @@ Total Impact:         ~0.4% CPU ⚡
 <summary><b>💡 Solution</b></summary>
 
 - You must be in an **active game** (not menu/lobby)
-- Feature must be **enabled** with a ✓ checkmark
+- Feature must be **enabled**
 - Updates occur every 500ms when in-game
 
 If still stuck: Refresh page → Try again
@@ -313,6 +313,29 @@ No. Waddle runs in the browser layer and doesn't touch the game engine.
 ---
 
 ## 📝 Changelog
+
+### [6.1] - Reliability & Correctness Pass
+- 🐛 Fixed `gameRef` stale reference — cached game object is now re-validated on every access and evicted after a game session ends
+- 🐛 Fixed `gameRef` fiber traversal crashing silently — wrapped in `try/catch` so React-internal changes no longer consume all retry attempts
+- 🐛 Fixed `keyDisplay` event listeners duplicating on re-enable — listeners are now tracked and fully removed on stop/cleanup
+- 🐛 Fixed `disablePartyRequests` silently no-oping when game not yet ready — now retries every 500ms until the game object is available
+- 🐛 Fixed `Block Party RQ` blocking `rejectPartyInvite` — blocked list narrowed to `inviteToParty` + `requestToJoinParty` only; player response actions unblocked
+- 🐛 Fixed `waitForGame` interval leaking on page unload — now stored in `state.intervals` and cleared by `globalCleanup`
+- ⚡ `refreshHud` now performs targeted add/remove per feature instead of full `innerHTML` wipe on every toggle
+- ⚡ `MutationObserver` on crosshair now guarded by a single pending RAF flag — prevents hundreds of queued frames during heavy DOM activity
+- ⚡ `saveSettings` is now debounced (100ms) — safe against rapid programmatic toggles
+- 🔧 `showToast` uses a module-level `state.toastContainer` ref — prevents duplicate containers if `#waddle-toasts` is ever detached
+- 🔧 `pressSpace` now dispatches to `document` instead of `window` for better game compatibility
+- 🎨 GitHub avatar URLs include `?s=56` for crisp HiDPI rendering
+- 🎨 Menu overlay stamped with `data-version` attribute for stale-instance detection
+
+### [6.0] - Advanced API Features
+- ✨ CPS detector with in-game chat warnings
+- ✨ In-game chat greeting on load
+- ✨ Toast notification system
+- ✨ HUD array showing active features
+- ✨ Session timer in About tab
+- ✨ Sidebar category navigation (Display / Utilities / About)
 
 ### [5.22] - Code Cleanup
 - 🧹 Removed `state.keyboardHandler` — handler is now fire-and-forget
