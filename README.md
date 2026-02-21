@@ -4,11 +4,11 @@
 
 ### The Ultimate Miniblox Enhancement Suite
 
-![Version](https://img.shields.io/badge/version-6.2-39ff14?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-6.3-39ff14?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-39ff14?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/platform-Miniblox-39ff14?style=for-the-badge)
 
-**Real-time monitoring • Crosshair customization • Game utilities • Zero Bottlenecks**
+**Real-time monitoring • Crosshair customization • Health HUD • Game utilities • Zero Bottlenecks**
 
 [Installation](#-quick-start) • [Features](#-core-features) • [Support](https://github.com/TheM1ddleM1n/Waddle/issues)
 
@@ -18,11 +18,13 @@
 
 ## ✨ Why Waddle?
 
-Transform your Miniblox experience with professional monitoring and utility features. Built by the Dream Team, optimized for performance, and professionally designed.
+Transform your Miniblox experience with professional monitoring, a custom health HUD, and utility features. Built by the Dream Team, optimized for performance, and professionally designed.
 
 | Feature | Benefit |
 |---------|----------|
 | 🎯 **Crosshair** | Lag-free aiming, always on in-game |
+| ❤️ **Health & Food HUD** | Replaces native bars with a clean custom widget |
+| ✨ **XP Bar** | Shows level & progress in survival only |
 | 📊 **Live Performance Metrics** | Monitor FPS & Ping together in real-time |
 | ⚡ **Minimal Overhead** | ~0.4% CPU usage — play without limits! |
 | 💾 **Auto-Saving Settings** | Your feature toggles are always remembered |
@@ -49,6 +51,42 @@ Choose your browser:
 ---
 
 ## 🎯 Core Features
+
+### ❤️ Always-On Health HUD
+
+Waddle replaces the native health, food, and XP bars with a clean custom widget that sits just above your hotbar — no toggle needed, it just works.
+
+<table>
+<tr>
+<td width="33%">
+
+#### ❤️ Health Bar
+- Live HP display via `game.info.health`
+- Color transitions: 🟢 green → 🟡 yellow → 🔴 red as HP drops
+- Shows in **survival & adventure** only
+- Hidden in creative and menus
+
+</td>
+<td width="33%">
+
+#### 🍗 Food Bar
+- Live hunger display via `game.info.food`
+- Dims to deep amber when critically low
+- Side by side with health bar
+- Hidden in creative and menus
+
+</td>
+<td width="33%">
+
+#### ✨ XP Bar
+- Shows current level and progress
+- **Survival only** — hidden in adventure and creative
+- Automatically hidden when XP is zero
+- Full-width bar below health & food
+
+</td>
+</tr>
+</table>
 
 ### 📊 Real-Time Display Counters
 
@@ -151,6 +189,8 @@ Enable exactly what you need via the **📊 Display** and **🛠️ Utilities** 
 - [ ] Anti-AFK
 - [ ] Block Party Requests
 
+> ❤️ **Health HUD** and **🎯 Crosshair** are always-on and do not require toggling — they appear automatically when you're in-game.
+
 ---
 
 ## 📈 Performance
@@ -161,13 +201,15 @@ Performance Counter:  0.15% CPU
 Coordinates:          0.05% CPU
 Key Display:          0.2% CPU
 Anti-AFK:             0.01% CPU
-────────────────────────────
+Health HUD:           ~0.01% CPU
+────────────────────────────────
 Total Impact:         ~0.4% CPU ⚡
 ```
 
 ### Why So Fast?
 - ✅ Single consolidated RAF loop
 - ✅ Direct DOM updates (only when values change)
+- ✅ Health widget skips DOM writes when HP/food/XP unchanged
 - ✅ Cached module panels — no rebuilds on tab switch
 - ✅ Scoped MutationObserver — watches `#react` only, not the whole page
 - ✅ Zero external dependencies
@@ -247,6 +289,25 @@ If still stuck: Refresh page → Try again
 
 </details>
 
+### Problem: Health HUD Not Showing
+<details>
+<summary><b>💡 Solution</b></summary>
+
+1. Health HUD only appears in **survival or adventure** mode — it is hidden in creative by design
+2. Verify you are in an **active game**, not the lobby or a menu
+3. **Refresh** the page if it still doesn't appear
+
+</details>
+
+### Problem: XP Bar Not Showing
+<details>
+<summary><b>💡 Solution</b></summary>
+
+- XP bar only appears in **survival** mode with **at least some XP**
+- It is hidden at zero XP and in all other game modes — this is by design
+
+</details>
+
 ### Problem: Settings Not Saving
 <details>
 <summary><b>💡 Solution</b></summary>
@@ -315,6 +376,13 @@ No — it's fixed to bottom-right. All other counters are fully draggable.
 </details>
 
 <details>
+<summary><b>Q: Why don't I see the health HUD in creative?</b></summary>
+
+Creative mode has no health or hunger mechanics, so the HUD is hidden automatically. It reappears the moment you switch to survival or adventure.
+
+</details>
+
+<details>
 <summary><b>Q: Does this affect Miniblox performance?</b></summary>
 
 No. Waddle runs in the browser layer and doesn't touch the game engine.
@@ -325,33 +393,43 @@ No. Waddle runs in the browser layer and doesn't touch the game engine.
 
 ## 📝 Changelog
 
+### [6.3] - Health HUD
+- ✨ Always-on health & food bars above the hotbar — replaces native bars entirely
+- ✨ XP bar shown in survival only, hidden when XP is zero
+- ✨ Health/food hidden in creative mode, shown in survival & adventure
+- ✨ Widget hidden in pause menus and lobby — same visibility logic as crosshair
+- 🎨 Health bar color transitions: green → yellow → red based on HP percentage
+- 🎨 Food bar dims to deep amber when critically low
+- 🎨 Frosted glass box surrounds the widget for clean separation from the game world
+- 🎨 XP bar full-width below health & food, only expands widget when visible
+
 ### [6.2] - Architecture & Correctness Pass
 - 🐛 Fixed `toggleFeature` calling both `cleanup()` and `stop()` on disable — each feature's `cleanup()` is now the single authoritative teardown path, eliminating double-cleanup
 - 🐛 Fixed session timer interval leaking on unload — now stored in `state.intervals.sessionTimer` and cleared by `globalCleanup`
 - 🐛 Fixed `safeInit` aborting all feature restores if one throws — each feature start is now individually wrapped in `try/catch`
 - 🐛 Fixed `showToast` reusing a stale detached container — now guards with `document.contains()` before reuse
-- ⚡ `MutationObserver` for crosshair now scoped to `#react` instead of `document.body` — eliminates observer firing on every Waddle DOM change (toasts, HUD items, etc.)
-- ⚡ Module panels are now cached per category (`_panelCache`) — buttons are built once and re-appended on tab switch with active state synced, no `innerHTML` rebuilds and no duplicate listeners
-- 🔧 `gameRef` getter-with-side-effects replaced with explicit `gameRef.resolve()` method — side-effecting property access was surprising and made retry logic hard to reason about
-- 🔧 Removed `MAX_GAME_ATTEMPTS` hard cap — the 500ms throttle alone prevents hammering; the cap caused `gameRef` to give up permanently if the game loaded after ~5 seconds
-- 🎨 Anti-AFK counter now pulses cyan on each jump dispatch — confirms the spacebar fired without needing to watch the countdown reset
-- 🎨 Clock counter now shows `cursor: default` — previously showed a grab cursor despite not being draggable
-- 🎨 CPS detector threshold raised to `>= 15 CPS` (removed the narrow `11–15` band that false-positived on fast legitimate players)
+- ⚡ `MutationObserver` for crosshair now scoped to `#react` instead of `document.body` — eliminates observer firing on every Waddle DOM change
+- ⚡ Module panels are now cached per category (`_panelCache`) — buttons are built once and re-appended on tab switch with active state synced
+- 🔧 `gameRef` getter-with-side-effects replaced with explicit `gameRef.resolve()` method
+- 🔧 Removed `MAX_GAME_ATTEMPTS` hard cap
+- 🎨 Anti-AFK counter now pulses cyan on each jump dispatch
+- 🎨 Clock counter now shows `cursor: default`
+- 🎨 CPS detector threshold raised to `>= 15 CPS`
 
 ### [6.1] - Reliability & Correctness Pass
-- 🐛 Fixed `gameRef` stale reference — cached game object is now re-validated on every access and evicted after a game session ends
-- 🐛 Fixed `gameRef` fiber traversal crashing silently — wrapped in `try/catch` so React-internal changes no longer consume all retry attempts
-- 🐛 Fixed `keyDisplay` event listeners duplicating on re-enable — listeners are now tracked and fully removed on stop/cleanup
-- 🐛 Fixed `disablePartyRequests` silently no-oping when game not yet ready — now retries every 500ms until the game object is available
-- 🐛 Fixed `Block Party RQ` blocking `rejectPartyInvite` — blocked list narrowed to `inviteToParty` + `requestToJoinParty` only; player response actions unblocked
-- 🐛 Fixed `waitForGame` interval leaking on page unload — now stored in `state.intervals` and cleared by `globalCleanup`
-- ⚡ `refreshHud` now performs targeted add/remove per feature instead of full `innerHTML` wipe on every toggle
-- ⚡ `MutationObserver` on crosshair now guarded by a single pending RAF flag — prevents hundreds of queued frames during heavy DOM activity
-- ⚡ `saveSettings` is now debounced (100ms) — safe against rapid programmatic toggles
-- 🔧 `showToast` uses a module-level `state.toastContainer` ref — prevents duplicate containers if `#waddle-toasts` is ever detached
-- 🔧 `pressSpace` now dispatches to `document` instead of `window` for better game compatibility
+- 🐛 Fixed `gameRef` stale reference
+- 🐛 Fixed `gameRef` fiber traversal crashing silently
+- 🐛 Fixed `keyDisplay` event listeners duplicating on re-enable
+- 🐛 Fixed `disablePartyRequests` silently no-oping when game not yet ready
+- 🐛 Fixed `Block Party RQ` blocking `rejectPartyInvite`
+- 🐛 Fixed `waitForGame` interval leaking on page unload
+- ⚡ `refreshHud` now performs targeted add/remove per feature
+- ⚡ `MutationObserver` on crosshair now guarded by a single pending RAF flag
+- ⚡ `saveSettings` is now debounced (100ms)
+- 🔧 `showToast` uses a module-level `state.toastContainer` ref
+- 🔧 `pressSpace` now dispatches to `document` instead of `window`
 - 🎨 GitHub avatar URLs include `?s=56` for crisp HiDPI rendering
-- 🎨 Menu overlay stamped with `data-version` attribute for stale-instance detection
+- 🎨 Menu overlay stamped with `data-version` attribute
 
 ### [6.0] - Advanced API Features
 - ✨ CPS detector with in-game chat warnings
@@ -360,45 +438,6 @@ No. Waddle runs in the browser layer and doesn't touch the game engine.
 - ✨ HUD array showing active features
 - ✨ Session timer in About tab
 - ✨ Sidebar category navigation (Display / Utilities / About)
-
-### [5.22] - Code Cleanup
-- 🧹 Removed `state.keyboardHandler` — handler is now fire-and-forget
-- 🧹 Removed redundant inner `'use strict'` from CPS IIFE
-- 🧹 Removed `state.intervals.sessionTimer` — session timer is fire-and-forget
-- 🧹 Removed per-feature `try/catch` in `safeInit` — single outer handler is sufficient
-- 🧹 Stripped all `console.log/warn/error` calls from shipped code
-
-### [5.21] - Dead Code Pass
-- 🧹 Removed `state.activeTab` — never read after being set
-- 🧹 Removed `saveSettings()` from drag `onMouseUp` — positions no longer persisted
-- 🧹 Removed empty `featureManager.keyDisplay.stop`
-- 🔀 Merged `createCounterElement` + `createCounter` into one function
-
-### [5.20] - Consolidation
-- 🧹 Removed `positions` from `saveSettings` — never restored
-- 🧹 Removed dead fields from `COUNTER_CONFIGS.realTime`
-- 🧹 Removed `TIMING` object — all values inlined or promoted to top-level consts
-- 🔀 Simplified tab system using `querySelectorAll` + `dataset`
-- 🔀 Promoted `MAX_GAME_ATTEMPTS` to top-level const
-
-### [5.19] - Settings Tab Removed
-- 🧹 Removed Settings tab, layout card, and `resetCounterPositions()`
-- Menu now has Features and About only
-
-### [5.18] - Bug Fixes & Dead Code
-- 🐛 Fixed space bar never lighting up in Key Display
-- 🧹 Removed `.fixed-base` and `.keybind-input` CSS
-- 🧹 Inlined `updateCrosshair()` into init
-- 🧹 Removed `TIMING.SESSION_UPDATE`
-- 🐛 Fixed RAF loop bug — disabling one of Performance/Coords no longer kills both
-
-### [5.17] - Simplified Controls
-- 🔒 Menu key permanently set to `\`
-- 🧹 Removed F1/F5 crosshair keybinds and customizable keybind system
-
-### [5.16] - Unified Performance Counter
-- ✨ Combined FPS & Ping into one unified counter
-- 🎨 Smart color-coding based on both metrics
 
 ---
 
