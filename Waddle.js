@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waddle
 // @namespace    https://github.com/TheM1ddleM1n/Waddle
-// @version      6.2
+// @version      6.3
 // @description  The ultimate Miniblox enhancement suite with advanced API features!
 // @author       The Dream Team! (Scripter & TheM1ddleM1n)
 // @icon         https://raw.githubusercontent.com/TheM1ddleM1n/Waddle/refs/heads/main/Penguin.png
@@ -9,7 +9,7 @@
 // @run-at       document-start
 // ==/UserScript==
 
-const SCRIPT_VERSION = '6.2';
+const SCRIPT_VERSION = '6.3';
 
 (function () {
   'use strict';
@@ -21,41 +21,38 @@ const SCRIPT_VERSION = '6.2';
 
   const DEFAULT_POSITIONS = {
     performance: { left: '50px', top: '80px' },
-    keyDisplay:  { left: '50px', top: '150px' },
-    coords:      { left: '50px', top: '220px' },
-    antiAfk:     { left: '50px', top: '290px' }
+    keyDisplay: { left: '50px', top: '150px' },
+    coords: { left: '50px', top: '220px' },
+    antiAfk: { left: '50px', top: '290px' }
   };
 
   const COUNTER_CONFIGS = {
-    performance: { id: 'performance-counter', text: 'FPS: -- | PING: 0ms',    pos: DEFAULT_POSITIONS.performance, draggable: true },
-    coords:      { id: 'coords-counter',      text: '📍 X: 0 Y: 0 Z: 0',      pos: DEFAULT_POSITIONS.coords,      draggable: true },
-    realTime:    { id: 'real-time-counter',   text: '00:00:00 AM' },
-    antiAfk:     { id: 'anti-afk-counter',    text: '🐧 Jumping in 5s',        pos: DEFAULT_POSITIONS.antiAfk,     draggable: true }
+    performance: { id: 'performance-counter', text: 'FPS: -- | PING: 0ms', pos: DEFAULT_POSITIONS.performance, draggable: true },
+    coords: { id: 'coords-counter', text: '📍 X: 0 Y: 0 Z: 0', pos: DEFAULT_POSITIONS.coords, draggable: true },
+    realTime: { id: 'real-time-counter', text: '00:00:00 AM' },
+    antiAfk: { id: 'anti-afk-counter', text: '🐧 Jumping in 5s', pos: DEFAULT_POSITIONS.antiAfk, draggable: true }
   };
 
   const CATEGORIES = [
-    { id: 'display',    label: 'Display',   icon: '📊' },
-    { id: 'utilities',  label: 'Utilities', icon: '🛠️' },
-    { id: 'about',      label: 'About',     icon: 'ℹ️' }
+    { id: 'display', label: 'Display', icon: '📊' },
+    { id: 'utilities', label: 'Utilities', icon: '🛠️' },
+    { id: 'about', label: 'About', icon: 'ℹ️' }
   ];
 
   const FEATURE_MAP = {
     display: [
-      { label: 'FPS & Ping',    feature: 'performance' },
-      { label: 'Coords',        feature: 'coords' },
-      { label: 'Clock',         feature: 'realTime' },
-      { label: 'Key Display',   feature: 'keyDisplay' }
+      { label: 'FPS & Ping', feature: 'performance' },
+      { label: 'Coords', feature: 'coords' },
+      { label: 'Clock', feature: 'realTime' },
+      { label: 'Key Display', feature: 'keyDisplay' }
     ],
     utilities: [
-      { label: 'Anti-AFK',       feature: 'antiAfk' },
+      { label: 'Anti-AFK', feature: 'antiAfk' },
       { label: 'Block Party RQ', feature: 'disablePartyRequests' }
     ]
   };
 
   // ─── gameRef ─────────────────────────────────────────────────────────────────
-  // Explicit resolve() method instead of a getter with hidden side-effects.
-  // Removed MAX_GAME_ATTEMPTS cap: the 500ms throttle alone prevents hammering;
-  // the cap caused gameRef to give up permanently if the game loaded late.
   const gameRef = {
     _game: null,
     _attempts: 0,
@@ -63,7 +60,6 @@ const SCRIPT_VERSION = '6.2';
     resolve() {
       if (this._game) {
         if (this._game.player && this._game.resourceMonitor) return this._game;
-        // Session ended — evict and allow fresh discovery
         this._game = null;
         this._attempts = 0;
       }
@@ -93,20 +89,24 @@ const SCRIPT_VERSION = '6.2';
       performance: false, coords: false, realTime: false,
       antiAfk: false, keyDisplay: false, disablePartyRequests: false
     },
-    counters:             { performance: null, realTime: null, coords: null, antiAfk: null, keyDisplay: null },
-    menuOverlay:          null,
-    activeCategory:       'display',
-    rafId:                null,
+    counters: { performance: null, realTime: null, coords: null, antiAfk: null, keyDisplay: null },
+    menuOverlay: null,
+    activeCategory: 'display',
+    rafId: null,
     lastPerformanceUpdate: 0,
-    lastCoordsUpdate:     0,
-    intervals:            {},
-    startTime:            Date.now(),
-    antiAfkCountdown:     5,
+    lastCoordsUpdate: 0,
+    intervals: {},
+    startTime: Date.now(),
+    antiAfkCountdown: 5,
     lastPerformanceColor: '#00FF00',
-    keys:                 { w: false, a: false, s: false, d: false, space: false, lmb: false, rmb: false },
-    crosshairContainer:   null,
-    hudArray:             null,
-    toastContainer:       null
+    lastHealth: -1,
+    lastFood: -1,
+    lastXp: -1,
+    keys: { w: false, a: false, s: false, d: false, space: false, lmb: false, rmb: false },
+    crosshairContainer: null,
+    healthWidget: null,
+    hudArray: null,
+    toastContainer: null
   };
 
   // ─── Greeting ────────────────────────────────────────────────────────────────
@@ -124,8 +124,6 @@ const SCRIPT_VERSION = '6.2';
   })();
 
   // ─── CPS Detector ────────────────────────────────────────────────────────────
-  // Threshold raised to >= 15 CPS (removes the narrow 11-15 range that false-
-  // positived on fast legitimate players).
   (function () {
     let clicks = 0;
     const CPS_THRESHOLD = 15, CHECK_INTERVAL = 1000, COOLDOWN = 2000;
@@ -157,77 +155,37 @@ const SCRIPT_VERSION = '6.2';
     if (!document.head) return false;
     const style = document.createElement('style');
     style.textContent = `
-* { box-sizing: border-box; }
+* { box-sizing:border-box; }
 :root {
-  --c: #00FFFF; --c-dim: rgba(0,255,255,.15); --c-border: rgba(0,255,255,.25);
-  --bg: rgba(12,12,18,.96); --bg2: rgba(20,20,30,.98); --bg3: rgba(30,30,45,1);
-  --text: #e0e0e0; --text-dim: #666; --radius: 6px; --fw: 600;
-  --glow: 0 0 12px rgba(0,255,255,.5); --shadow: 0 8px 32px rgba(0,0,0,.8);
+  --c:#00FFFF; --c-dim:rgba(0,255,255,.15); --c-border:rgba(0,255,255,.25);
+  --bg:rgba(12,12,18,.96); --bg2:rgba(20,20,30,.98); --bg3:rgba(30,30,45,1);
+  --text:#e0e0e0; --text-dim:#666; --radius:6px; --fw:600;
+  --glow:0 0 12px rgba(0,255,255,.5); --shadow:0 8px 32px rgba(0,0,0,.8);
 }
-.css-xhoozx, [class*="crosshair"], img[src*="crosshair"] { display:none !important; }
-#waddle-overlay {
-  position:fixed; inset:0; background:rgba(0,0,0,.65); backdrop-filter:blur(8px);
-  z-index:9999; display:flex; align-items:center; justify-content:center;
-  opacity:0; pointer-events:none; transition:opacity .15s ease;
-}
+.css-xhoozx,[class*="crosshair"],img[src*="crosshair"] { display:none !important; }
+.css-qttk5u { display:none !important; }
+#waddle-overlay { position:fixed; inset:0; background:rgba(0,0,0,.65); backdrop-filter:blur(8px); z-index:9999; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .15s ease; }
 #waddle-overlay.show { opacity:1; pointer-events:auto; }
-#waddle-window {
-  display:flex; width:782px; height:483px; background:var(--bg);
-  border:1px solid var(--c-border); border-radius:10px;
-  box-shadow:var(--shadow), 0 0 40px rgba(0,255,255,.08); overflow:hidden; user-select:none;
-}
-#waddle-sidebar {
-  width:160px; min-width:160px; background:var(--bg2);
-  border-right:1px solid var(--c-border); display:flex; flex-direction:column; padding:0;
-}
-#waddle-logo {
-  padding:21px 16px 16px; font-size:1.25rem; font-weight:900; color:var(--c);
-  text-shadow:var(--glow); border-bottom:1px solid var(--c-border); letter-spacing:1px;
-}
+#waddle-window { display:flex; width:782px; height:483px; background:var(--bg); border:1px solid var(--c-border); border-radius:10px; box-shadow:var(--shadow),0 0 40px rgba(0,255,255,.08); overflow:hidden; user-select:none; }
+#waddle-sidebar { width:160px; min-width:160px; background:var(--bg2); border-right:1px solid var(--c-border); display:flex; flex-direction:column; padding:0; }
+#waddle-logo { padding:21px 16px 16px; font-size:1.25rem; font-weight:900; color:var(--c); text-shadow:var(--glow); border-bottom:1px solid var(--c-border); letter-spacing:1px; }
 #waddle-logo span { font-size:.68rem; color:var(--text-dim); display:block; font-weight:400; margin-top:2px; }
-.waddle-cat {
-  padding:13px 16px; display:flex; align-items:center; gap:9px;
-  font-size:.94rem; font-weight:var(--fw); color:var(--text-dim); cursor:pointer;
-  border-left:3px solid transparent; transition:all .1s ease;
-}
+.waddle-cat { padding:13px 16px; display:flex; align-items:center; gap:9px; font-size:.94rem; font-weight:var(--fw); color:var(--text-dim); cursor:pointer; border-left:3px solid transparent; transition:all .1s ease; }
 .waddle-cat:hover { color:var(--text); background:rgba(255,255,255,.04); }
 .waddle-cat.active { color:var(--c); border-left-color:var(--c); background:var(--c-dim); }
 .waddle-cat-icon { font-size:1.15rem; }
-#waddle-sidebar-footer {
-  margin-top:auto; padding:14px 16px; font-size:.75rem; color:var(--text-dim);
-  border-top:1px solid var(--c-border);
-}
+#waddle-sidebar-footer { margin-top:auto; padding:14px 16px; font-size:.75rem; color:var(--text-dim); border-top:1px solid var(--c-border); }
 #waddle-panel { flex:1; display:flex; flex-direction:column; overflow:hidden; }
-#waddle-panel-title {
-  padding:16px 20px 12px; font-size:.8rem; font-weight:var(--fw); color:var(--text-dim);
-  letter-spacing:1.5px; text-transform:uppercase; border-bottom:1px solid rgba(255,255,255,.05);
-}
-#waddle-module-grid {
-  flex:1; display:grid; grid-template-columns:1fr 1fr;
-  gap:9px; padding:16px; align-content:start; overflow-y:auto;
-}
+#waddle-panel-title { padding:16px 20px 12px; font-size:.8rem; font-weight:var(--fw); color:var(--text-dim); letter-spacing:1.5px; text-transform:uppercase; border-bottom:1px solid rgba(255,255,255,.05); }
+#waddle-module-grid { flex:1; display:grid; grid-template-columns:1fr 1fr; gap:9px; padding:16px; align-content:start; overflow-y:auto; }
 #waddle-module-grid::-webkit-scrollbar { width:4px; }
 #waddle-module-grid::-webkit-scrollbar-thumb { background:var(--c-border); border-radius:2px; }
-.waddle-module {
-  background:var(--bg3); border:1px solid rgba(255,255,255,.07); border-radius:var(--radius);
-  padding:12px 14px; cursor:pointer; transition:all .12s ease;
-  display:flex; align-items:center; justify-content:space-between;
-  color:var(--text-dim); font-size:.92rem; font-weight:var(--fw);
-}
+.waddle-module { background:var(--bg3); border:1px solid rgba(255,255,255,.07); border-radius:var(--radius); padding:12px 14px; cursor:pointer; transition:all .12s ease; display:flex; align-items:center; justify-content:space-between; color:var(--text-dim); font-size:.92rem; font-weight:var(--fw); }
 .waddle-module:hover { border-color:var(--c-border); color:var(--text); }
-.waddle-module.active {
-  border-color:var(--c); background:var(--c-dim); color:var(--c);
-  box-shadow:inset 0 0 8px rgba(0,255,255,.08);
-}
-.waddle-module-dot {
-  width:8px; height:8px; border-radius:50%; background:var(--text-dim);
-  flex-shrink:0; transition:background .12s ease;
-}
+.waddle-module.active { border-color:var(--c); background:var(--c-dim); color:var(--c); box-shadow:inset 0 0 8px rgba(0,255,255,.08); }
+.waddle-module-dot { width:8px; height:8px; border-radius:50%; background:var(--text-dim); flex-shrink:0; transition:background .12s ease; }
 .waddle-module.active .waddle-module-dot { background:var(--c); box-shadow:0 0 6px var(--c); }
-#waddle-about {
-  flex:1; padding:18px; display:flex; flex-direction:column; gap:14px;
-  overflow-y:auto; color:var(--text);
-}
+#waddle-about { flex:1; padding:18px; display:flex; flex-direction:column; gap:14px; overflow-y:auto; color:var(--text); }
 .about-block { background:var(--bg3); border:1px solid rgba(255,255,255,.07); border-radius:var(--radius); padding:14px; }
 .about-block h3 { color:var(--c); font-size:.75rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; margin:0 0 10px; }
 .about-credit { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
@@ -237,74 +195,62 @@ const SCRIPT_VERSION = '6.2';
 .about-credit .role { font-size:.65rem; color:var(--c); font-weight:700; }
 .about-timer { font-size:2rem; font-weight:900; color:var(--c); font-family:'Courier New',monospace; text-shadow:var(--glow); text-align:center; padding:4px 0; }
 .about-links { display:flex; gap:8px; flex-wrap:wrap; }
-.about-link-btn {
-  background:var(--bg); border:1px solid var(--c-border); color:var(--c);
-  border-radius:var(--radius); padding:6px 14px; font-size:.75rem; font-weight:var(--fw);
-  cursor:pointer; transition:all .1s ease;
-}
+.about-link-btn { background:var(--bg); border:1px solid var(--c-border); color:var(--c); border-radius:var(--radius); padding:6px 14px; font-size:.75rem; font-weight:var(--fw); cursor:pointer; transition:all .1s ease; }
 .about-link-btn:hover { background:var(--c-dim); }
-#waddle-hud {
-  position:fixed; top:60px; right:16px; z-index:9998;
-  display:flex; flex-direction:column; align-items:flex-end; gap:3px; pointer-events:none;
-}
-.hud-item {
-  background:var(--bg); border-left:2px solid var(--c); padding:3px 10px;
-  font-size:.72rem; font-weight:var(--fw); color:var(--c); letter-spacing:.5px;
-  animation:hud-in .15s ease;
-}
+#waddle-hud { position:fixed; top:60px; right:16px; z-index:9998; display:flex; flex-direction:column; align-items:flex-end; gap:3px; pointer-events:none; }
+.hud-item { background:var(--bg); border-left:2px solid var(--c); padding:3px 10px; font-size:.72rem; font-weight:var(--fw); color:var(--c); letter-spacing:.5px; animation:hud-in .15s ease; }
 @keyframes hud-in { from { opacity:0; transform:translateX(8px); } to { opacity:1; transform:none; } }
-#waddle-toasts {
-  position:fixed; bottom:70px; right:18px; z-index:10000;
-  display:flex; flex-direction:column-reverse; gap:6px; pointer-events:none;
-}
-.waddle-toast {
-  display:flex; align-items:center; gap:10px; background:var(--bg2);
-  border:1px solid rgba(255,255,255,.1); border-radius:var(--radius);
-  padding:9px 14px; min-width:200px; box-shadow:var(--shadow);
-  animation:toast-in .2s ease; transition:opacity .25s ease, transform .25s ease;
-}
+#waddle-toasts { position:fixed; bottom:70px; right:18px; z-index:10000; display:flex; flex-direction:column-reverse; gap:6px; pointer-events:none; }
+.waddle-toast { display:flex; align-items:center; gap:10px; background:var(--bg2); border:1px solid rgba(255,255,255,.1); border-radius:var(--radius); padding:9px 14px; min-width:200px; box-shadow:var(--shadow); animation:toast-in .2s ease; transition:opacity .25s ease,transform .25s ease; }
 .waddle-toast.hide { opacity:0; transform:translateX(10px); }
 @keyframes toast-in { from { opacity:0; transform:translateX(12px); } to { opacity:1; transform:none; } }
-.toast-icon {
-  width:22px; height:22px; border-radius:4px; display:flex; align-items:center;
-  justify-content:center; font-size:.75rem; font-weight:900; flex-shrink:0;
-}
+.toast-icon { width:22px; height:22px; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:.75rem; font-weight:900; flex-shrink:0; }
 .toast-icon.enabled { background:#22c55e; color:#000; }
 .toast-icon.disabled { background:#ef4444; color:#fff; }
 .toast-icon.info { background:#3b82f6; color:#fff; }
 .toast-body { flex:1; }
 .toast-title { font-size:.78rem; font-weight:700; color:var(--text); }
 .toast-msg { font-size:.68rem; color:var(--text-dim); margin-top:1px; }
-.counter, .key-display-container { position:fixed; z-index:9998; user-select:none; }
-.counter {
-  background:var(--bg); border:1px solid var(--c-border); color:var(--c);
-  font-weight:var(--fw); font-size:.78rem; padding:5px 11px;
-  border-radius:var(--radius); box-shadow:var(--shadow); cursor:grab; width:max-content;
-}
+.counter,.key-display-container { position:fixed; z-index:9998; user-select:none; }
+.counter { background:var(--bg); border:1px solid var(--c-border); color:var(--c); font-weight:var(--fw); font-size:.78rem; padding:5px 11px; border-radius:var(--radius); box-shadow:var(--shadow); cursor:grab; width:max-content; }
 .counter.dragging { cursor:grabbing; transform:scale(1.05); }
-/* Clock is fixed — make it clear it isn't draggable */
 #real-time-counter { cursor:default !important; }
-/* Anti-AFK pulse: confirms the jump fired visually */
 @keyframes afk-pulse {
-  0%   { box-shadow: var(--shadow), 0 0 0 0   rgba(0,255,255,.7); }
-  70%  { box-shadow: var(--shadow), 0 0 0 10px rgba(0,255,255,0);  }
-  100% { box-shadow: var(--shadow), 0 0 0 0   rgba(0,255,255,0);  }
+  0% { box-shadow:var(--shadow),0 0 0 0 rgba(0,255,255,.7); }
+  70% { box-shadow:var(--shadow),0 0 0 10px rgba(0,255,255,0); }
+  100% { box-shadow:var(--shadow),0 0 0 0 rgba(0,255,255,0); }
 }
-.counter.afk-pulse { animation: afk-pulse .45s ease; }
+.counter.afk-pulse { animation:afk-pulse .45s ease; }
 .key-display-container { cursor:grab; }
 .key-display-grid { display:grid; gap:5px; }
-.key-box {
-  background:var(--bg2); border:2px solid rgba(255,255,255,.12); border-radius:var(--radius);
-  display:flex; align-items:center; justify-content:center;
-  font-weight:900; font-size:.72rem; color:var(--text-dim); width:44px; height:44px;
-}
+.key-box { background:var(--bg2); border:2px solid rgba(255,255,255,.12); border-radius:var(--radius); display:flex; align-items:center; justify-content:center; font-weight:900; font-size:.72rem; color:var(--text-dim); width:44px; height:44px; }
 .key-box.active { background:var(--c-dim); border-color:var(--c); color:var(--c); box-shadow:var(--glow); }
 .key-box.mouse-box { width:62px; }
 .key-box.space-box { grid-column:1 / -1; width:100%; height:36px; }
-#waddle-crosshair-container {
-  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
-  z-index:5000; pointer-events:none;
-}
+#waddle-crosshair-container { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:5000; pointer-events:none; }
+#waddle-health-widget { position:fixed; bottom:84px; left:50%; transform:translateX(-50%); z-index:5000; pointer-events:none; display:none; flex-direction:column; align-items:stretch; gap:6px; width:420px; background:rgba(0,0,0,.45); border:1px solid rgba(255,255,255,.12); border-radius:8px; padding:8px 12px; }
+#waddle-health-widget.visible { display:flex; }
+#waddle-bars-row { display:flex; flex-direction:row; align-items:flex-end; gap:12px; width:100%; }
+.wb-row { flex:1; display:flex; flex-direction:column; gap:3px; }
+.wb-header { display:flex; justify-content:space-between; align-items:center; padding:0 2px; }
+.wb-label { font-size:.72rem; font-weight:700; letter-spacing:.4px; display:flex; align-items:center; gap:4px; }
+.wb-value { font-size:.72rem; font-weight:700; opacity:.9; font-family:'Courier New',monospace; }
+.wb-track { width:100%; height:8px; background:rgba(0,0,0,.55); border-radius:99px; overflow:hidden; border:1px solid rgba(255,255,255,.1); }
+.wb-fill { height:100%; border-radius:99px; transition:width .2s ease,background-color .3s ease; will-change:width; }
+#wb-health-fill { background:#22c55e; }
+#wb-health-fill.medium { background:#eab308; }
+#wb-health-fill.low { background:#ef4444; }
+#wb-health-label { color:#22c55e; }
+#wb-health-label.medium { color:#eab308; }
+#wb-health-label.low { color:#ef4444; }
+#wb-food-fill { background:#f59e0b; }
+#wb-food-fill.low { background:#92400e; }
+#wb-food-label { color:#f59e0b; }
+#wb-food-label.low { color:#92400e; }
+#wb-xp-row { display:none; width:100%; }
+#wb-xp-row.visible { display:flex; }
+#wb-xp-fill { background:#22c55e; }
+#wb-xp-label { color:#22c55e; }
     `;
     document.head.appendChild(style);
     return true;
@@ -313,7 +259,6 @@ const SCRIPT_VERSION = '6.2';
   // ─── Toast ───────────────────────────────────────────────────────────────────
   function showToast(title, type = 'info', message = '') {
     if (!document.body) return;
-    // Re-create container if it was detached from the DOM
     if (!state.toastContainer || !document.contains(state.toastContainer)) {
       state.toastContainer = document.getElementById('waddle-toasts') || (() => {
         const c = document.createElement('div');
@@ -388,10 +333,10 @@ const SCRIPT_VERSION = '6.2';
   function createCrosshair() {
     const c = document.createElement('div');
     c.append(
-      makeLine({ top: '0',    left: '50%', width: '2px', height: '8px', transform: 'translateX(-50%)' }),
+      makeLine({ top: '0', left: '50%', width: '2px', height: '8px', transform: 'translateX(-50%)' }),
       makeLine({ bottom: '0', left: '50%', width: '2px', height: '8px', transform: 'translateX(-50%)' }),
-      makeLine({ left: '0',  top: '50%',  width: '8px', height: '2px', transform: 'translateY(-50%)' }),
-      makeLine({ right: '0', top: '50%',  width: '8px', height: '2px', transform: 'translateY(-50%)' })
+      makeLine({ left: '0', top: '50%', width: '8px', height: '2px', transform: 'translateY(-50%)' }),
+      makeLine({ right: '0', top: '50%', width: '8px', height: '2px', transform: 'translateY(-50%)' })
     );
     return c;
   }
@@ -400,11 +345,13 @@ const SCRIPT_VERSION = '6.2';
     if (!state.crosshairContainer) return;
     const defaultCrosshair = document.querySelector('.css-xhoozx');
     const pauseMenu = document.querySelector('.chakra-modal__content-container,[role="dialog"]');
-    if (defaultCrosshair && !pauseMenu) {
-      defaultCrosshair.style.display = 'none';
-      state.crosshairContainer.style.display = 'block';
-    } else {
-      state.crosshairContainer.style.display = 'none';
+    const inGame = !!(defaultCrosshair && !pauseMenu);
+    if (defaultCrosshair) defaultCrosshair.style.display = 'none';
+    state.crosshairContainer.style.display = inGame ? 'block' : 'none';
+    if (state.healthWidget) {
+      const gamemode = gameRef.resolve()?.info?.gamemode?.id;
+      const showBars = inGame && gamemode !== 'creative';
+      state.healthWidget.classList.toggle('visible', showBars);
     }
   }
 
@@ -414,7 +361,6 @@ const SCRIPT_VERSION = '6.2';
     state.crosshairContainer.id = 'waddle-crosshair-container';
     state.crosshairContainer.appendChild(createCrosshair());
     document.body.appendChild(state.crosshairContainer);
-    // Scope observer to #react — avoids firing on every Waddle DOM change
     const target = document.getElementById('react') || document.body;
     new MutationObserver(() => {
       if (!_crosshairRafPending) {
@@ -423,6 +369,112 @@ const SCRIPT_VERSION = '6.2';
       }
     }).observe(target, { childList: true, subtree: true });
     return true;
+  }
+
+  // ─── Health / Food / XP Widget ───────────────────────────────────────────────
+  function initHealthWidget() {
+    if (!document.body || state.healthWidget) return;
+    const widget = document.createElement('div');
+    widget.id = 'waddle-health-widget';
+
+    // health + food side by side
+    const barsRow = document.createElement('div');
+    barsRow.id = 'waddle-bars-row';
+
+    const healthRow = document.createElement('div');
+    healthRow.className = 'wb-row';
+    healthRow.innerHTML = `
+      <div class="wb-header">
+        <span class="wb-label" id="wb-health-label">❤️ Health</span>
+        <span class="wb-value" id="wb-health-value">20 / 20</span>
+      </div>
+      <div class="wb-track"><div class="wb-fill" id="wb-health-fill" style="width:100%"></div></div>
+    `;
+
+    const foodRow = document.createElement('div');
+    foodRow.className = 'wb-row';
+    foodRow.innerHTML = `
+      <div class="wb-header">
+        <span class="wb-label" id="wb-food-label">🍗 Food</span>
+        <span class="wb-value" id="wb-food-value">20 / 20</span>
+      </div>
+      <div class="wb-track"><div class="wb-fill" id="wb-food-fill" style="width:100%"></div></div>
+    `;
+
+    barsRow.append(healthRow, foodRow);
+
+    // XP full width below
+    const xpRow = document.createElement('div');
+    xpRow.className = 'wb-row';
+    xpRow.id = 'wb-xp-row';
+    xpRow.innerHTML = `
+      <div class="wb-header">
+        <span class="wb-label" id="wb-xp-label">✨ Level</span>
+        <span class="wb-value" id="wb-xp-value">0</span>
+      </div>
+      <div class="wb-track"><div class="wb-fill" id="wb-xp-fill" style="width:0%"></div></div>
+    `;
+
+    widget.append(barsRow, xpRow);
+    document.body.appendChild(widget);
+    state.healthWidget = widget;
+  }
+
+  function tickHealthWidget() {
+    if (!state.healthWidget) return;
+    const game = gameRef.resolve();
+    if (!game?.info) return;
+
+    const hp = game.info.health ?? 20;
+    const maxHp = game.info.maxHealth ?? 20;
+    const food = game.info.food ?? 20;
+    const xpObj = game.info.xp;
+    const xpProgress = xpObj?.experience ?? 0;
+    const xpLevel = xpObj?.experienceLevel ?? 0;
+
+    if (hp !== state.lastHealth) {
+      state.lastHealth = hp;
+      const pct = Math.max(0, Math.min(100, (hp / maxHp) * 100));
+      const tier = pct <= 25 ? 'low' : pct <= 50 ? 'medium' : '';
+      const fill = document.getElementById('wb-health-fill');
+      const label = document.getElementById('wb-health-label');
+      const val = document.getElementById('wb-health-value');
+      if (fill) { fill.style.width = `${pct}%`; fill.className = `wb-fill${tier ? ' ' + tier : ''}`; fill.id = 'wb-health-fill'; }
+      if (label) { label.className = `wb-label${tier ? ' ' + tier : ''}`; label.id = 'wb-health-label'; }
+      if (val) val.textContent = `${Math.ceil(hp)} / ${maxHp}`;
+    }
+
+    if (food !== state.lastFood) {
+      state.lastFood = food;
+      const pct = Math.max(0, Math.min(100, (food / 20) * 100));
+      const low = pct <= 25;
+      const fill = document.getElementById('wb-food-fill');
+      const label = document.getElementById('wb-food-label');
+      const val = document.getElementById('wb-food-value');
+      if (fill) { fill.style.width = `${pct}%`; fill.className = `wb-fill${low ? ' low' : ''}`; fill.id = 'wb-food-fill'; }
+      if (label) { label.className = `wb-label${low ? ' low' : ''}`; label.id = 'wb-food-label'; }
+      if (val) val.textContent = `${Math.ceil(food)} / 20`;
+    }
+
+    const xpKey = xpProgress + xpLevel;
+const isSurvival = gameRef.resolve()?.info?.gamemode?.id === 'survival';
+if (xpKey !== state.lastXp || !isSurvival) {
+  state.lastXp = xpKey;
+  const hasXp = isSurvival && (xpLevel > 0 || xpProgress > 0);
+  const row = document.getElementById('wb-xp-row');
+  if (row) row.classList.toggle('visible', hasXp);
+  if (hasXp) {
+    const fill = document.getElementById('wb-xp-fill');
+    const val = document.getElementById('wb-xp-value');
+    if (fill) fill.style.width = `${Math.round(xpProgress * 100)}%`;
+    if (val) val.textContent = `Lv ${xpLevel}`;
+  }
+}
+  }
+
+  function startHealthInterval() {
+    if (state.intervals.health) return;
+    state.intervals.health = setInterval(tickHealthWidget, 150);
   }
 
   // ─── Counters ────────────────────────────────────────────────────────────────
@@ -442,7 +494,7 @@ const SCRIPT_VERSION = '6.2';
       Object.assign(counter.style, { right: '30px', bottom: '30px', background: 'transparent', boxShadow: 'none', border: 'none', fontSize: '1.1rem', padding: '0' });
     } else {
       counter.style.left = config.pos.left;
-      counter.style.top  = config.pos.top;
+      counter.style.top = config.pos.top;
       if (config.draggable) setupDragging(counter);
     }
     document.body.appendChild(counter);
@@ -476,15 +528,15 @@ const SCRIPT_VERSION = '6.2';
       if (!rafId) {
         rafId = requestAnimationFrame(() => {
           const r = el.getBoundingClientRect();
-          el.style.left = `${Math.max(10, Math.min(window.innerWidth  - r.width  - 10, el._pendingX - el._offsetX))}px`;
-          el.style.top  = `${Math.max(10, Math.min(window.innerHeight - r.height - 10, el._pendingY - el._offsetY))}px`;
+          el.style.left = `${Math.max(10, Math.min(window.innerWidth - r.width - 10, el._pendingX - el._offsetX))}px`;
+          el.style.top = `${Math.max(10, Math.min(window.innerHeight - r.height - 10, el._pendingY - el._offsetY))}px`;
           rafId = null;
         });
       }
     }, { passive: true });
   }
 
-  // ─── RAF Loop (shared by performance + coords) ───────────────────────────────
+  // ─── RAF Loop ────────────────────────────────────────────────────────────────
   function startPerformanceLoop() {
     if (state.rafId) return;
     const loop = (t) => {
@@ -510,7 +562,7 @@ const SCRIPT_VERSION = '6.2';
   function updatePerformanceCounter() {
     const game = gameRef.resolve();
     if (!game || !state.counters.performance) return;
-    const fps  = Math.round(game.resourceMonitor?.filteredFPS  || 0);
+    const fps = Math.round(game.resourceMonitor?.filteredFPS || 0);
     const ping = Math.round(game.resourceMonitor?.filteredPing || 0);
     let color = '#00FF00';
     if (fps < 30 || ping > 200) color = '#FF0000';
@@ -553,7 +605,7 @@ const SCRIPT_VERSION = '6.2';
     container.id = 'key-display-container';
     container.className = 'key-display-container';
     container.style.left = DEFAULT_POSITIONS.keyDisplay.left;
-    container.style.top  = DEFAULT_POSITIONS.keyDisplay.top;
+    container.style.top = DEFAULT_POSITIONS.keyDisplay.top;
     const grid = document.createElement('div');
     grid.className = 'key-display-grid';
     grid.style.gridTemplateColumns = '44px 44px 44px';
@@ -617,19 +669,19 @@ const SCRIPT_VERSION = '6.2';
       if (e.button === 0) { state.keys.lmb = false; updateKeyDisplay('lmb', false); }
       else if (e.button === 2) { state.keys.rmb = false; updateKeyDisplay('rmb', false); }
     };
-    window.addEventListener('keydown',   kd, { passive: true });
-    window.addEventListener('keyup',     ku, { passive: true });
+    window.addEventListener('keydown', kd, { passive: true });
+    window.addEventListener('keyup', ku, { passive: true });
     window.addEventListener('mousedown', md, { passive: true });
-    window.addEventListener('mouseup',   mu, { passive: true });
+    window.addEventListener('mouseup', mu, { passive: true });
     _keyListeners = { kd, ku, md, mu };
   }
 
   function teardownKeyDisplayListeners() {
     if (!_keyListeners) return;
-    window.removeEventListener('keydown',   _keyListeners.kd);
-    window.removeEventListener('keyup',     _keyListeners.ku);
+    window.removeEventListener('keydown', _keyListeners.kd);
+    window.removeEventListener('keyup', _keyListeners.ku);
     window.removeEventListener('mousedown', _keyListeners.md);
-    window.removeEventListener('mouseup',   _keyListeners.mu);
+    window.removeEventListener('mouseup', _keyListeners.mu);
     _keyListeners = null;
   }
 
@@ -656,26 +708,23 @@ const SCRIPT_VERSION = '6.2';
   }
 
   // ─── Feature Manager ─────────────────────────────────────────────────────────
-  // cleanup() is the single authoritative "disable" path for each feature:
-  // it stops intervals, removes DOM, and tears down listeners.
-  // toggleFeature() calls only cleanup() on disable — no double-call with stop().
   const featureManager = {
     performance: {
-      start:   () => { if (!state.counters.performance) createCounter('performance'); startPerformanceLoop(); updatePerformanceCounter(); },
+      start: () => { if (!state.counters.performance) createCounter('performance'); startPerformanceLoop(); updatePerformanceCounter(); },
       cleanup: () => {
         if (state.counters.performance) { state.counters.performance.remove(); state.counters.performance = null; }
         if (!state.features.coords) stopPerformanceLoop();
       }
     },
     coords: {
-      start:   () => { if (!state.counters.coords) createCounter('coords'); startPerformanceLoop(); },
+      start: () => { if (!state.counters.coords) createCounter('coords'); startPerformanceLoop(); },
       cleanup: () => {
         if (state.counters.coords) { state.counters.coords.remove(); state.counters.coords = null; }
         if (!state.features.performance) stopPerformanceLoop();
       }
     },
     realTime: {
-      start:   () => { if (!state.counters.realTime) createCounter('realTime'); updateRealTime(); state.intervals.realTime = setInterval(updateRealTime, 1000); },
+      start: () => { if (!state.counters.realTime) createCounter('realTime'); updateRealTime(); state.intervals.realTime = setInterval(updateRealTime, 1000); },
       cleanup: () => {
         clearInterval(state.intervals.realTime); state.intervals.realTime = null;
         if (state.counters.realTime) { state.counters.realTime.remove(); state.counters.realTime = null; }
@@ -692,7 +741,6 @@ const SCRIPT_VERSION = '6.2';
           if (state.antiAfkCountdown <= 0) {
             pressSpace();
             state.antiAfkCountdown = 5;
-            // Pulse the counter to confirm the jump fired
             const el = state.counters.antiAfk;
             if (el) { el.classList.remove('afk-pulse'); void el.offsetWidth; el.classList.add('afk-pulse'); }
           }
@@ -704,7 +752,7 @@ const SCRIPT_VERSION = '6.2';
       }
     },
     keyDisplay: {
-      start:   () => { if (!state.counters.keyDisplay) createKeyDisplay(); setupKeyDisplayListeners(); },
+      start: () => { if (!state.counters.keyDisplay) createKeyDisplay(); setupKeyDisplayListeners(); },
       cleanup: () => {
         teardownKeyDisplayListeners();
         if (state.counters.keyDisplay) { state.counters.keyDisplay.remove(); state.counters.keyDisplay = null; }
@@ -730,34 +778,29 @@ const SCRIPT_VERSION = '6.2';
     const enabled = !state.features[featureName];
     state.features[featureName] = enabled;
     if (enabled) featureManager[featureName]?.start();
-    else         featureManager[featureName]?.cleanup();
+    else featureManager[featureName]?.cleanup();
     saveSettings();
     refreshHud();
     return enabled;
   }
 
   // ─── Panel Cache ─────────────────────────────────────────────────────────────
-  // Module buttons are built once per category and re-used on tab switch.
-  // Active state is synced on re-append; no innerHTML rebuilds, no new listeners.
   const _panelCache = {};
 
   function buildModulePanel(categoryId) {
-    const grid       = document.getElementById('waddle-module-grid');
-    const title      = document.getElementById('waddle-panel-title');
+    const grid = document.getElementById('waddle-module-grid');
+    const title = document.getElementById('waddle-panel-title');
     const aboutPanel = document.getElementById('waddle-about');
     if (!grid) return;
-
     if (categoryId === 'about') {
       grid.style.display = 'none';
       if (title) title.style.display = 'none';
       if (aboutPanel) aboutPanel.style.display = 'flex';
       return;
     }
-
     grid.style.display = 'grid';
     if (title) { title.style.display = 'block'; title.textContent = categoryId; }
     if (aboutPanel) aboutPanel.style.display = 'none';
-
     if (!_panelCache[categoryId]) {
       _panelCache[categoryId] = (FEATURE_MAP[categoryId] || []).map(({ label, feature }) => {
         const btn = document.createElement('div');
@@ -776,8 +819,6 @@ const SCRIPT_VERSION = '6.2';
         return btn;
       });
     }
-
-    // Re-append cached nodes (no recreation), syncing active state first
     grid.innerHTML = '';
     _panelCache[categoryId].forEach(btn => {
       btn.classList.toggle('active', !!state.features[btn.dataset.feature]);
@@ -848,7 +889,7 @@ const SCRIPT_VERSION = '6.2';
     const linksRow = document.createElement('div');
     linksRow.className = 'about-links';
     [['Suggest Feature', 'https://github.com/TheM1ddleM1n/Waddle/issues/new?labels=enhancement'],
-     ['Report Bug',      'https://github.com/TheM1ddleM1n/Waddle/issues/new?labels=bug']
+     ['Report Bug', 'https://github.com/TheM1ddleM1n/Waddle/issues/new?labels=bug']
     ].forEach(([text, url]) => {
       const btn = document.createElement('button');
       btn.className = 'about-link-btn';
@@ -917,9 +958,10 @@ const SCRIPT_VERSION = '6.2';
       createMenu();
       setupKeyboardHandler();
       initializeCrosshairModule();
+      initHealthWidget();
+      startHealthInterval();
       initHud();
       showToast('Waddle loaded', 'info', 'Press \\ to open menu');
-      // Start each restored feature individually so one failure can't abort the rest
       setTimeout(() => {
         Object.entries(state.features).forEach(([feature, enabled]) => {
           if (!enabled) return;
@@ -928,7 +970,6 @@ const SCRIPT_VERSION = '6.2';
         refreshHud();
       }, 100);
       updateSessionTimer();
-      // Stored in state.intervals so globalCleanup clears it on unload
       state.intervals.sessionTimer = setInterval(updateSessionTimer, 1000);
     } catch (_) {
       showToast('Init failed', 'info', 'Check console');
