@@ -432,17 +432,42 @@ const SCRIPT_VERSION = '6.3';
     const xpProgress = xpObj?.experience ?? 0;
     const xpLevel = xpObj?.experienceLevel ?? 0;
 
-    if (hp !== state.lastHealth) {
-      state.lastHealth = hp;
-      const pct = Math.max(0, Math.min(100, (hp / maxHp) * 100));
-      const tier = pct <= 25 ? 'low' : pct <= 50 ? 'medium' : '';
-      const fill = document.getElementById('wb-health-fill');
-      const label = document.getElementById('wb-health-label');
-      const val = document.getElementById('wb-health-value');
-      if (fill) { fill.style.width = `${pct}%`; fill.className = `wb-fill${tier ? ' ' + tier : ''}`; fill.id = 'wb-health-fill'; }
-      if (label) { label.className = `wb-label${tier ? ' ' + tier : ''}`; label.id = 'wb-health-label'; }
-      if (val) val.textContent = `${Math.ceil(hp)} / ${maxHp}`;
-    }
+    // Grab React player object (needed for absorption)
+const root = Object.values(document.querySelector("#react"))[0];
+const player = root.updateQueue.baseState.element.props.game.player;
+
+// Absorption effect (ID 22)
+const absEff = player.activePotionsMap.get(22);
+const absorptionExtra = absEff ? (absEff.amplifier + 1) * 4 : 0;
+
+// Health including absorption
+const totalHp = hp + absorptionExtra;
+const totalMaxHp = maxHp + absorptionExtra;
+
+// Now check and update when this *total* changes
+if (totalHp !== state.lastHealth) {
+  state.lastHealth = totalHp;
+
+  const pct = Math.max(0, Math.min(100, (totalHp / totalMaxHp) * 100));
+  const tier = pct <= 25 ? 'low' : pct <= 50 ? 'medium' : '';
+
+  const fill = document.getElementById('wb-health-fill');
+  const label = document.getElementById('wb-health-label');
+  const val = document.getElementById('wb-health-value');
+
+  if (fill) {
+    fill.style.width = `${pct}%`;
+    fill.className = `wb-fill${tier ? ' ' + tier : ''}`;
+    fill.id = 'wb-health-fill';
+  }
+  if (label) {
+    label.className = `wb-label${tier ? ' ' + tier : ''}`;
+    label.id = 'wb-health-label';
+  }
+  if (val) {
+    val.textContent = `${Math.ceil(totalHp)} / ${totalMaxHp}`;
+  }
+}
 
     if (food !== state.lastFood) {
       state.lastFood = food;
