@@ -345,12 +345,12 @@ const SCRIPT_VERSION = '6.3';
     if (!state.crosshairContainer) return;
     const defaultCrosshair = document.querySelector('.css-xhoozx');
     const pauseMenu = document.querySelector('.chakra-modal__content-container,[role="dialog"]');
-    const inGame = !!(defaultCrosshair && !pauseMenu);
+    const inGame = !!(defaultCrosshair && !pauseMenu && document.pointerLockElement);
     if (defaultCrosshair) defaultCrosshair.style.display = 'none';
     state.crosshairContainer.style.display = inGame ? 'block' : 'none';
     if (state.healthWidget) {
       const gamemode = gameRef.resolve()?.info?.gamemode?.id;
-      const showBars = inGame && gamemode !== 'creative';
+      const showBars = inGame && gamemode !== 'creative' && gamemode !== 'spectator';
       state.healthWidget.classList.toggle('visible', showBars);
     }
   }
