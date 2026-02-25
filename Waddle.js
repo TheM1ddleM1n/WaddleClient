@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waddle
 // @namespace    https://github.com/TheM1ddleM1n/Waddle
-// @version      6.4
+// @version      6.5
 // @description  The ultimate Miniblox enhancement suite with advanced API features!
 // @author       The Dream Team! (Scripter & TheM1ddleM1n)
 // @icon         https://raw.githubusercontent.com/TheM1ddleM1n/Waddle/refs/heads/main/Penguin.png
@@ -9,7 +9,7 @@
 // @run-at       document-start
 // ==/UserScript==
 
-const SCRIPT_VERSION = '6.4';
+const SCRIPT_VERSION = '6.5';
 
 (function () {
   'use strict';
@@ -99,12 +99,8 @@ const SCRIPT_VERSION = '6.4';
     startTime: Date.now(),
     antiAfkCountdown: 5,
     lastPerformanceColor: '#00FF00',
-    lastHealth: -1,
-    lastFood: -1,
-    lastXp: -1,
     keys: { w: false, a: false, s: false, d: false, space: false, lmb: false, rmb: false },
     crosshairContainer: null,
-    healthWidget: null,
     hudArray: null,
     toastContainer: null
   };
@@ -163,7 +159,6 @@ const SCRIPT_VERSION = '6.4';
   --glow:0 0 12px rgba(0,255,255,.5); --shadow:0 8px 32px rgba(0,0,0,.8);
 }
 .css-xhoozx,[class*="crosshair"],img[src*="crosshair"] { display:none !important; }
-.css-qttk5u { display:none !important; }
 .css-1pj0jj0 { display:none !important; }
 #waddle-overlay { position:fixed; inset:0; background:rgba(0,0,0,.65); backdrop-filter:blur(8px); z-index:9999; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .15s ease; }
 #waddle-overlay.show { opacity:1; pointer-events:auto; }
@@ -229,29 +224,6 @@ const SCRIPT_VERSION = '6.4';
 .key-box.mouse-box { width:62px; }
 .key-box.space-box { grid-column:1 / -1; width:100%; height:36px; }
 #waddle-crosshair-container { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:5000; pointer-events:none; }
-#waddle-health-widget { position:fixed; bottom:84px; left:50%; transform:translateX(-50%); z-index:5000; pointer-events:none; display:none; flex-direction:column; align-items:stretch; gap:6px; width:420px; background:rgba(0,0,0,.45); border:1px solid rgba(255,255,255,.12); border-radius:8px; padding:8px 12px; }
-#waddle-health-widget.visible { display:flex; }
-#waddle-bars-row { display:flex; flex-direction:row; align-items:flex-end; gap:12px; width:100%; }
-.wb-row { flex:1; display:flex; flex-direction:column; gap:3px; }
-.wb-header { display:flex; justify-content:space-between; align-items:center; padding:0 2px; }
-.wb-label { font-size:.72rem; font-weight:700; letter-spacing:.4px; display:flex; align-items:center; gap:4px; }
-.wb-value { font-size:.72rem; font-weight:700; opacity:.9; font-family:'Courier New',monospace; }
-.wb-track { width:100%; height:8px; background:rgba(0,0,0,.55); border-radius:99px; overflow:hidden; border:1px solid rgba(255,255,255,.1); }
-.wb-fill { height:100%; border-radius:99px; transition:width .2s ease,background-color .3s ease; will-change:width; }
-#wb-health-fill { background:#22c55e; }
-#wb-health-fill.medium { background:#eab308; }
-#wb-health-fill.low { background:#ef4444; }
-#wb-health-label { color:#22c55e; }
-#wb-health-label.medium { color:#eab308; }
-#wb-health-label.low { color:#ef4444; }
-#wb-food-fill { background:#f59e0b; }
-#wb-food-fill.low { background:#92400e; }
-#wb-food-label { color:#f59e0b; }
-#wb-food-label.low { color:#92400e; }
-#wb-xp-row { display:none; width:100%; }
-#wb-xp-row.visible { display:flex; }
-#wb-xp-fill { background:#22c55e; }
-#wb-xp-label { color:#22c55e; }
 #wb-hud-canvas { position:fixed; inset:0; pointer-events:none; z-index:4999; }
     `;
     document.head.appendChild(style);
@@ -350,11 +322,6 @@ const SCRIPT_VERSION = '6.4';
     const inGame = !!(defaultCrosshair && !pauseMenu && document.pointerLockElement);
     if (defaultCrosshair) defaultCrosshair.style.display = 'none';
     state.crosshairContainer.style.display = inGame ? 'block' : 'none';
-    if (state.healthWidget) {
-      const gamemode = gameRef.resolve()?.info?.gamemode?.id;
-      const showBars = inGame && gamemode !== 'creative' && gamemode !== 'spectator';
-      state.healthWidget.classList.toggle('visible', showBars);
-    }
   }
 
   function initializeCrosshairModule() {
@@ -373,88 +340,6 @@ const SCRIPT_VERSION = '6.4';
     return true;
   }
 
-  // ─── Health / Food / XP Widget ───────────────────────────────────────────────
-  function initHealthWidget() {
-    if (!document.body || state.healthWidget) return;
-    const widget = document.createElement('div');
-    widget.id = 'waddle-health-widget';
-    const barsRow = document.createElement('div');
-    barsRow.id = 'waddle-bars-row';
-    const healthRow = document.createElement('div');
-    healthRow.className = 'wb-row';
-    healthRow.innerHTML = `<div class="wb-header"><span class="wb-label" id="wb-health-label">❤️ Health</span><span class="wb-value" id="wb-health-value">20 / 20</span></div><div class="wb-track"><div class="wb-fill" id="wb-health-fill" style="width:100%"></div></div>`;
-    const foodRow = document.createElement('div');
-    foodRow.className = 'wb-row';
-    foodRow.innerHTML = `<div class="wb-header"><span class="wb-label" id="wb-food-label">🍗 Food</span><span class="wb-value" id="wb-food-value">20 / 20</span></div><div class="wb-track"><div class="wb-fill" id="wb-food-fill" style="width:100%"></div></div>`;
-    barsRow.append(healthRow, foodRow);
-    const xpRow = document.createElement('div');
-    xpRow.className = 'wb-row';
-    xpRow.id = 'wb-xp-row';
-    xpRow.innerHTML = `<div class="wb-header"><span class="wb-label" id="wb-xp-label">✨ Level</span><span class="wb-value" id="wb-xp-value">0</span></div><div class="wb-track"><div class="wb-fill" id="wb-xp-fill" style="width:0%"></div></div>`;
-    widget.append(barsRow, xpRow);
-    document.body.appendChild(widget);
-    state.healthWidget = widget;
-  }
-
-  function tickHealthWidget() {
-    if (!state.healthWidget) return;
-    const game = gameRef.resolve();
-    if (!game?.info) return;
-    const hp = game.info.health ?? 20;
-    const maxHp = game.info.maxHealth ?? 20;
-    const food = game.info.food ?? 20;
-    const xpObj = game.info.xp;
-    const xpProgress = xpObj?.experience ?? 0;
-    const xpLevel = xpObj?.experienceLevel ?? 0;
-    const root = Object.values(document.querySelector('#react'))[0];
-    const player = root.updateQueue.baseState.element.props.game.player;
-    const absEff = player.activePotionsMap.get(22);
-    const absorptionExtra = absEff ? (absEff.amplifier + 1) * 4 : 0;
-    const totalHp = hp + absorptionExtra;
-    const totalMaxHp = maxHp + absorptionExtra;
-    if (totalHp !== state.lastHealth) {
-      state.lastHealth = totalHp;
-      const pct = Math.max(0, Math.min(100, (totalHp / totalMaxHp) * 100));
-      const tier = pct <= 25 ? 'low' : pct <= 50 ? 'medium' : '';
-      const fill = document.getElementById('wb-health-fill');
-      const label = document.getElementById('wb-health-label');
-      const val = document.getElementById('wb-health-value');
-      if (fill) { fill.style.width = `${pct}%`; fill.className = `wb-fill${tier ? ' ' + tier : ''}`; fill.id = 'wb-health-fill'; }
-      if (label) { label.className = `wb-label${tier ? ' ' + tier : ''}`; label.id = 'wb-health-label'; }
-      if (val) val.textContent = `${Math.ceil(totalHp)} / ${totalMaxHp}`;
-    }
-    if (food !== state.lastFood) {
-      state.lastFood = food;
-      const pct = Math.max(0, Math.min(100, (food / 20) * 100));
-      const low = pct <= 25;
-      const fill = document.getElementById('wb-food-fill');
-      const label = document.getElementById('wb-food-label');
-      const val = document.getElementById('wb-food-value');
-      if (fill) { fill.style.width = `${pct}%`; fill.className = `wb-fill${low ? ' low' : ''}`; fill.id = 'wb-food-fill'; }
-      if (label) { label.className = `wb-label${low ? ' low' : ''}`; label.id = 'wb-food-label'; }
-      if (val) val.textContent = `${Math.ceil(food)} / 20`;
-    }
-    const xpKey = xpProgress + xpLevel;
-    const isSurvival = gameRef.resolve()?.info?.gamemode?.id === 'survival';
-    if (xpKey !== state.lastXp || !isSurvival) {
-      state.lastXp = xpKey;
-      const hasXp = isSurvival && (xpLevel > 0 || xpProgress > 0);
-      const row = document.getElementById('wb-xp-row');
-      if (row) row.classList.toggle('visible', hasXp);
-      if (hasXp) {
-        const fill = document.getElementById('wb-xp-fill');
-        const val = document.getElementById('wb-xp-value');
-        if (fill) fill.style.width = `${Math.round(xpProgress * 100)}%`;
-        if (val) val.textContent = `Lv ${xpLevel}`;
-      }
-    }
-  }
-
-  function startHealthInterval() {
-    if (state.intervals.health) return;
-    state.intervals.health = setInterval(tickHealthWidget, 150);
-  }
-
   // ─── HUD Canvas ──────────────────────────────────────────────────────────────
   function initHudCanvas() {
     if (document.getElementById('wb-hud-canvas')) return;
@@ -470,311 +355,304 @@ const SCRIPT_VERSION = '6.4';
   }
 
   // ─── Target HUD ──────────────────────────────────────────────────────────────
-const _faceImgCache = {};
-const _playerFaceCache = {};
-let _entityMapKey = null;
+  const _faceImgCache = {};
+  const _playerFaceCache = {};
+  let _entityMapKey = null;
 
-let _cachedNearest = null;
-let _cachedMinDist = Infinity;
-let _lastEntityScan = 0;
-const ENTITY_SCAN_INTERVAL = 50;
+  let _cachedNearest = null;
+  let _cachedMinDist = Infinity;
+  let _lastEntityScan = 0;
+  const ENTITY_SCAN_INTERVAL = 50;
 
-let _cachedPauseMenu = false;
-let _lastPauseCheck = 0;
-const PAUSE_CHECK_INTERVAL = 200;
+  let _cachedPauseMenu = false;
+  let _lastPauseCheck = 0;
+  const PAUSE_CHECK_INTERVAL = 200;
 
-let _cachedBorderGradient = null;
-let _cachedBorderGradientKey = '';
+  let _cachedBorderGradient = null;
+  let _cachedBorderGradientKey = '';
 
-let _lastDrawnHp = -1;
-let _lastDrawnName = '';
-let _lastDrawnDist = -1;
-let _lastDrawnFaceSrc = '';
-let _lastDrawnType = '';
-let _needsRedraw = true;
+  let _lastDrawnHp = -1;
+  let _lastDrawnName = '';
+  let _lastDrawnDist = -1;
+  let _lastDrawnFaceSrc = '';
+  let _lastDrawnType = '';
+  let _needsRedraw = true;
 
-function findEntityMapKey(world) {
-  if (_entityMapKey && world[_entityMapKey] instanceof Map) return _entityMapKey;
-  for (const [k, v] of Object.entries(world)) {
-    if (v instanceof Map && v.size > 0) {
-      const first = v.values().next().value;
-      if (first && typeof first.getHealth === 'function' && first.pos) {
-        _entityMapKey = k;
-        return k;
-      }
-    }
-  }
-  return null;
-}
-
-function startTargetHUDLoop() {
-  const canvas = document.getElementById('wb-hud-canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const MAX_RANGE = 5;
-  const W = 220, R = 10;
-  const H_ENTITY = 86;
-  const H_BLOCK = 52;
-
-  function getBorderGradient(x, y, h) {
-    const key = `${x},${y},${h}`;
-    if (_cachedBorderGradient && _cachedBorderGradientKey === key) return _cachedBorderGradient;
-    const g = ctx.createLinearGradient(x, y, x + W, y + h);
-    g.addColorStop(0, '#7c3aed');
-    g.addColorStop(1, '#2563eb');
-    _cachedBorderGradient = g;
-    _cachedBorderGradientKey = key;
-    return g;
-  }
-
-  let _domFaceEl = null;
-  let _domNameEl = null;
-  let _domQueryAge = 0;
-  const DOM_QUERY_INTERVAL = 500;
-
-  function getDOM(now) {
-    if (now - _domQueryAge > DOM_QUERY_INTERVAL) {
-      _domFaceEl = document.querySelector('.css-1pj0jj0 img');
-      _domNameEl = document.querySelector('.css-1pj0jj0 p');
-      _domQueryAge = now;
-    }
-  }
-
-  function drawRoundedBox(x, y, w, h) {
-    ctx.beginPath();
-    ctx.moveTo(x + R, y);
-    ctx.lineTo(x + w - R, y);
-    ctx.quadraticCurveTo(x + w, y, x + w, y + R);
-    ctx.lineTo(x + w, y + h - R);
-    ctx.quadraticCurveTo(x + w, y + h, x + w - R, y + h);
-    ctx.lineTo(x + R, y + h);
-    ctx.quadraticCurveTo(x, y + h, x, y + h - R);
-    ctx.lineTo(x, y + R);
-    ctx.quadraticCurveTo(x, y, x + R, y);
-    ctx.closePath();
-  }
-
-  function drawEntityHUD(nearest, minDist, faceSrc, faceName) {
-    const x = (canvas.width - W) / 2;
-    const y = 16;
-    const maxHp = nearest.getMaxHealth?.() ?? 20;
-    const hp = Math.max(0, nearest.getHealth());
-    const hpPct = hp / maxHp;
-    const distStr = minDist.toFixed(1);
-    const barColor = hpPct > 0.5 ? '#22c55e' : hpPct > 0.25 ? '#eab308' : '#ef4444';
-
-    if (
-      hp === _lastDrawnHp &&
-      faceName === _lastDrawnName &&
-      distStr === String(_lastDrawnDist) &&
-      faceSrc === _lastDrawnFaceSrc &&
-      _lastDrawnType === 'entity' &&
-      !_needsRedraw
-    ) return;
-
-    _lastDrawnHp = hp;
-    _lastDrawnName = faceName;
-    _lastDrawnDist = distStr;
-    _lastDrawnFaceSrc = faceSrc;
-    _lastDrawnType = 'entity';
-    _needsRedraw = false;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.save();
-
-    ctx.shadowColor = 'rgba(0,0,0,0.9)';
-    ctx.shadowBlur = 18;
-    drawRoundedBox(x, y, W, H_ENTITY);
-    ctx.globalAlpha = 0.9;
-    ctx.fillStyle = '#0b0b14';
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.strokeStyle = getBorderGradient(x, y, H_ENTITY);
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
-
-    if (faceSrc) {
-      if (!_faceImgCache[faceSrc]) {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.src = faceSrc;
-        _faceImgCache[faceSrc] = img;
-      }
-      const img = _faceImgCache[faceSrc];
-      if (img.complete && img.naturalWidth > 0) ctx.drawImage(img, x + 10, y + 10, 34, 34);
-    }
-
-    const nameX = faceSrc ? x + 52 : x + 10;
-    ctx.textAlign = 'left';
-    ctx.font = 'bold 13px Poppins,sans-serif';
-    ctx.fillStyle = '#e2e8f0';
-    ctx.fillText(faceName, nameX, y + 26);
-
-    const barW = W - 20, barH = 8;
-    const barX = x + 10;
-    const barY = y + 40;
-
-    ctx.fillStyle = 'rgba(255,255,255,0.07)';
-    ctx.beginPath();
-    ctx.roundRect(barX, barY, barW, barH, 4);
-    ctx.fill();
-
-    ctx.fillStyle = barColor;
-    ctx.beginPath();
-    ctx.roundRect(barX, barY, Math.max(hpPct * barW, 0), barH, 4);
-    ctx.fill();
-
-    ctx.font = '10px Poppins,sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.6)';
-    ctx.textAlign = 'left';
-    ctx.fillText(`${Math.round(hp)} / ${maxHp}`, barX, barY + barH + 14);
-
-    ctx.fillStyle = '#7c3aed';
-    ctx.textAlign = 'right';
-    ctx.fillText(`${distStr}m`, x + W - 10, barY + barH + 14);
-
-    ctx.restore();
-  }
-
-  function drawBlockHUD(blockName) {
-    const x = (canvas.width - W) / 2;
-    const y = 16;
-
-    if (
-      blockName === _lastDrawnName &&
-      _lastDrawnType === 'block' &&
-      !_needsRedraw
-    ) return;
-
-    _lastDrawnName = blockName;
-    _lastDrawnType = 'block';
-    _lastDrawnHp = -1;
-    _lastDrawnDist = -1;
-    _lastDrawnFaceSrc = '';
-    _needsRedraw = false;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.save();
-
-    ctx.shadowColor = 'rgba(0,0,0,0.9)';
-    ctx.shadowBlur = 18;
-    drawRoundedBox(x, y, W, H_BLOCK);
-    ctx.globalAlpha = 0.9;
-    ctx.fillStyle = '#0b0b14';
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.strokeStyle = getBorderGradient(x, y, H_BLOCK);
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
-
-    // ── Block icon ──
-    ctx.font = '22px sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('🧱', x + 10, y + 32);
-
-    // ── Block name ──
-    ctx.font = 'bold 13px Poppins,sans-serif';
-    ctx.fillStyle = '#e2e8f0';
-    ctx.textAlign = 'left';
-    ctx.fillText(blockName, x + 44, y + 21);
-
-    // ── Block label ──
-    ctx.font = '10px Poppins,sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.35)';
-    ctx.fillText('Block', x + 44, y + 36);
-
-    ctx.restore();
-  }
-
-  function tick() {
-    const now = performance.now();
-
-    if (now - _lastPauseCheck > PAUSE_CHECK_INTERVAL) {
-      _cachedPauseMenu = !!document.querySelector('.chakra-modal__content-container,[role="dialog"]');
-      _lastPauseCheck = now;
-    }
-
-    const inGame = !!(document.pointerLockElement && !_cachedPauseMenu);
-    if (!inGame) {
-      if (_lastDrawnType !== '') {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        _lastDrawnType = '';
-        _needsRedraw = true;
-      }
-      requestAnimationFrame(tick);
-      return;
-    }
-
-    const game = gameRef._game || gameRef.resolve();
-    const player = game?.player;
-
-    if (game?.world && player?.pos) {
-      if (now - _lastEntityScan > ENTITY_SCAN_INTERVAL) {
-        _lastEntityScan = now;
-        const mapKey = findEntityMapKey(game.world);
-        const dump = mapKey ? game.world[mapKey] : null;
-        if (dump) {
-          let nearest = null, minDist = Infinity;
-          dump.forEach((entity) => {
-            if (!entity || entity.id === player.id) return;
-            if (typeof entity.getHealth !== 'function') return;
-            if (!entity.pos) return;
-            const dist = player.pos.distanceTo(entity.pos);
-            if (dist < minDist) { minDist = dist; nearest = entity; }
-          });
-          if (nearest !== _cachedNearest) _needsRedraw = true;
-          _cachedNearest = nearest;
-          _cachedMinDist = minDist;
+  function findEntityMapKey(world) {
+    if (_entityMapKey && world[_entityMapKey] instanceof Map) return _entityMapKey;
+    for (const [k, v] of Object.entries(world)) {
+      if (v instanceof Map && v.size > 0) {
+        const first = v.values().next().value;
+        if (first && typeof first.getHealth === 'function' && first.pos) {
+          _entityMapKey = k;
+          return k;
         }
       }
-
-      if (_cachedNearest && _cachedMinDist <= MAX_RANGE) {
-  const isPlayer = _cachedNearest.constructor?.name === 'ClientEntityPlayerOther';
-  getDOM(now);
-
-  const domSrc = _domFaceEl?.src ?? null;
-  const domName = _domNameEl?.textContent ?? null;
-
-  let faceSrc = null;
-  let faceName;
-
-  if (isPlayer) {
-    // only trust domName when domSrc is also present
-    // (if domSrc is null we're looking at a block, not the player)
-    const lookingAtPlayer = !!(domSrc);
-    const nameKey = (lookingAtPlayer ? domName : null) || _cachedNearest.name || '';
-    if (domSrc && nameKey) _playerFaceCache[nameKey] = domSrc;
-    faceSrc = _playerFaceCache[nameKey] ?? null;
-    faceName = (lookingAtPlayer ? domName : null) || _cachedNearest.name || '???';
-  } else {
-    // mobs — never use DOM, always use entity data directly
-    faceName = _cachedNearest.name || _cachedNearest.constructor?.name?.replace('Entity', '') || '???';
+    }
+    return null;
   }
 
-  drawEntityHUD(_cachedNearest, _cachedMinDist, faceSrc, faceName);
-} else {
-        // ── No entity in range — check for block via DOM ──
-        getDOM(now);
-        const blockName = _domNameEl?.textContent?.trim() ?? null;
-        if (blockName) {
-          drawBlockHUD(blockName);
-        } else if (_lastDrawnType !== '') {
+  function startTargetHUDLoop() {
+    const canvas = document.getElementById('wb-hud-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const MAX_RANGE = 5;
+    const W = 220, R = 10;
+    const H_ENTITY = 86;
+    const H_BLOCK = 52;
+
+    function getBorderGradient(x, y, h) {
+      const key = `${x},${y},${h}`;
+      if (_cachedBorderGradient && _cachedBorderGradientKey === key) return _cachedBorderGradient;
+      const g = ctx.createLinearGradient(x, y, x + W, y + h);
+      g.addColorStop(0, '#7c3aed');
+      g.addColorStop(1, '#2563eb');
+      _cachedBorderGradient = g;
+      _cachedBorderGradientKey = key;
+      return g;
+    }
+
+    let _domFaceEl = null;
+    let _domNameEl = null;
+    let _domQueryAge = 0;
+    const DOM_QUERY_INTERVAL = 500;
+
+    function getDOM(now) {
+      if (now - _domQueryAge > DOM_QUERY_INTERVAL) {
+        _domFaceEl = document.querySelector('.css-1pj0jj0 img');
+        _domNameEl = document.querySelector('.css-1pj0jj0 p');
+        _domQueryAge = now;
+      }
+    }
+
+    function drawRoundedBox(x, y, w, h) {
+      ctx.beginPath();
+      ctx.moveTo(x + R, y);
+      ctx.lineTo(x + w - R, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + R);
+      ctx.lineTo(x + w, y + h - R);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - R, y + h);
+      ctx.lineTo(x + R, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - R);
+      ctx.lineTo(x, y + R);
+      ctx.quadraticCurveTo(x, y, x + R, y);
+      ctx.closePath();
+    }
+
+    function drawEntityHUD(nearest, minDist, faceSrc, faceName) {
+      const x = (canvas.width - W) / 2;
+      const y = 16;
+      const maxHp = nearest.getMaxHealth?.() ?? 20;
+      const hp = Math.max(0, nearest.getHealth());
+      const hpPct = hp / maxHp;
+      const distStr = minDist.toFixed(1);
+      const barColor = hpPct > 0.5 ? '#22c55e' : hpPct > 0.25 ? '#eab308' : '#ef4444';
+
+      if (
+        hp === _lastDrawnHp &&
+        faceName === _lastDrawnName &&
+        distStr === String(_lastDrawnDist) &&
+        faceSrc === _lastDrawnFaceSrc &&
+        _lastDrawnType === 'entity' &&
+        !_needsRedraw
+      ) return;
+
+      _lastDrawnHp = hp;
+      _lastDrawnName = faceName;
+      _lastDrawnDist = distStr;
+      _lastDrawnFaceSrc = faceSrc;
+      _lastDrawnType = 'entity';
+      _needsRedraw = false;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+
+      ctx.shadowColor = 'rgba(0,0,0,0.9)';
+      ctx.shadowBlur = 18;
+      drawRoundedBox(x, y, W, H_ENTITY);
+      ctx.globalAlpha = 0.9;
+      ctx.fillStyle = '#0b0b14';
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = getBorderGradient(x, y, H_ENTITY);
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+
+      if (faceSrc) {
+        if (!_faceImgCache[faceSrc]) {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.src = faceSrc;
+          _faceImgCache[faceSrc] = img;
+        }
+        const img = _faceImgCache[faceSrc];
+        if (img.complete && img.naturalWidth > 0) ctx.drawImage(img, x + 10, y + 10, 34, 34);
+      }
+
+      const nameX = faceSrc ? x + 52 : x + 10;
+      ctx.textAlign = 'left';
+      ctx.font = 'bold 13px Poppins,sans-serif';
+      ctx.fillStyle = '#e2e8f0';
+      ctx.fillText(faceName, nameX, y + 26);
+
+      const barW = W - 20, barH = 8;
+      const barX = x + 10;
+      const barY = y + 40;
+
+      ctx.fillStyle = 'rgba(255,255,255,0.07)';
+      ctx.beginPath();
+      ctx.roundRect(barX, barY, barW, barH, 4);
+      ctx.fill();
+
+      ctx.fillStyle = barColor;
+      ctx.beginPath();
+      ctx.roundRect(barX, barY, Math.max(hpPct * barW, 0), barH, 4);
+      ctx.fill();
+
+      ctx.font = '10px Poppins,sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.textAlign = 'left';
+      ctx.fillText(`${Math.round(hp)} / ${maxHp}`, barX, barY + barH + 14);
+
+      ctx.fillStyle = '#7c3aed';
+      ctx.textAlign = 'right';
+      ctx.fillText(`${distStr}m`, x + W - 10, barY + barH + 14);
+
+      ctx.restore();
+    }
+
+    function drawBlockHUD(blockName) {
+      const x = (canvas.width - W) / 2;
+      const y = 16;
+
+      if (
+        blockName === _lastDrawnName &&
+        _lastDrawnType === 'block' &&
+        !_needsRedraw
+      ) return;
+
+      _lastDrawnName = blockName;
+      _lastDrawnType = 'block';
+      _lastDrawnHp = -1;
+      _lastDrawnDist = -1;
+      _lastDrawnFaceSrc = '';
+      _needsRedraw = false;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+
+      ctx.shadowColor = 'rgba(0,0,0,0.9)';
+      ctx.shadowBlur = 18;
+      drawRoundedBox(x, y, W, H_BLOCK);
+      ctx.globalAlpha = 0.9;
+      ctx.fillStyle = '#0b0b14';
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = getBorderGradient(x, y, H_BLOCK);
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+
+      ctx.font = '22px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('🧱', x + 10, y + 32);
+
+      ctx.font = 'bold 13px Poppins,sans-serif';
+      ctx.fillStyle = '#e2e8f0';
+      ctx.textAlign = 'left';
+      ctx.fillText(blockName, x + 44, y + 21);
+
+      ctx.font = '10px Poppins,sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.fillText('Block', x + 44, y + 36);
+
+      ctx.restore();
+    }
+
+    function tick() {
+      const now = performance.now();
+
+      if (now - _lastPauseCheck > PAUSE_CHECK_INTERVAL) {
+        _cachedPauseMenu = !!document.querySelector('.chakra-modal__content-container,[role="dialog"]');
+        _lastPauseCheck = now;
+      }
+
+      const inGame = !!(document.pointerLockElement && !_cachedPauseMenu);
+      if (!inGame) {
+        if (_lastDrawnType !== '') {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           _lastDrawnType = '';
           _needsRedraw = true;
         }
+        requestAnimationFrame(tick);
+        return;
       }
+
+      const game = gameRef._game || gameRef.resolve();
+      const player = game?.player;
+
+      if (game?.world && player?.pos) {
+        if (now - _lastEntityScan > ENTITY_SCAN_INTERVAL) {
+          _lastEntityScan = now;
+          const mapKey = findEntityMapKey(game.world);
+          const dump = mapKey ? game.world[mapKey] : null;
+          if (dump) {
+            let nearest = null, minDist = Infinity;
+            dump.forEach((entity) => {
+              if (!entity || entity.id === player.id) return;
+              if (typeof entity.getHealth !== 'function') return;
+              if (!entity.pos) return;
+              const dist = player.pos.distanceTo(entity.pos);
+              if (dist < minDist) { minDist = dist; nearest = entity; }
+            });
+            if (nearest !== _cachedNearest) _needsRedraw = true;
+            _cachedNearest = nearest;
+            _cachedMinDist = minDist;
+          }
+        }
+
+        if (_cachedNearest && _cachedMinDist <= MAX_RANGE) {
+          const isPlayer = _cachedNearest.constructor?.name === 'ClientEntityPlayerOther';
+          getDOM(now);
+
+          const domSrc = _domFaceEl?.src ?? null;
+          const domName = _domNameEl?.textContent ?? null;
+
+          let faceSrc = null;
+          let faceName;
+
+          if (isPlayer) {
+            const lookingAtPlayer = !!(domSrc);
+            const nameKey = (lookingAtPlayer ? domName : null) || _cachedNearest.name || '';
+            if (domSrc && nameKey) _playerFaceCache[nameKey] = domSrc;
+            faceSrc = _playerFaceCache[nameKey] ?? null;
+            faceName = (lookingAtPlayer ? domName : null) || _cachedNearest.name || '???';
+          } else {
+            faceName = _cachedNearest.name || _cachedNearest.constructor?.name?.replace('Entity', '') || '???';
+          }
+
+          drawEntityHUD(_cachedNearest, _cachedMinDist, faceSrc, faceName);
+        } else {
+          getDOM(now);
+          const blockName = _domNameEl?.textContent?.trim() ?? null;
+          if (blockName) {
+            drawBlockHUD(blockName);
+          } else if (_lastDrawnType !== '') {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            _lastDrawnType = '';
+            _needsRedraw = true;
+          }
+        }
+      }
+
+      requestAnimationFrame(tick);
     }
 
     requestAnimationFrame(tick);
   }
-
-  requestAnimationFrame(tick);
-}
 
   // ─── Counters ────────────────────────────────────────────────────────────────
   function createCounter(type) {
@@ -1023,7 +901,12 @@ function startTargetHUDLoop() {
       }
     },
     realTime: {
-      start: () => { if (!state.counters.realTime) createCounter('realTime'); updateRealTime(); state.intervals.realTime = setInterval(updateRealTime, 1000); },
+      start: () => {
+        if (state.intervals.realTime) return;
+        if (!state.counters.realTime) createCounter('realTime');
+        updateRealTime();
+        state.intervals.realTime = setInterval(updateRealTime, 1000);
+      },
       cleanup: () => {
         clearInterval(state.intervals.realTime); state.intervals.realTime = null;
         if (state.counters.realTime) { state.counters.realTime.remove(); state.counters.realTime = null; }
@@ -1031,6 +914,7 @@ function startTargetHUDLoop() {
     },
     antiAfk: {
       start: () => {
+        if (state.intervals.antiAfk) return;
         if (!state.counters.antiAfk) createCounter('antiAfk');
         state.antiAfkCountdown = 5;
         updateAntiAfkCounter();
@@ -1248,8 +1132,6 @@ function startTargetHUDLoop() {
       createMenu();
       setupKeyboardHandler();
       initializeCrosshairModule();
-      initHealthWidget();
-      startHealthInterval();
       initHudCanvas();
       startTargetHUDLoop();
       initHud();
