@@ -4,7 +4,7 @@
 
 ### The Ultimate Miniblox Enhancement Suite
 
-![Version](https://img.shields.io/badge/version-6.4-39ff14?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-6.5-39ff14?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-39ff14?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/platform-Miniblox-39ff14?style=for-the-badge)
 
@@ -27,8 +27,6 @@
 ### Always-On (no toggle needed)
 
 **🎯 Crosshair** — cyan crosshair, auto-hides in menus and pause screens
-
-**❤️ Health HUD** — replaces native bars with clean health, food and XP widget above the hotbar. Includes absorption hearts. Hidden in creative mode.
 
 **🎯 Target HUD** — canvas-based HUD at top-center of screen
 - **Players** — persistent face + name + health bar + distance. Face cached so it stays visible when looking away
@@ -59,6 +57,10 @@
 ---
 
 ## 📝 Changelog
+
+### [6.5] - Health Widget Removed
+- 🗑️ Removed custom health/food/XP overlay — native bars restored
+- 🐛 Fixed duplicate interval stacking on realTime and antiAfk rapid toggles
 
 ### [6.4] - Target HUD
 - ✨ Canvas-based Target HUD — players, mobs, and blocks
