@@ -1124,6 +1124,42 @@ const SCRIPT_VERSION = '6.5';
     });
   }
 
+  // ─── Space Sky ──────────────────────────────────────────────────────────────
+  function initSpaceSky() {
+    const doApply = () => {
+      const tryPatch = () => {
+        const gs = gameRef.resolve()?.gameScene;
+        if (!gs?.sky) {
+          setTimeout(tryPatch, 500);
+          return;
+        }
+        const loader = new THREE.CubeTextureLoader();
+        loader.setPath('https://threejs.org/examples/textures/cube/MilkyWay/');
+        loader.load(
+          ['dark-s_px.jpg','dark-s_nx.jpg','dark-s_py.jpg','dark-s_ny.jpg','dark-s_pz.jpg','dark-s_nz.jpg'],
+          (cubeTexture) => {
+            gs.sky._waddleOriginalUpdate = gs.sky.update.bind(gs.sky);
+            gs.sky.update = function () {
+              this._waddleOriginalUpdate();
+              this.gameScene.scene.background = cubeTexture;
+            };
+            gs.scene.background = cubeTexture;
+          }
+        );
+      };
+      tryPatch();
+    };
+
+    if (typeof THREE !== 'undefined') {
+      doApply();
+    } else {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.min.js';
+      script.onload = doApply;
+      document.head.appendChild(script);
+    }
+  }
+
   async function safeInit() {
     try {
       await ensureDOMReady();
@@ -1135,6 +1171,7 @@ const SCRIPT_VERSION = '6.5';
       initHudCanvas();
       startTargetHUDLoop();
       initHud();
+      initSpaceSky();
       showToast('Waddle loaded', 'info', 'Press \\ to open menu');
       setTimeout(() => {
         Object.entries(state.features).forEach(([feature, enabled]) => {
@@ -1149,6 +1186,5 @@ const SCRIPT_VERSION = '6.5';
       showToast('Init failed', 'info', 'Check console');
     }
   }
-
   safeInit();
 })();
