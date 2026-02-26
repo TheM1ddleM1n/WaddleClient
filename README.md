@@ -4,7 +4,7 @@
 
 ### The Ultimate Miniblox Enhancement Suite
 
-![Version](https://img.shields.io/badge/version-6.5-39ff14?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-6.5.1-39ff14?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-39ff14?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/platform-Miniblox-39ff14?style=for-the-badge)
 
@@ -54,6 +54,7 @@
 ## ⚡ Performance
 
 ~0.5% total CPU. Key optimizations:
+- Game reference cached and revalidated every 2s — never resolved per frame
 - Target HUD entity scan throttled to 20fps, dirty flag skips redraws when nothing changed
 - Single RAF loop, direct DOM updates, debounced settings saves
 - MutationObserver scoped to `#react` only, module panels cached
@@ -61,13 +62,29 @@
 
 ---
 
+## 🛡️ Stability
+
+- Target HUD RAF loop is error-bounded — any mid-frame throw resets state and restarts after 2s backoff instead of silently dying
+- Space Sky detects whether Miniblox's bundled Three.js is new enough (r128+) before using it; falls back to a pinned CDN build if not, with a toast on failure
+- Settings migration strips unrecognised keys from older versions so stale config never breaks new feature state
+- Panel cache is invalidated on settings restore so module buttons always reflect the correct saved state
+
+---
+
 ## 📝 Changelog
+
+### [6.5.1] - Reliability Pass
+- ⚡ `getGameCached()` — game reference now revalidated every 2s instead of every RAF frame; `updatePerformanceCounter` accepts pre-resolved game to avoid double-resolve
+- 🐛 `_panelCache` busted on `restoreSavedState` so module buttons correctly reflect loaded settings
+- 🛡️ Three.js version guard in `initSpaceSky` — uses bundled copy only if `REVISION >= 128`, otherwise loads pinned CDN build with `onerror` toast fallback
+- 🛡️ Error boundary in `startTargetHUDLoop` — `tick()` wrapped in try/catch; on error, resets draw state and restarts via `setTimeout` + early `return` to prevent duplicate RAF chains
+- 🗂️ Settings versioning — `migrateSettings()` silently drops keys not present in the current feature set; `KNOWN_FEATURES` derived automatically from initial state so no manual list to maintain
 
 ### [6.5] - Space Sky
 - 🗑️ Removed custom health/food/XP overlay — native bars restored
 - 🐛 Fixed duplicate interval stacking on realTime and antiAfk rapid toggles
 - ✨ Always-on MilkyWay cubemap skybox via Three.js `sky.update` patch
-- 🗑️ Removed module cards from menu UI (will do)
+- 🗑️ Removed module cards from menu UI (will do soon)
 
 ### [6.4] - Target HUD
 - ✨ Canvas-based Target HUD — players, mobs, and blocks
