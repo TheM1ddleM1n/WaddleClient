@@ -83,6 +83,16 @@ const SCRIPT_VERSION = '6.5';
     reset() { this._attempts = 0; this._lastTryTime = 0; }
   };
 
+  // ─── Fix 1: Cached game accessor (revalidates every 2s, not every frame) ────
+  let _lastGameValidation = 0;
+  function getGameCached(now = performance.now()) {
+    if (!gameRef._game || now - _lastGameValidation > 2000) {
+      _lastGameValidation = now;
+      gameRef.resolve();
+    }
+    return gameRef._game;
+  }
+
   // ─── State ───────────────────────────────────────────────────────────────────
   let state = {
     features: {
@@ -104,6 +114,21 @@ const SCRIPT_VERSION = '6.5';
     hudArray: null,
     toastContainer: null
   };
+
+  // ─── Fix 5: Settings versioning — derive known keys from initial state ────────
+  const KNOWN_FEATURES = new Set(Object.keys(state.features));
+
+  function migrateSettings(raw) {
+    const features = {};
+    if (!raw?.features) return features;
+    // Version-specific migration hooks go here, e.g.:
+    // if (!raw.version || raw.version < '6.5') { /* rename/transform keys */ }
+    for (const [k, v] of Object.entries(raw.features)) {
+      if (KNOWN_FEATURES.has(k) && typeof v === 'boolean') features[k] = v;
+      // Unrecognised keys (removed features) are silently dropped
+    }
+    return features;
+  }
 
   // ─── Greeting ────────────────────────────────────────────────────────────────
   (function () {
@@ -392,10 +417,16 @@ const SCRIPT_VERSION = '6.5';
     return null;
   }
 
+  // ─── Fix 4: Error boundary + self-restarting RAF in startTargetHUDLoop ───────
   function startTargetHUDLoop() {
     const canvas = document.getElementById('wb-hud-canvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      showToast('Target HUD', 'info', 'Canvas 2D context unavailable');
+      return;
+    }
+
     const MAX_RANGE = 5;
     const W = 220, R = 10;
     const H_ENTITY = 86;
@@ -573,81 +604,91 @@ const SCRIPT_VERSION = '6.5';
     }
 
     function tick() {
-      const now = performance.now();
+      try {
+        const now = performance.now();
 
-      if (now - _lastPauseCheck > PAUSE_CHECK_INTERVAL) {
-        _cachedPauseMenu = !!document.querySelector('.chakra-modal__content-container,[role="dialog"]');
-        _lastPauseCheck = now;
-      }
-
-      const inGame = !!(document.pointerLockElement && !_cachedPauseMenu);
-      if (!inGame) {
-        if (_lastDrawnType !== '') {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          _lastDrawnType = '';
-          _needsRedraw = true;
-        }
-        requestAnimationFrame(tick);
-        return;
-      }
-
-      const game = gameRef._game || gameRef.resolve();
-      const player = game?.player;
-
-      if (game?.world && player?.pos) {
-        if (now - _lastEntityScan > ENTITY_SCAN_INTERVAL) {
-          _lastEntityScan = now;
-          const mapKey = findEntityMapKey(game.world);
-          const dump = mapKey ? game.world[mapKey] : null;
-          if (dump) {
-            let nearest = null, minDist = Infinity;
-            dump.forEach((entity) => {
-              if (!entity || entity.id === player.id) return;
-              if (typeof entity.getHealth !== 'function') return;
-              if (!entity.pos) return;
-              const dist = player.pos.distanceTo(entity.pos);
-              if (dist < minDist) { minDist = dist; nearest = entity; }
-            });
-            if (nearest !== _cachedNearest) _needsRedraw = true;
-            _cachedNearest = nearest;
-            _cachedMinDist = minDist;
-          }
+        if (now - _lastPauseCheck > PAUSE_CHECK_INTERVAL) {
+          _cachedPauseMenu = !!document.querySelector('.chakra-modal__content-container,[role="dialog"]');
+          _lastPauseCheck = now;
         }
 
-        if (_cachedNearest && _cachedMinDist <= MAX_RANGE) {
-          const isPlayer = _cachedNearest.constructor?.name === 'ClientEntityPlayerOther';
-          getDOM(now);
-
-          const domSrc = _domFaceEl?.src ?? null;
-          const domName = _domNameEl?.textContent ?? null;
-
-          let faceSrc = null;
-          let faceName;
-
-          if (isPlayer) {
-            const lookingAtPlayer = !!(domSrc);
-            const nameKey = (lookingAtPlayer ? domName : null) || _cachedNearest.name || '';
-            if (domSrc && nameKey) _playerFaceCache[nameKey] = domSrc;
-            faceSrc = _playerFaceCache[nameKey] ?? null;
-            faceName = (lookingAtPlayer ? domName : null) || _cachedNearest.name || '???';
-          } else {
-            faceName = _cachedNearest.name || _cachedNearest.constructor?.name?.replace('Entity', '') || '???';
-          }
-
-          drawEntityHUD(_cachedNearest, _cachedMinDist, faceSrc, faceName);
-        } else {
-          getDOM(now);
-          const blockName = _domNameEl?.textContent?.trim() ?? null;
-          if (blockName) {
-            drawBlockHUD(blockName);
-          } else if (_lastDrawnType !== '') {
+        const inGame = !!(document.pointerLockElement && !_cachedPauseMenu);
+        if (!inGame) {
+          if (_lastDrawnType !== '') {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             _lastDrawnType = '';
             _needsRedraw = true;
           }
+          requestAnimationFrame(tick);
+          return;
         }
-      }
 
+        // Fix 1: use cached game accessor instead of resolving every frame
+        const game = getGameCached(now);
+        const player = game?.player;
+
+        if (game?.world && player?.pos) {
+          if (now - _lastEntityScan > ENTITY_SCAN_INTERVAL) {
+            _lastEntityScan = now;
+            const mapKey = findEntityMapKey(game.world);
+            const dump = mapKey ? game.world[mapKey] : null;
+            if (dump) {
+              let nearest = null, minDist = Infinity;
+              dump.forEach((entity) => {
+                if (!entity || entity.id === player.id) return;
+                if (typeof entity.getHealth !== 'function') return;
+                if (!entity.pos) return;
+                const dist = player.pos.distanceTo(entity.pos);
+                if (dist < minDist) { minDist = dist; nearest = entity; }
+              });
+              if (nearest !== _cachedNearest) _needsRedraw = true;
+              _cachedNearest = nearest;
+              _cachedMinDist = minDist;
+            }
+          }
+
+          if (_cachedNearest && _cachedMinDist <= MAX_RANGE) {
+            const isPlayer = _cachedNearest.constructor?.name === 'ClientEntityPlayerOther';
+            getDOM(now);
+
+            const domSrc = _domFaceEl?.src ?? null;
+            const domName = _domNameEl?.textContent ?? null;
+
+            let faceSrc = null;
+            let faceName;
+
+            if (isPlayer) {
+              const lookingAtPlayer = !!(domSrc);
+              const nameKey = (lookingAtPlayer ? domName : null) || _cachedNearest.name || '';
+              if (domSrc && nameKey) _playerFaceCache[nameKey] = domSrc;
+              faceSrc = _playerFaceCache[nameKey] ?? null;
+              faceName = (lookingAtPlayer ? domName : null) || _cachedNearest.name || '???';
+            } else {
+              faceName = _cachedNearest.name || _cachedNearest.constructor?.name?.replace('Entity', '') || '???';
+            }
+
+            drawEntityHUD(_cachedNearest, _cachedMinDist, faceSrc, faceName);
+          } else {
+            getDOM(now);
+            const blockName = _domNameEl?.textContent?.trim() ?? null;
+            if (blockName) {
+              drawBlockHUD(blockName);
+            } else if (_lastDrawnType !== '') {
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              _lastDrawnType = '';
+              _needsRedraw = true;
+            }
+          }
+        }
+      } catch (err) {
+        // Fix 4: catch any mid-frame error, reset state, back off 2s before restarting
+        console.warn('[Waddle] Target HUD tick error:', err);
+        _lastDrawnType = '';
+        _needsRedraw = true;
+        try { ctx.clearRect(0, 0, canvas.width, canvas.height); } catch (_) {}
+        setTimeout(() => requestAnimationFrame(tick), 2000);
+        return; // prevent the normal rAF below from also firing
+      }
       requestAnimationFrame(tick);
     }
 
@@ -713,17 +754,18 @@ const SCRIPT_VERSION = '6.5';
     }, { passive: true });
   }
 
-  // ─── RAF Loop ────────────────────────────────────────────────────────────────
+  // ─── Fix 1: RAF loop uses getGameCached + accepts game param ─────────────────
   function startPerformanceLoop() {
     if (state.rafId) return;
     const loop = (t) => {
       if (!state.features.performance && !state.features.coords) { state.rafId = null; return; }
+      const game = getGameCached(t);
       if (t - state.lastPerformanceUpdate >= 500 && state.counters.performance) {
-        updatePerformanceCounter();
+        updatePerformanceCounter(game);
         state.lastPerformanceUpdate = t;
       }
       if (t - state.lastCoordsUpdate >= 100 && state.counters.coords) {
-        const pos = gameRef.resolve()?.player?.pos;
+        const pos = game?.player?.pos;
         if (pos) updateCounterText('coords', `📍 X: ${pos.x.toFixed(1)} Y: ${pos.y.toFixed(1)} Z: ${pos.z.toFixed(1)}`);
         state.lastCoordsUpdate = t;
       }
@@ -736,8 +778,8 @@ const SCRIPT_VERSION = '6.5';
     if (state.rafId) { cancelAnimationFrame(state.rafId); state.rafId = null; }
   }
 
-  function updatePerformanceCounter() {
-    const game = gameRef.resolve();
+  // Fix 1: accepts pre-resolved game instead of calling gameRef.resolve() again
+  function updatePerformanceCounter(game) {
     if (!game || !state.counters.performance) return;
     const fps = Math.round(game.resourceMonitor?.filteredFPS || 0);
     const ping = Math.round(game.resourceMonitor?.filteredPing || 0);
@@ -887,7 +929,7 @@ const SCRIPT_VERSION = '6.5';
   // ─── Feature Manager ─────────────────────────────────────────────────────────
   const featureManager = {
     performance: {
-      start: () => { if (!state.counters.performance) createCounter('performance'); startPerformanceLoop(); updatePerformanceCounter(); },
+      start: () => { if (!state.counters.performance) createCounter('performance'); startPerformanceLoop(); updatePerformanceCounter(getGameCached()); },
       cleanup: () => {
         if (state.counters.performance) { state.counters.performance.remove(); state.counters.performance = null; }
         if (!state.features.coords) stopPerformanceLoop();
@@ -1094,16 +1136,14 @@ const SCRIPT_VERSION = '6.5';
     });
   }
 
-  // ─── Persistence ─────────────────────────────────────────────────────────────
+  // ─── Fix 2 + 5: Persistence with migration and panel cache invalidation ───────
   function restoreSavedState() {
     try {
-      const settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
-      if (settings?.features) {
-        Object.keys(state.features).forEach(k => {
-          if (typeof settings.features[k] === 'boolean') state.features[k] = settings.features[k];
-        });
-      }
+      const raw = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
+      if (raw) Object.assign(state.features, migrateSettings(raw));
     } catch (_) {}
+    // Fix 2: bust panel cache so buttons reflect restored state correctly
+    Object.keys(_panelCache).forEach(k => delete _panelCache[k]);
   }
 
   // ─── Cleanup ─────────────────────────────────────────────────────────────────
@@ -1124,15 +1164,20 @@ const SCRIPT_VERSION = '6.5';
     });
   }
 
-  // ─── Space Sky ──────────────────────────────────────────────────────────────
+  // ─── Fix 3: Space Sky with Three.js version guard ────────────────────────────
+  const MIN_THREE_REVISION = 128;
+
+  function isThreeCompatible() {
+    return typeof THREE !== 'undefined' &&
+      typeof THREE.CubeTextureLoader === 'function' &&
+      parseInt(THREE.REVISION, 10) >= MIN_THREE_REVISION;
+  }
+
   function initSpaceSky() {
     const doApply = () => {
       const tryPatch = () => {
         const gs = gameRef.resolve()?.gameScene;
-        if (!gs?.sky) {
-          setTimeout(tryPatch, 500);
-          return;
-        }
+        if (!gs?.sky) { setTimeout(tryPatch, 500); return; }
         const loader = new THREE.CubeTextureLoader();
         loader.setPath('https://threejs.org/examples/textures/cube/MilkyWay/');
         loader.load(
@@ -1150,12 +1195,18 @@ const SCRIPT_VERSION = '6.5';
       tryPatch();
     };
 
-    if (typeof THREE !== 'undefined') {
+    if (isThreeCompatible()) {
+      // Miniblox's bundled Three.js is new enough — use it directly
       doApply();
     } else {
+      // Either absent or too old — load a known-good version from CDN
       const script = document.createElement('script');
       script.src = 'https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.min.js';
-      script.onload = doApply;
+      script.onload = () => {
+        if (isThreeCompatible()) doApply();
+        else showToast('Space Sky', 'info', 'Three.js version mismatch');
+      };
+      script.onerror = () => showToast('Space Sky', 'info', 'Failed to load Three.js');
       document.head.appendChild(script);
     }
   }
