@@ -4,7 +4,7 @@
 
 ### The Ultimate Miniblox Enhancement Suite
 
-![Version](https://img.shields.io/badge/version-6.5.1-39ff14?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-6.5-39ff14?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-39ff14?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/platform-Miniblox-39ff14?style=for-the-badge)
 
@@ -73,7 +73,7 @@
 
 ## 📝 Changelog
 
-### [6.5.1] - Reliability Pass
+### [6.5 v2] - Reliability Pass
 - ⚡ `getGameCached()` — game reference now revalidated every 2s instead of every RAF frame; `updatePerformanceCounter` accepts pre-resolved game to avoid double-resolve
 - 🐛 `_panelCache` busted on `restoreSavedState` so module buttons correctly reflect loaded settings
 - 🛡️ Three.js version guard in `initSpaceSky` — uses bundled copy only if `REVISION >= 128`, otherwise loads pinned CDN build with `onerror` toast fallback
@@ -84,7 +84,6 @@
 - 🗑️ Removed custom health/food/XP overlay — native bars restored
 - 🐛 Fixed duplicate interval stacking on realTime and antiAfk rapid toggles
 - ✨ Always-on MilkyWay cubemap skybox via Three.js `sky.update` patch
-- 🗑️ Removed module cards from menu UI (will do soon)
 
 ### [6.4] - Target HUD
 - ✨ Canvas-based Target HUD — players, mobs, and blocks
@@ -105,7 +104,7 @@
 - 🐛 Fixed gameRef, keyDisplay listeners, party request and interval leak bugs
 
 ### [6.0] - Advanced API Features
-- ✨ CPS detector, chat greeting, toast system, HUD array, session timer, sidebar nav
+- ✨ CPS detector, chat greeting, toast system, HUD array, session timer, sidebar navigation
 
 ---
 
