@@ -34,6 +34,10 @@
 - **Blocks** — block name + 🧱 icon when no entity is nearby. Entity always takes priority over block
 - Health bar color reacts to HP: 🟢 → 🟡 → 🔴
 
+**🌌 Space Sky** — MilkyWay cubemap skybox, replaces the default day/night sky entirely
+
+![Space Sky](https://github.com/user-attachments/assets/a11615b2-423f-41bc-9f5c-be91bd1f2adc)
+
 ### Toggleable (via `\` menu)
 
 | Feature | Description |
@@ -53,14 +57,17 @@
 - Target HUD entity scan throttled to 20fps, dirty flag skips redraws when nothing changed
 - Single RAF loop, direct DOM updates, debounced settings saves
 - MutationObserver scoped to `#react` only, module panels cached
+- Space sky patches `sky.update` directly — zero RAF overhead
 
 ---
 
 ## 📝 Changelog
 
-### [6.5] - Health Widget Removed
+### [6.5] - Space Sky
 - 🗑️ Removed custom health/food/XP overlay — native bars restored
 - 🐛 Fixed duplicate interval stacking on realTime and antiAfk rapid toggles
+- ✨ Always-on MilkyWay cubemap skybox via Three.js `sky.update` patch
+- 🗑️ Removed module cards from menu UI (will do)
 
 ### [6.4] - Target HUD
 - ✨ Canvas-based Target HUD — players, mobs, and blocks
