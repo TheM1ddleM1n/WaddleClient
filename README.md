@@ -110,11 +110,12 @@
 
 ## 👥 Credits
 
-| Role | Contributor |
-|------|-------------|
-| **Original Creator** | [@Scripter132132](https://github.com/Scripter132132) |
-| **Enhancement & Maintenance** | [@TheM1ddleM1n](https://github.com/TheM1ddleM1n) |
-| **Inspired By** | Scripter's NovaCore client |
+| **Role**                  | **Contributor**                                      |
+| :------------------------ | :--------------------------------------------------- |
+| Original Creator          | [@Scripter132132](https://github.com/Scripter132132) |
+| Enhancement & Maintenance | [@TheM1ddleM1n](https://github.com/TheM1ddleM1n)     |
+| Inspired By               | Scripter's NovaCore Client                           |
+
 
 ---
 
