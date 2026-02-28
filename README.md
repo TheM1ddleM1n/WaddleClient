@@ -2,7 +2,7 @@
 
 # 🐧 Waddle
 
-### The Ultimate Miniblox Enhancement Suite
+### The Ultimate Miniblox Enhancement Suite!
 
 ![Version](https://img.shields.io/badge/version-6.5-39ff14?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-39ff14?style=for-the-badge)
