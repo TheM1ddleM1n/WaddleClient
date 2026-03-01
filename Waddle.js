@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waddle
 // @namespace    https://github.com/TheM1ddleM1n/Waddle
-// @version      6.5
+// @version      6.6
 // @description  The ultimate Miniblox enhancement suite with advanced API features!
 // @author       The Dream Team! (Scripter & TheM1ddleM1n)
 // @icon         https://raw.githubusercontent.com/TheM1ddleM1n/Waddle/refs/heads/main/Penguin.png
@@ -9,7 +9,7 @@
 // @run-at       document-start
 // ==/UserScript==
 
-const SCRIPT_VERSION = '6.5';
+const SCRIPT_VERSION = '6.6';
 
 (function () {
   'use strict';
@@ -48,9 +48,19 @@ const SCRIPT_VERSION = '6.5';
     ],
     utilities: [
       { label: 'Anti-AFK', feature: 'antiAfk' },
+      { label: 'Fun Facts', feature: 'funFacts' },
       { label: 'Block Party RQ', feature: 'disablePartyRequests' }
     ]
   };
+
+  const FUN_FACTS = [
+    'Penguins can drink seawater thanks to a special gland above their eyes.',
+    'A group of penguins in the water is called a raft.',
+    'Emperor penguins are the tallest penguin species on Earth.',
+    'Some penguin species can dive deeper than 500 meters.',
+    'Penguins use their wings as powerful flippers to swim.',
+    'Many penguins slide on their bellies across ice to save energy.'
+  ];
 
   // ─── gameRef ─────────────────────────────────────────────────────────────────
   const gameRef = {
@@ -97,7 +107,8 @@ const SCRIPT_VERSION = '6.5';
   let state = {
     features: {
       performance: false, coords: false, realTime: false,
-      antiAfk: false, keyDisplay: false, disablePartyRequests: false
+      antiAfk: false, keyDisplay: false, disablePartyRequests: false,
+      funFacts: false
     },
     counters: { performance: null, realTime: null, coords: null, antiAfk: null, keyDisplay: null },
     menuOverlay: null,
@@ -980,6 +991,21 @@ const SCRIPT_VERSION = '6.5';
       cleanup: () => {
         clearInterval(state.intervals.partyRetry); state.intervals.partyRetry = null;
         restorePartyRequests();
+      }
+    },
+    funFacts: {
+      start: () => {
+        if (state.intervals.funFacts) return;
+        const showRandomFact = () => {
+          const fact = FUN_FACTS[Math.floor(Math.random() * FUN_FACTS.length)];
+          showToast('🐧 Fun Fact', 'info', fact);
+        };
+        showRandomFact();
+        state.intervals.funFacts = setInterval(showRandomFact, 60000);
+      },
+      cleanup: () => {
+        clearInterval(state.intervals.funFacts);
+        state.intervals.funFacts = null;
       }
     }
   };
