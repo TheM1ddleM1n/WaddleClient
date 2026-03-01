@@ -29,7 +29,7 @@
 **🎯 Crosshair** — cyan crosshair, auto-hides in menus and pause screens
 
 **🎯 Target HUD** — canvas-based HUD at top-center of screen
-- **Players** — persistent face + name + health bar + distance. Face cached so it stays visible when looking away
+- **Players** — persistent face + name + health bar. Face cached so it stays visible when looking away
 - **Mobs** — clean name (`Zombie`, `Creeper` etc.) + health bar + distance
 - **Blocks** — block name + 🧱 icon when no entity is nearby. Entity always takes priority over block
 - Health bar color reacts to HP: 🟢 → 🟡 → 🔴
@@ -92,10 +92,6 @@
 - ✨ Entity always takes priority over block
 - ⚡ Throttled scans, dirty flag, cached gradient
 
-### [6.3] - Health HUD
-- ✨ Always-on health, food and XP bars replacing native bars
-- ✨ Absorption hearts, survival/adventure only, hidden in creative
-
 ### [6.2] - Architecture Pass
 - 🐛 Multiple cleanup, leak and stale reference fixes
 - ⚡ MutationObserver scoped, module panels cached, settings debounced
@@ -123,7 +119,7 @@
 
 <div align="center">
 
-[📦 GitHub](https://github.com/TheM1ddleM1n/WaddleClient) •
+[📦 GitHub](https://github.com/TheM1ddleM1n/Waddle) •
 [🐛 Report Bug](https://github.com/TheM1ddleM1n/Waddle/issues/new?labels=bug) •
 [✨ Suggest Feature](https://github.com/TheM1ddleM1n/Waddle/issues/new?labels=enhancement) •
 [🎮 Play Miniblox](https://miniblox.io/)
