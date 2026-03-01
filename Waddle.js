@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waddle
 // @namespace    https://github.com/TheM1ddleM1n/Waddle
-// @version      6.5
+// @version      6.8
 // @description  The ultimate Miniblox enhancement suite with advanced API features!
 // @author       The Dream Team! (Scripter & TheM1ddleM1n)
 // @icon         https://raw.githubusercontent.com/TheM1ddleM1n/Waddle/refs/heads/main/Penguin.png
@@ -9,7 +9,7 @@
 // @run-at       document-start
 // ==/UserScript==
 
-const SCRIPT_VERSION = '6.5';
+const SCRIPT_VERSION = '6.8';
 
 (function () {
   'use strict';
@@ -48,10 +48,33 @@ const SCRIPT_VERSION = '6.5';
     ],
     utilities: [
       { label: 'Anti-AFK', feature: 'antiAfk' },
+      { label: 'Fun Facts', feature: 'funFacts' },
       { label: 'Block Party RQ', feature: 'disablePartyRequests' }
     ]
   };
 
+  const FUN_FACTS = [
+    'Penguins can drink seawater thanks to a special gland above their eyes.',
+    'A group of penguins in the water is called a raft.',
+    'On land, a group of penguins is called a waddle.',
+    'Emperor penguins are the tallest penguin species on Earth.',
+    'Little blue penguins are the smallest penguins in the world.',
+    'Some penguin species can dive deeper than 500 meters.',
+    'Gentoo penguins can swim at speeds up to about 22 mph (35 km/h).',
+    'Penguins use their wings as powerful flippers to swim.',
+    'Many penguins slide on their bellies across ice to save energy.',
+    'Penguin feathers are densely packed and help keep water out.',
+    'Penguins preen often to spread waterproofing oils across their feathers.',
+    'Most penguins have countershading: dark backs and light bellies for camouflage.',
+    'Emperor penguin dads incubate eggs on their feet during Antarctic winter.',
+    'Some penguins build pebble nests and may gift stones to their mates.',
+    'The yellow-eyed penguin is one of the rarest penguin species.',
+    'Penguins can spend around half their lives in the ocean.',
+    'Penguins have excellent underwater vision compared to their land vision.',
+    'Molting season replaces penguins\' feathers all at once, so they stay ashore.',
+    'Not all penguins live in icy climates; several species live in temperate regions.',
+    'Penguins are birds, but their bodies are specialized for swimming instead of flying.'
+  ];
   // ─── gameRef ─────────────────────────────────────────────────────────────────
   const gameRef = {
     _game: null,
@@ -97,7 +120,8 @@ const SCRIPT_VERSION = '6.5';
   let state = {
     features: {
       performance: false, coords: false, realTime: false,
-      antiAfk: false, keyDisplay: false, disablePartyRequests: false
+      antiAfk: false, keyDisplay: false, disablePartyRequests: false,
+      funFacts: false
     },
     counters: { performance: null, realTime: null, coords: null, antiAfk: null, keyDisplay: null },
     menuOverlay: null,
@@ -112,7 +136,8 @@ const SCRIPT_VERSION = '6.5';
     keys: { w: false, a: false, s: false, d: false, space: false, lmb: false, rmb: false },
     crosshairContainer: null,
     hudArray: null,
-    toastContainer: null
+    toastContainer: null,
+    hasShownFunFactOnJoin: false
   };
 
   // ─── Fix 5: Settings versioning — derive known keys from initial state ────────
@@ -980,6 +1005,31 @@ const SCRIPT_VERSION = '6.5';
       cleanup: () => {
         clearInterval(state.intervals.partyRetry); state.intervals.partyRetry = null;
         restorePartyRequests();
+      }
+    },
+    funFacts: {
+      start: () => {
+        if (state.hasShownFunFactOnJoin || state.intervals.funFacts) return;
+        let wasInGame = false;
+        const showRandomFact = () => {
+          const fact = FUN_FACTS[Math.floor(Math.random() * FUN_FACTS.length)];
+          showToast('🐧 Fun Fact', 'info', fact);
+          state.hasShownFunFactOnJoin = true;
+          clearInterval(state.intervals.funFacts);
+          state.intervals.funFacts = null;
+        };
+        const watchInGame = () => {
+          const paused = !!document.querySelector('.chakra-modal__content-container,[role="dialog"]');
+          const inGame = !!(document.pointerLockElement && !paused);
+          if (inGame && !wasInGame && !state.hasShownFunFactOnJoin) showRandomFact();
+          wasInGame = inGame;
+        };
+        watchInGame();
+        if (!state.hasShownFunFactOnJoin) state.intervals.funFacts = setInterval(watchInGame, 500);
+      },
+      cleanup: () => {
+        clearInterval(state.intervals.funFacts);
+        state.intervals.funFacts = null;
       }
     }
   };
