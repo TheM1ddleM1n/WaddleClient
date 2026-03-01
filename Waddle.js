@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Waddle
 // @namespace    https://github.com/TheM1ddleM1n/Waddle
-// @version      6.6
+// @version      6.7
 // @description  The ultimate Miniblox enhancement suite with advanced API features!
 // @author       The Dream Team! (Scripter & TheM1ddleM1n)
 // @icon         https://raw.githubusercontent.com/TheM1ddleM1n/Waddle/refs/heads/main/Penguin.png
@@ -9,7 +9,7 @@
 // @run-at       document-start
 // ==/UserScript==
 
-const SCRIPT_VERSION = '6.6';
+const SCRIPT_VERSION = '6.7';
 
 (function () {
   'use strict';
@@ -996,12 +996,19 @@ const SCRIPT_VERSION = '6.6';
     funFacts: {
       start: () => {
         if (state.intervals.funFacts) return;
+        let wasInGame = false;
         const showRandomFact = () => {
           const fact = FUN_FACTS[Math.floor(Math.random() * FUN_FACTS.length)];
           showToast('🐧 Fun Fact', 'info', fact);
         };
-        showRandomFact();
-        state.intervals.funFacts = setInterval(showRandomFact, 60000);
+        const watchInGame = () => {
+          const paused = !!document.querySelector('.chakra-modal__content-container,[role="dialog"]');
+          const inGame = !!(document.pointerLockElement && !paused);
+          if (inGame && !wasInGame) showRandomFact();
+          wasInGame = inGame;
+        };
+        watchInGame();
+        state.intervals.funFacts = setInterval(watchInGame, 500);
       },
       cleanup: () => {
         clearInterval(state.intervals.funFacts);
