@@ -121,11 +121,8 @@ const SCRIPT_VERSION = '6.5';
   function migrateSettings(raw) {
     const features = {};
     if (!raw?.features) return features;
-    // Version-specific migration hooks go here, e.g.:
-    // if (!raw.version || raw.version < '6.5') { /* rename/transform keys */ }
     for (const [k, v] of Object.entries(raw.features)) {
       if (KNOWN_FEATURES.has(k) && typeof v === 'boolean') features[k] = v;
-      // Unrecognised keys (removed features) are silently dropped
     }
     return features;
   }
@@ -398,7 +395,6 @@ const SCRIPT_VERSION = '6.5';
 
   let _lastDrawnHp = -1;
   let _lastDrawnName = '';
-  let _lastDrawnDist = -1;
   let _lastDrawnFaceSrc = '';
   let _lastDrawnType = '';
   let _needsRedraw = true;
@@ -470,19 +466,17 @@ const SCRIPT_VERSION = '6.5';
       ctx.closePath();
     }
 
-    function drawEntityHUD(nearest, minDist, faceSrc, faceName) {
+    function drawEntityHUD(nearest, faceSrc, faceName) {
       const x = (canvas.width - W) / 2;
       const y = 16;
       const maxHp = nearest.getMaxHealth?.() ?? 20;
       const hp = Math.max(0, nearest.getHealth());
       const hpPct = hp / maxHp;
-      const distStr = minDist.toFixed(1);
       const barColor = hpPct > 0.5 ? '#22c55e' : hpPct > 0.25 ? '#eab308' : '#ef4444';
 
       if (
         hp === _lastDrawnHp &&
         faceName === _lastDrawnName &&
-        distStr === String(_lastDrawnDist) &&
         faceSrc === _lastDrawnFaceSrc &&
         _lastDrawnType === 'entity' &&
         !_needsRedraw
@@ -490,7 +484,6 @@ const SCRIPT_VERSION = '6.5';
 
       _lastDrawnHp = hp;
       _lastDrawnName = faceName;
-      _lastDrawnDist = distStr;
       _lastDrawnFaceSrc = faceSrc;
       _lastDrawnType = 'entity';
       _needsRedraw = false;
@@ -547,10 +540,6 @@ const SCRIPT_VERSION = '6.5';
       ctx.textAlign = 'left';
       ctx.fillText(`${Math.round(hp)} / ${maxHp}`, barX, barY + barH + 14);
 
-      ctx.fillStyle = '#7c3aed';
-      ctx.textAlign = 'right';
-      ctx.fillText(`${distStr}m`, x + W - 10, barY + barH + 14);
-
       ctx.restore();
     }
 
@@ -567,7 +556,6 @@ const SCRIPT_VERSION = '6.5';
       _lastDrawnName = blockName;
       _lastDrawnType = 'block';
       _lastDrawnHp = -1;
-      _lastDrawnDist = -1;
       _lastDrawnFaceSrc = '';
       _needsRedraw = false;
 
@@ -623,7 +611,6 @@ const SCRIPT_VERSION = '6.5';
           return;
         }
 
-        // Fix 1: use cached game accessor instead of resolving every frame
         const game = getGameCached(now);
         const player = game?.player;
 
@@ -667,7 +654,7 @@ const SCRIPT_VERSION = '6.5';
               faceName = _cachedNearest.name || _cachedNearest.constructor?.name?.replace('Entity', '') || '???';
             }
 
-            drawEntityHUD(_cachedNearest, _cachedMinDist, faceSrc, faceName);
+            drawEntityHUD(_cachedNearest, faceSrc, faceName);
           } else {
             getDOM(now);
             const blockName = _domNameEl?.textContent?.trim() ?? null;
@@ -681,13 +668,12 @@ const SCRIPT_VERSION = '6.5';
           }
         }
       } catch (err) {
-        // Fix 4: catch any mid-frame error, reset state, back off 2s before restarting
         console.warn('[Waddle] Target HUD tick error:', err);
         _lastDrawnType = '';
         _needsRedraw = true;
         try { ctx.clearRect(0, 0, canvas.width, canvas.height); } catch (_) {}
         setTimeout(() => requestAnimationFrame(tick), 2000);
-        return; // prevent the normal rAF below from also firing
+        return;
       }
       requestAnimationFrame(tick);
     }
@@ -778,7 +764,6 @@ const SCRIPT_VERSION = '6.5';
     if (state.rafId) { cancelAnimationFrame(state.rafId); state.rafId = null; }
   }
 
-  // Fix 1: accepts pre-resolved game instead of calling gameRef.resolve() again
   function updatePerformanceCounter(game) {
     if (!game || !state.counters.performance) return;
     const fps = Math.round(game.resourceMonitor?.filteredFPS || 0);
@@ -1142,7 +1127,6 @@ const SCRIPT_VERSION = '6.5';
       const raw = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
       if (raw) Object.assign(state.features, migrateSettings(raw));
     } catch (_) {}
-    // Fix 2: bust panel cache so buttons reflect restored state correctly
     Object.keys(_panelCache).forEach(k => delete _panelCache[k]);
   }
 
@@ -1196,10 +1180,8 @@ const SCRIPT_VERSION = '6.5';
     };
 
     if (isThreeCompatible()) {
-      // Miniblox's bundled Three.js is new enough — use it directly
       doApply();
     } else {
-      // Either absent or too old — load a known-good version from CDN
       const script = document.createElement('script');
       script.src = 'https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.min.js';
       script.onload = () => {
